@@ -133,17 +133,14 @@ def movePlayer(moveType, direction=False, step=10):
         # y-axis pointing down from the ball
         bodyAngle = line.getParams(ballCenterPos, oldCenterPos)[3]
         # rotate body and feet around ball
-        print('body moving')
         bodyCenterPos, rotate = move.moveCircle(
             ballCenterPos, oldCenterPos, direction, step,
             boundaryX=[0,screenWidth], boundaryY=[0,screenHeight],
             objCenter=bodyCenter)
         if rotate != bodyAngle:
             # body still moving, so feet still move too
-            print('left foot moving')
             lFootCenterPos = move.moveCircle(ballCenterPos, lFootCenterPos,
                                              direction, step)[0]
-            print('right foot moving')
             rFootCenterPos = move.moveCircle(ballCenterPos, rFootCenterPos,
                                              direction, step)[0]
         feetToFront(ballCenterPos)   # move feet to front of body
@@ -161,7 +158,6 @@ def movePlayer(moveType, direction=False, step=10):
         # direction the player is currently facing (angle measured in degrees)
         currentRot = getRotation()[0]
         if currentRot != rotate:
-            print('currentRot and rotate',currentRot,rotate)
             # player is facing the wrong direction --> move feet around body
             feetToFront(bodyCenterPos)
     elif 'to ' in moveType:
