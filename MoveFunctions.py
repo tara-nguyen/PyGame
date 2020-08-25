@@ -109,8 +109,7 @@ def moveCircle(rotCenter, currentCenterPos, direction,
     step is the change in the angle (measured in degrees) by which the object
     will move at each keypress. A positive value must be given.
     maxRotation is the maximum angle (measured in degrees) to which the object
-    is allowed to move. Assign the argument a numerical value between -180 and
-    180 to set a limit.
+    is allowed to move. If specified, the angle must be between 0 & 180 degrees.
     boundaryX and boundaryY are lists representing the vertical and lateral
     ranges, respectively, of the area in which the object is allowed to move.
     objCenter is the object's center point.'''
@@ -127,17 +126,27 @@ def moveCircle(rotCenter, currentCenterPos, direction,
     if reachedBoundaries(boundaryX, boundaryY, currentCenterPos, direction,
                          quarter):
         step = 0
-    # check maximum rotation
-    if maxRotation != False:
-        if abs(currentAngle) >= abs(maxRotation):
-            # object has reached maximum rotation --> stop moving
-            step = 0
-        elif abs(step) >= abs(maxRotation-currentAngle):
-            # final step before reaching maximum rotation
-            step = abs(maxRotation-currentAngle)
     # check direction
-    if step != 0 and (direction == 'clockwise' or direction == 'left'):
+    elif direction == 'counterclockwise' or direction == 'right':
+        # check maximum rotation
+        if maxRotation != False:
+            if currentAngle >= maxRotation:
+                # object has reached maximum rotation --> stop moving
+                step = 0
+            if step >= maxRotation-currentAngle:
+                # final step before reaching maximum rotation
+                step = maxRotation-currentAngle
+    else:
         step *= -1   # negative step size
+        maxRotation *= -1
+        # check maximum rotation
+        if maxRotation != False:
+            if currentAngle <= maxRotation:
+                # object has reached maximum rotation --> stop moving
+                step = 0
+            if step <= maxRotation-currentAngle:
+                # final step before reaching maximum rotation
+                step = maxRotation-currentAngle
     rotate = currentAngle + step   # new angle (measured in degrees)
     # make sure the angle is between -180 and 180 degrees
     if rotate > 180:
@@ -149,21 +158,22 @@ def moveCircle(rotCenter, currentCenterPos, direction,
     newY = rotCenter[1] + r * math.cos(rotate*math.pi/180)
     # check if the new point is outside the boundaries, in which case the step 
     # size needs to be decreased until the new point is inside the boundaries
-    while reachedBoundaries(boundaryX, boundaryY, (newX,newY), direction,
-                            quarter):
-        if direction == 'clockwise' or direction == 'left':
-            step += .01
-        else:
-            step -= .01
-        rotate = currentAngle + step   # new angle (measured in degrees)
-        # make sure the angle is between -180 and 180 degrees
-        if rotate > 180:
-            rotate -= 360
-        elif rotate < -180:
-            rotate += 360
-        # new coordinates of object center
-        newX = rotCenter[0] + r * math.sin(rotate*math.pi/180)
-        newY = rotCenter[1] + r * math.cos(rotate*math.pi/180)
+    if step != 0:
+        while reachedBoundaries(boundaryX, boundaryY, (newX,newY), direction,
+                                quarter):
+            if direction == 'counterclockwise' or direction == 'right':
+                step -= .01
+            else:
+                step += .01
+            rotate = currentAngle + step   # new angle (measured in degrees)
+            # make sure the angle is between -180 and 180 degrees
+            if rotate > 180:
+                rotate -= 360
+            elif rotate < -180:
+                rotate += 360
+            # new coordinates of object center
+            newX = rotCenter[0] + r * math.sin(rotate*math.pi/180)
+            newY = rotCenter[1] + r * math.cos(rotate*math.pi/180)
     newCenterPos = newX, newY
     return newCenterPos, rotate
 
