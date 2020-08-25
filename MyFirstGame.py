@@ -134,7 +134,7 @@ def movePlayer(moveType, direction=False, step=10):
         bodyAngle = line.getParams(ballCenterPos, oldCenterPos)[3]
         # rotate body and feet around ball
         bodyCenterPos, rotate = move.moveCircle(
-            ballCenterPos, oldCenterPos, direction, step,
+            ballCenterPos, oldCenterPos, direction, step=step,
             boundaryX=[0,screenWidth], boundaryY=[0,screenHeight],
             objCenter=bodyCenter)
         if rotate != bodyAngle:
@@ -547,7 +547,7 @@ rFoot = foot
 # body position
 bodyPosX = random.uniform(0, screenWidth-bodyCenter[0]*2)
 bodyPosY = random.uniform(goalHeight, screenHeight-bodyCenter[1]*2)
-bodyPosX = screenCenter[0]-bodyCenter[0]-100
+bodyPosX = screenCenter[0]-bodyCenter[0]-50
 bodyPosY = screenCenter[1]+ballCenter[1]+20
 bodyPos = bodyPosX, bodyPosY
 # coordinates of center of the image, relative to the screen
