@@ -32,30 +32,24 @@ def update(screen, things, thingsPos, moved, newCenterPos, rotate=False):
                 movedFound[i][i].append(j)
             else:
                 movedFound[i][i].append('no match')
-##    print('movedFound',movedFound)
     # count number moved objects found in things
     count = [0] * numThings
     for i in range(numThings):
         for j in range(numMoved):
             if movedFound[i][i][j] != 'no match':
                 count[i] += 1
-##    print('count movedFound',count)
-##    print()
     # redraw objects
     thingsRedrawn = [0] * numThings
     objMovedRedrawn = [0] * numMoved
     for i in range(numThings):
-##        print('i=',i)
         if count[i] == 0:
             # unmoved object
             screen.blit(things[i], thingsPos[i])
             thingsRedrawn[i] += 1
-##            print('thingsRedrawn',thingsRedrawn)
         else:
             # moved object
             for j in range(numMoved):
                 if thingsRedrawn[i] == 0 and objMovedRedrawn[j] == 0:
-##                    print('j=',j)
                     # object hasn't been redrawn
                     if movedFound[i][i][j] != 'no match':
                         if rotate != False:
@@ -69,91 +63,107 @@ def update(screen, things, thingsPos, moved, newCenterPos, rotate=False):
                         screen.blit(things[i], thingsPos[i])   # object redrawn
                         thingsRedrawn[i] += 1
                         objMovedRedrawn[j] += 1
-##                        print('thingsRedrawn',thingsRedrawn)
-##                        print('objMovedRedrawn',objMovedRedrawn)
                         break
- 
+
+def reachedBoundaries(boundaryX, boundaryY, point, direction, quarter):
+    '''This function checks if an object rotating around a point has gone or
+    will be going over the screen boundaries.
+    boundaryX and boundaryY are lists representing the vertical and lateral
+    ranges, respectively, of the area in which the object is allowed to move.
+    point is either the current coordinates of the object's center or the point
+    to which the object is supposed to move.
+    quarter is the quarter in the xy-plane (with the y-axis pointing downward)
+    in which the object is currently staying.'''
+    if direction == 'counterclockwise' or direction == 'right':
+        if boundaryX != False:
+            if quarter == 1 and point[0] >= boundaryX[1]:
+                return True
+            elif quarter == 3 and point[0] <= boundaryX[0]:
+                return True
+        if boundaryY != False:
+            if quarter == 2 and point[1] <= boundaryY[0]:
+                return True
+            elif quarter == 4 and point[1] >= boundaryY[1]:
+                return True
+    elif direction == 'clockwise' or direction == 'left':
+        if boundaryX != False:
+            if quarter == 2 and point[0] >= boundaryX[1]:
+                return True
+            elif quarter == 4 and point[0] <= boundaryX[0]:
+                return True
+        if boundaryY != False:
+            if quarter == 1 and point[1] >= boundaryY[1]:
+                return True
+            elif quarter == 3 and point[1] <= boundaryY[0]:
+                return True
+    else:
+        return False
+
 def moveCircle(rotCenter, currentCenterPos, direction,
                step=10, maxRotation=False,
                boundaryX=False, boundaryY=False, objCenter=False):
-    '''This function rotates an object along an imaginary circle.
-    rotCenter is the point around which the object moves.
+    '''This function rotates an object around a point or around another object.
+    rotCenter is the point or the center of the object around which the moving
+    object rotates.
     currentCenterPos refers to the current coordinates of the object's center.
     step is the change in the angle (measured in degrees) by which the object
-    will move at each keypress.
+    will move at each keypress. A positive value must be given.
     maxRotation is the maximum angle (measured in degrees) to which the object
     is allowed to move. Assign the argument a numerical value between -180 and
     180 to set a limit.
     boundaryX and boundaryY are lists representing the vertical and lateral
     ranges, respectively, of the area in which the object is allowed to move.
     objCenter is the object's center point.'''
-    # check boundaries
+    # radius, current angle (measured in degrees), and current quarter
+    r, currentAngle, quarter = line.getParams(rotCenter, currentCenterPos)[2:]
+    # set boundaries
     if boundaryX != False and objCenter != False:
         boundaryX[0] += objCenter[0]   # smallest possible x (left boundary)
         boundaryX[1] -= objCenter[0]   # largest possible x (right boundary)
     if boundaryY != False and objCenter != False:
         boundaryY[0] += objCenter[1]   # smallest possible y (upper boundary)
         boundaryY[1] -= objCenter[1]   # largest possible y (lower boundary)
-    # radius, current angle (measured in degrees), and current quarter
-    r, currentAngle, quarter = line.getParams(rotCenter, currentCenterPos)[2:]
+    # check boundaries: stop moving if object has reached a boundary
+    if reachedBoundaries(boundaryX, boundaryY, currentCenterPos, direction,
+                         quarter):
+        step = 0
+    # check maximum rotation
+    if maxRotation != False:
+        if abs(currentAngle) >= abs(maxRotation):
+            # object has reached maximum rotation --> stop moving
+            step = 0
+        elif abs(step) >= abs(maxRotation-currentAngle):
+            # final step before reaching maximum rotation
+            step = abs(maxRotation-currentAngle)
     # check direction
-    if direction == 'counterclockwise' or direction == 'right':
-        if maxRotation != False:
-            if currentAngle >= maxRotation:
-                # object has reached maximum rotation --> stop moving
-                step = 0
-            elif step >= maxRotation - currentAngle:
-                # final step before reaching maximum rotation
-                step = maxRotation - currentAngle
-        if boundaryX != False:
-            if quarter == 1 and currentCenterPos[0] >= boundaryX[1]:
-                # object has reached boundary --> stop moving
-                step = 0
-            elif quarter == 3 and currentCenterPos[0] <= boundaryX[0]:
-                # object has reached boundary --> stop moving
-                step = 0
-        if boundaryY != False:
-            if quarter == 2 and currentCenterPos[1] <= boundaryY[0]:
-                # object has reached boundary --> stop moving
-                step = 0
-            elif quarter == 4 and currentCenterPos[1] >= boundaryY[1]:
-                # object has reached boundary --> stop moving
-                step = 0
-    elif direction == 'clockwise' or direction == 'left':
-        step *= -1
-        if maxRotation != False:
-            if currentAngle <= maxRotation:
-                # object has reached maximum rotation --> stop moving
-                step = 0
-            elif step <= maxRotation - currentAngle:
-                # final step before reaching maximum rotation
-                step = maxRotation - currentAngle
-        if boundaryX != False:
-            if quarter == 2 and currentCenterPos[0] >= boundaryX[1]:
-                # object has reached boundary --> stop moving
-                step = 0
-            elif quarter == 4 and currentCenterPos[0] <= boundaryX[0]:
-                # object has reached boundary --> stop moving
-                step = 0
-        if boundaryY != False:
-            if quarter == 1 and currentCenterPos[1] >= boundaryY[1]:
-                # object has reached boundary --> stop moving
-                step = 0
-            elif quarter == 3 and currentCenterPos[1] <= boundaryY[0]:
-                # object has reached boundary --> stop moving
-                step = 0
-    else:
-        print('Invalid direction.')
+    if step != 0 and (direction == 'clockwise' or direction == 'left'):
+        step *= -1   # negative step size
     rotate = currentAngle + step   # new angle (measured in degrees)
-    # check if the object has gone past the negative side of the y-axis
+    # make sure the angle is between -180 and 180 degrees
     if rotate > 180:
         rotate -= 360
     elif rotate < -180:
         rotate += 360
-    rotateRad = rotate * math.pi/180   # new angle (measured in radians)
-    # coordinates of new center of the object, relative to the screen
-    newX = rotCenter[0] + r * math.sin(rotateRad)
-    newY = rotCenter[1] + r * math.cos(rotateRad)
+    # new coordinates of object center
+    newX = rotCenter[0] + r * math.sin(rotate*math.pi/180)
+    newY = rotCenter[1] + r * math.cos(rotate*math.pi/180)
+    # check if the new point is outside the boundaries, in which case the step 
+    # size needs to be decreased until the new point is inside the boundaries
+    while reachedBoundaries(boundaryX, boundaryY, (newX,newY), direction,
+                            quarter):
+        if direction == 'clockwise' or direction == 'left':
+            step += .01
+        else:
+            step -= .01
+        rotate = currentAngle + step   # new angle (measured in degrees)
+        # make sure the angle is between -180 and 180 degrees
+        if rotate > 180:
+            rotate -= 360
+        elif rotate < -180:
+            rotate += 360
+        # new coordinates of object center
+        newX = rotCenter[0] + r * math.sin(rotate*math.pi/180)
+        newY = rotCenter[1] + r * math.cos(rotate*math.pi/180)
     newCenterPos = newX, newY
     return newCenterPos, rotate
 
@@ -168,7 +178,7 @@ def moveStraight(center, currentCenterPos, direction, stepX=10, stepY=10,
     boundaryX and boundaryY are lists representing the vertical and lateral
     ranges, respectively, of the area in which the object is allowed to move.
     objCenter is the object's center point.'''
-    # check boundaries
+    # set boundaries
     if boundaryX != False:
         boundaryX[0] += center[0]   # smallest possible x (left boundary)
         boundaryX[1] -= center[0]   # largest possible x (right boundary)
@@ -178,7 +188,7 @@ def moveStraight(center, currentCenterPos, direction, stepX=10, stepY=10,
     # check direction
     if direction == 'up':
         stepX = 0   # no lateral movement
-        stepY *= -1   # negative step
+        stepY *= -1   # negative step size
         rotate = 0   # new angle (measured in degrees)
         if boundaryY != False:
             if currentCenterPos[1] <= boundaryY[0]:
@@ -198,7 +208,7 @@ def moveStraight(center, currentCenterPos, direction, stepX=10, stepY=10,
                 # final step before reaching boundary
                 stepY = boundaryY[1] - currentCenterPos[1]
     elif direction == 'left':
-        stepX *= -1   # negative step
+        stepX *= -1   # negative step size
         stepY = 0   # no vertical movement
         rotate = 90   # new angle (measured in degrees)
         if boundaryX != False:
@@ -220,7 +230,7 @@ def moveStraight(center, currentCenterPos, direction, stepX=10, stepY=10,
                 stepX = boundaryX[1] - currentCenterPos[0]
     else:
         print('Invalid direction.')
-    # coordinates of new center of the object, relative to the screen
+    # new coordinates of object center
     newCenterPos = currentCenterPos[0]+stepX, currentCenterPos[1]+stepY
     return newCenterPos, rotate
 
@@ -255,6 +265,6 @@ def moveToPoint(endPoint, currentCenterPos, endAngle=0, speedBoost=1):
             stepX = Xdiff
             stepY = Ydiff
             rotate = endAngle
-    # coordinates of new center of the object, relative to the screen
+    # new coordinates of object center
     newCenterPos = currentCenterPos[0]+stepX, currentCenterPos[1]+stepY
     return newCenterPos, rotate
