@@ -16,33 +16,33 @@ def getParams(point1, point2):
     dist = math.sqrt(Xdiff**2 + Ydiff**2)
     if dist == 0:
         # the two points are the same --> can't compute angle
-        currentAngle, quarter = False, False
+        angle, quarter = False, False
     else:
         # two different points --> can compute angle
         # angle measured in radians
         if point2[1] >= point1[1]:
             # bottom-right quarter of xy-plane
-            currentAngle = math.asin(abs(Xdiff)/dist)
+            angle = math.asin(abs(Xdiff)/dist)
         else:
             # top-right quarter of xy-plane
-            currentAngle = math.pi/2 + math.asin(abs(Ydiff)/dist)
+            angle = math.pi/2 + math.asin(abs(Ydiff)/dist)
         if point2[0] < point1[0]:
             # left of the y-axis
-            currentAngle *= -1
+            angle *= -1
         # angle measured in degrees
-        currentAngle *= 180/math.pi
+        angle *= 180/math.pi
         # quarter in which second point belongs
-        if currentAngle >= 0:
-            if currentAngle <= 90:
+        if angle >= 0:
+            if angle <= 90:
                 quarter = 1
-            elif currentAngle <= 180:
+            elif angle <= 180:
                 quarter = 2
         else:
-            if currentAngle >= -90:
+            if angle >= -90:
                 quarter = 4
-            elif currentAngle >= -180:
+            elif angle >= -180:
                 quarter = 3
-    return Xdiff, Ydiff, dist, currentAngle, quarter
+    return Xdiff, Ydiff, dist, angle, quarter
 
 def getLine(point0, point1, slope=False, point2X=False, point2Y=False):
     '''This function returns information about a line connecting two
