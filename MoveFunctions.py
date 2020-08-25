@@ -98,9 +98,13 @@ def moveCircle(rotCenter, currentCenterPos, direction,
     r, currentAngle, quarter = line.getParams(rotCenter, currentCenterPos)[2:]
     # check direction
     if direction == 'counterclockwise' or direction == 'right':
-        if maxRotation != False and currentAngle >= maxRotation:
-            # object has reached maximum rotation --> stop moving
-            step = 0
+        if maxRotation != False:
+            if currentAngle >= maxRotation:
+                # object has reached maximum rotation --> stop moving
+                step = 0
+            elif step >= maxRotation - currentAngle:
+                # final step before reaching maximum rotation
+                step = maxRotation - currentAngle
         if boundaryX != False:
             if quarter == 1 and currentCenterPos[0] >= boundaryX[1]:
                 # object has reached boundary --> stop moving
@@ -117,9 +121,13 @@ def moveCircle(rotCenter, currentCenterPos, direction,
                 step = 0
     elif direction == 'clockwise' or direction == 'left':
         step *= -1
-        if maxRotation != False and currentAngle <= maxRotation:
-            # object has reached maximum rotation --> stop moving
-            step = 0
+        if maxRotation != False:
+            if currentAngle <= maxRotation:
+                # object has reached maximum rotation --> stop moving
+                step = 0
+            elif step <= maxRotation - currentAngle:
+                # final step before reaching maximum rotation
+                step = maxRotation - currentAngle
         if boundaryX != False:
             if quarter == 2 and currentCenterPos[0] >= boundaryX[1]:
                 # object has reached boundary --> stop moving
@@ -170,32 +178,46 @@ def moveStraight(center, currentCenterPos, direction, stepX=10, stepY=10,
     # check direction
     if direction == 'up':
         stepX = 0   # no lateral movement
+        stepY *= -1   # negative step
         rotate = 0   # new angle (measured in degrees)
-        if boundaryY != False and currentCenterPos[1] <= boundaryY[0]:
-            # object has reached boundary --> stop moving
-            stepY = 0
-        else:
-            stepY *= -1
+        if boundaryY != False:
+            if currentCenterPos[1] <= boundaryY[0]:
+                # object has reached boundary --> stop moving
+                stepY = 0
+            elif stepY <= boundaryY[0] - currentCenterPos[1]:
+                # final step before reaching boundary
+                stepY = boundaryY[0] - currentCenterPos[1]
     elif direction == 'down':
         stepX = 0   # no lateral movement
         rotate = 180   # new angle (measured in degrees)
-        if boundaryY != False and currentCenterPos[1] >= boundaryY[1]:
-            # object has reached boundary --> stop moving
-            stepY = 0
+        if boundaryY != False:
+            if currentCenterPos[1] >= boundaryY[1]:
+                # object has reached boundary --> stop moving
+                stepY = 0
+            elif stepY >= boundaryY[1] - currentCenterPos[1]:
+                # final step before reaching boundary
+                stepY = boundaryY[1] - currentCenterPos[1]
     elif direction == 'left':
+        stepX *= -1   # negative step
         stepY = 0   # no vertical movement
         rotate = 90   # new angle (measured in degrees)
-        if boundaryX != False and currentCenterPos[0] <= boundaryX[0]:
-            # object has reached boundary --> stop moving
-            stepX = 0
-        else:
-            stepX *= -1
+        if boundaryX != False:
+            if currentCenterPos[0] <= boundaryX[0]:
+                # object has reached boundary --> stop moving
+                stepX = 0
+            elif stepX <= boundaryX[0] - currentCenterPos[0]:
+                # final step before reaching boundary
+                stepX = boundaryX[0] - currentCenterPos[0]
     elif direction == 'right':
         stepY = 0   # no vertical movement
         rotate = -90   # new angle (measured in degrees)
-        if boundaryX != False and currentCenterPos[0] >= boundaryX[1]:
-            # object has reached boundary --> stop moving
-            stepX = 0
+        if boundaryX != False:
+            if currentCenterPos[0] >= boundaryX[1]:
+                # object has reached boundary --> stop moving
+                stepX = 0
+            elif stepX >= boundaryX[1] - currentCenterPos[0]:
+                # final step before reaching boundary
+                stepX = boundaryX[1] - currentCenterPos[0]
     else:
         print('Invalid direction.')
     # coordinates of new center of the object, relative to the screen
