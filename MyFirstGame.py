@@ -139,10 +139,18 @@ def movePlayer(moveType, direction=False, step=10):
             objCenter=bodyCenter)
         if rotate != bodyAngle:
             # body still moving, so feet still move too
+            # set step size; make sure it's between 0 and 180 degrees
+            if rotate - bodyAngle > 180:
+                step = abs(rotate - bodyAngle - 360)
+            elif rotate - bodyAngle < -180:
+                step = abs(rotate - bodyAngle + 360)
+            else:
+                step = abs(rotate - bodyAngle)
+            # move feet
             lFootCenterPos = move.moveCircle(ballCenterPos, lFootCenterPos,
-                                             direction, step)[0]
+                                             direction, step=step)[0]
             rFootCenterPos = move.moveCircle(ballCenterPos, rFootCenterPos,
-                                             direction, step)[0]
+                                             direction, step=step)[0]
         feetToFront(ballCenterPos)   # move feet to front of body
     elif moveType == 'straight':
         # move body
