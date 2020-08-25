@@ -48,8 +48,11 @@ class Game:
 
     def processMoveKeys(self, pressedKeys):
         '''This function processes pressed keys that will initiate
-        player movements.'''    
-        pressed, direction, moveType = [False] * 3
+        player movements.'''
+        # keys used for player movements
+        self.moveKeys = ('left', 'left-rshift', 'right', 'right-rshift',
+                         'up', 'down','space')
+        pressed, direction, moveType = [None] * 3
         if pressedKeys[pygame.K_LEFT] == 1:
             # left arrow key has been pressed
             direction = 'left'   # movement direction
@@ -85,10 +88,10 @@ class Game:
         if pressedKeys[pygame.K_SPACE] == 1:
             # spacebar has been pressed
             pressed = 'space'
-            direction = False
+            direction = None
             moveType = 'to ball'
         return pressed, direction, moveType
-
+        
 class Background(Game):
     '''This class is a child of the Game class. This class has two methods:
     __init__ and blit.
@@ -108,7 +111,7 @@ class Background(Game):
         
 class Goal(Game):
     '''This class is a child of the Game class. This class has the following
-    method: __init__, crop, load, setPos, blit, getPos, getCenter, and
+    methods: __init__, crop, load, setPos, blit, getPos, getCenter, and
     getCenterPos.
     To get a brief description of each method, use the following syntax:
         <module name as imported>.Goal.<method name>.__doc__'''
@@ -194,7 +197,7 @@ class Goal(Game):
 
 class Player(Game):
     '''This class is a child of the Game class. This class has the following
-    method: __init__, load, setStartPos, blit, getPos, getCenter, setCenterPos,
+    methods: __init__, load, setStartPos, blit, getPos, getCenter, setCenterPos,
     getCenterPos, getMidpoint, getRotation, setMovingRotation, getMovingRotation,
     getBodyAngle, getFootAngle, feetToFront, setStep, getDistanceMoved, 
     getSinCos, getEnding, moveAroundBall, moveStraight, moveToBall, move, 
@@ -250,7 +253,8 @@ class Player(Game):
         # coordinates of the body center at the start of the program
         self.bodyCenterPos = (bodyPosX+self.bodyCenterStart[0],
                               bodyPosY+self.bodyCenterStart[1])
-        self.feetOut = 1
+        # how many pixels of the feet stick out from the front of the body
+        self.feetOut = 1   
         # position of the feet
         self.lFootPos = (self.bodyCenterPos[0]-self.footWidth-1,
                          bodyPosY-self.feetOut)
@@ -413,26 +417,36 @@ class Player(Game):
         ballCenterPos is the coordinates of the ball center.
         direction denotes which way the body/foot will move.'''
         self.setStep(10, 10)   # set step size
+        # current angle (measured in degrees) of the body with respect to the 
+        # y-axis pointing down from the ball
+        bodyAngle = self.getBodyAngle(ballCenterPos)
         # rotate body
         newCenterPos, rotate = move.moveCircle(
-            ballCenterPos, self.getCenterPos()[2], direction, self.stepX,
+            ballCenterPos, self.getCenterPos()[2], direction, step=self.stepX,
             boundaryX=[0,self.screenWidth], boundaryY=[0,self.screenHeight],
             objCenter=self.getCenter()[1])
-        if newCenterPos != self.getCenterPos()[2]:
+        # distance moved
+        moveX, moveY = self.getDistanceMoved(newCenterPos)
+        if round(moveX, 5) != 0 or round(moveY, 5) != 0:
             self.moved = True
             # new coordinates of the body center
             self.setCenterPos('body', newCenterPos[0], newCenterPos[1])
             # rotation (angled measured in degrees)
-            self.setMovingRotation(rotate)   
+            self.setMovingRotation(rotate)
+            # step size for rotation of the feet (between 0 and 180 degrees)
+            if rotate - bodyAngle > 180:
+                step = abs(rotate - bodyAngle - 360)
+            elif rotate - bodyAngle < -180:
+                step = abs(rotate - bodyAngle + 360)
+            else:
+                step = abs(rotate - bodyAngle)
             # rotate feet
             newCenterPos = move.moveCircle(
-                ballCenterPos, self.getCenterPos()[0],
-                direction, self.stepX)[0]
+                ballCenterPos, self.getCenterPos()[0], direction, step=step)[0]
             # new coordinates of the center of the left foot
             self.setCenterPos('lFoot', newCenterPos[0], newCenterPos[1])
             newCenterPos = move.moveCircle(
-                ballCenterPos, self.getCenterPos()[1],
-                direction, self.stepX)[0]
+                ballCenterPos, self.getCenterPos()[1], direction, step=step)[0]
             # new coordinates of the center of the right foot
             self.setCenterPos('rFoot', newCenterPos[0], newCenterPos[1])
             self.feetToFront(ballCenterPos)   # move feet to front of body
@@ -474,7 +488,7 @@ class Player(Game):
             self.getBodyAngle(ballCenterPos))
         # move body
         newCenterPos, rotate = move.moveToPoint(
-            endPoint, self.getCenterPos()[2], endAngle=endAngle, speedBoost=2)
+            endPoint, self.getCenterPos()[2], endAngle=endAngle, speedBoost=3)
         if newCenterPos != self.getCenterPos()[0]:
             self.moved = True
             # distance moved
@@ -489,7 +503,7 @@ class Player(Game):
                               self.getCenterPos()[1][1]+moveY)
             self.feetToFront(endPoint)   # move feet to front of body
 
-    def move(self, moveType, direction=None, ballCenter=None, ballCenterPos=None):
+    def move(self, moveType, direction, ballCenter, ballCenterPos):
         '''This function moves the player according to the specified type
         of movement.
         ballCenter is the ball center and ballCenterPos is its coordinates.'''
@@ -592,7 +606,6 @@ class Player(Game):
         self.updateFoot(foot, newCenterPos, rotate, allThings, allPos)
         self.updateDisplay()
         pygame.time.wait(100)   # pause program for 100 ms
-        ######################################################################
         # bring foot back to the position and rotation before the kick
         if foot == 'lFoot':
             newCenterPos = self.kFootCenterPos, self.getCenterPos()[1]
@@ -603,11 +616,11 @@ class Player(Game):
         
 class Ball(Game):
     '''This class is a child of the Game class. This class has the following
-    method: __init__, blit, getPos, setCenterPos, getCenterPos, setMovingAngle,
-    getSinCos, setFirstStep, setStep, setVelocity, getVelocity, getMovingAngle,
+    methods: __init__, blit, getPos, setCenterPos, getCenterPos, setMovingAngle,
+    getMovingAngle, getSinCos, setFirstStep, setVelocity, getVelocity,
     getExtremes, setFinalStep1, setFinalStep2, hitGoalPosts, bounceBack1,
-    bounceBack2, meetPlayer, checkGoal, decrementStep, moveBall, resetBall, and
-    updateBall.
+    bounceBack2, meetPlayer, checkGoal, setStep, decrementStep, moveBall, 
+    resetBall, and updateBall.
     To get a brief description of each method, use the following syntax:
         <module name as imported>.Ball.<method name>.__doc__'''
     def __init__(self, screenSize):
@@ -623,8 +636,7 @@ class Ball(Game):
         Y = random.uniform(self.screenHeight/2, self.screenHeight-self.diameter)
         self.pos = X, Y   # where the ball will be drawn
         self.screen.blit(self.ball, self.pos)
-        # center of the ball
-        self.center = self.ball.get_rect().center
+        self.center = self.ball.get_rect().center   # center of the ball
         # coordinates of the center at the start of the program
         self.centerPos = X+self.center[0], Y+self.center[1]
         
@@ -647,6 +659,12 @@ class Ball(Game):
         current ball center.'''
         self.movingAngle = angle
 
+    def getMovingAngle(self):
+        '''This function returns the angle (measured in degrees) at which the
+        ball is currently moving, with respect to the negative y-axis pointing 
+        up from the current ball center.'''
+        return self.movingAngle
+
     def getSinCos(self):
         '''This function returns the sine and cosine of the moving angle.'''
         sine = math.sin(self.movingAngle * math.pi/180)
@@ -658,11 +676,6 @@ class Ball(Game):
         self.stepX = stepSize * self.getSinCos()[0]
         self.stepY = stepSize * self.getSinCos()[1]
 
-    def setStep(self, stepX, stepY):
-        '''This function sets the step size for the ball's movements.'''
-        self.stepX = stepX
-        self.stepY = stepY
-
     def setVelocity(self, stepSize):
         '''This function sets the velocity of the ball.'''
         self.velocity = self.stepX, self.stepY
@@ -670,12 +683,6 @@ class Ball(Game):
     def getVelocity(self):
         '''This function returns the current velocity of the ball.'''
         return self.velocity
-
-    def getMovingAngle(self):
-        '''This function returns the angle (measured in degrees) at which the
-        ball is currently moving, with respect to the negative y-axis pointing 
-        up from the current ball center.'''
-        return self.movingAngle
 
     def getExtremes(self):
         '''This function returns the coordinates of the leftmost, rightmost, top, 
@@ -848,13 +855,18 @@ class Ball(Game):
         else:
             return False
                 
+    def setStep(self, stepX, stepY):
+        '''This function sets the step size for the ball's movements.'''
+        self.stepX = stepX
+        self.stepY = stepY
+
     def decrementStep(self):
         '''This function decrements the step size to make the ball move slower.'''
         factor = random.uniform(1.03, 1.05)
         self.setStep(self.stepX/factor, self.stepY/factor)
 
     def moveBall(self, bodyAngle, stepSize, goalPosts, playerRot, feetMidpoint,
-                 minDist, allThings, allPos):
+                 minDist, allThings, allPos, pressedKeys):
         '''This function handles ball movements when the ball is kicked.
         bodyAngle is the angle (measured in degrees) of the body with respect to
         the y-axis pointing down from the ball.
@@ -865,7 +877,9 @@ class Ball(Game):
         at their centers.
         minDist is the nearest distance to the player that the ball can get.
         allThings is a list of everything on the screen.
-        allPos is a list of the positions of everything on the screen.'''
+        allPos is a list of the positions of everything on the screen.
+        pressedKeys is pygame.key.get_pressed(), which tells us which key has
+        been pressed.'''
         # angle (measured in degrees) at which the ball will move, with respect
         # to the y-axis pointing up from the current ball center
         self.setMovingAngle(random.uniform(bodyAngle-1, bodyAngle+1))
