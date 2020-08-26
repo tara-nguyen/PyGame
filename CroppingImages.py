@@ -24,7 +24,7 @@ def cropImage(image, cropMethod, newWidth, newHeight, position=(0,0),
     the final image will be pasted.
     position refers to the position of the cropped image with regard to
     the new surface on which the image will be pasted.
-    The arguments shiftLeft and shiftUp refer to how much the right and
+    The parameters shiftLeft and shiftUp refer to how much the right and
     the bottom sides of the image will be cropped out.
     The default is to crop out the left and/or top sides of the image.'''
     # current image size and new surface size

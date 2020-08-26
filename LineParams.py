@@ -54,10 +54,10 @@ def getLine(point0, point1, slope=False, point2X=False, point2Y=False):
     of the given points, lies on opposite sides of the vertical line passing
     through the other given point, and
     (5) the coordinates of another point on the line, whose one of the
-    coordinates is already given in the arguments (either point2X or point2Y).'''
+    coordinates is already given in the parameters (either point2X or point2Y).'''
     # difference in coordinates of the two given points
     Xdiff, Ydiff = getParams(point0, point1)[:2]
-    # slope of line, if not given in the arguments
+    # slope of line, if not given in the parameters
     if slope == False:
         slope = Ydiff / Xdiff
     # x- and y-intercepts
