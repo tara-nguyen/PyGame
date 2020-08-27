@@ -551,7 +551,9 @@ class Player(Game):
         return lFootToBall, rFootToBall
         
     def chooseKickingFoot(self, ballCenterPos):
-        '''This function chooses the foot that will kick the ball.
+        '''This function chooses the foot that will kick the ball, gets the
+        angle (measured in degrees) of the foot with respect to the y-axis
+        pointing down from the ball, and returns a string indicating which foot.
         ballCenterPos is the coordinates of the ball center.'''
         # distance between the ball and each of the player's feet
         lFootToBall, rFootToBall = self.getDistanceToBall(ballCenterPos)
@@ -561,17 +563,21 @@ class Player(Game):
         if lFootToBall < rFootToBall:
             self.kFootCenterPos = self.getCenterPos()[0]
             self.kFootAngle = self.getFootAngle(ballCenterPos)[0]
+            return 'lFoot'   # left foot is the kicking foot
         elif lFootToBall > rFootToBall:
             self.kFootCenterPos = self.getCenterPos()[1]
             self.kFootAngle = self.getFootAngle(ballCenterPos)[1]
+            return 'rFoot'   # right foot is the kicking foot
         else:
             # ball is equidistant from both feet --> make a random pick
             feet = [self.getCenterPos()[0], self.getCenterPos()[1]]
             self.kFootCenterPos = random.choice(feet)
             if self.kFootCenterPos == feet[0]:
                 self.kFootAngle = self.getFootAngle(ballCenterPos)[0]
+                return 'lFoot'   # left foot is the kicking foot
             else:
                 self.kFootAngle = self.getFootAngle(ballCenterPos)[1]
+                return 'rFoot'   # right foot is the kicking foot
         
     def kickBall(self, ballCenterPos, ballCenter, allThings, allPos):
         '''This function moves a foot to make the player kick the ball.
@@ -580,12 +586,22 @@ class Player(Game):
         allPos is a list of the positions of everything on the screen.'''
         # direction the player is currently facing (angle measured in degrees)
         currentRot = self.getRotation()
+        # distance between the ball and each of the player's feet
+        lFootToBall, rFootToBall = self.getDistanceToBall(ballCenterPos)
         # choose the foot that will kick the ball
-        self.chooseKickingFoot(ballCenterPos)
+        kickingFoot = self.chooseKickingFoot(ballCenterPos)
         # point to which the kicking foot will move
         endPoint = self.getEnding(
-            ballCenterPos, self.footCenterStart[1]+ballCenter[1]-3,
+            ballCenterPos, self.footCenterStart[1]+ballCenter[1],
             self.kFootAngle)[0]
+        # If the foot is already very close to the ball then the foot won't
+        # need to move, so the foot's center is the endpoint.
+        if kickingFoot == 'lFoot':   # left foot is the kicking foot
+            if lFootToBall <= self.footCenterStart[1] + ballCenter[1]:
+                endPoint = self.kFootCenterPos
+        else:   # right foot is the kicking foot
+            if rFootToBall <= self.footCenterStart[1] + ballCenter[1]:
+                endPoint = self.kFootCenterPos
         # move foot
         newCenterPos, rotate = move.moveToPoint(endPoint, self.kFootCenterPos,
                                                 endAngle=currentRot)
@@ -594,24 +610,23 @@ class Player(Game):
             self.touchedBall = True
         else:
             self.touchedBall = False
-        if self.kFootCenterPos == self.getCenterPos()[0]:
-            foot = 'lFoot'   # left foot is the kicking foot
+        if kickingFoot == 'lFoot':   # left foot is the kicking foot
             newCenterPos = newCenterPos, self.getCenterPos()[1]
             rotate = rotate, currentRot
-        else:
-            foot = 'rFoot'   # right foot is the kicking foot
+        else:   # right foot is the kicking foot
             newCenterPos = self.getCenterPos()[0], newCenterPos
             rotate = currentRot, rotate
         # update display to show movement
-        self.updateFoot(foot, newCenterPos, rotate, allThings, allPos)
+        self.updateFoot(kickingFoot, newCenterPos, rotate, allThings, allPos)
         self.updateDisplay()
         pygame.time.wait(100)   # pause program for 100 ms
         # bring foot back to the position and rotation before the kick
-        if foot == 'lFoot':
+        if kickingFoot == 'lFoot':   # left foot is the kicking foot
             newCenterPos = self.kFootCenterPos, self.getCenterPos()[1]
-        else:
+        else:   # right foot is the kicking foot
             newCenterPos = self.getCenterPos()[0], self.kFootCenterPos
-        self.updateFoot(foot, newCenterPos, (currentRot,)*2, allThings, allPos)
+        self.updateFoot(kickingFoot, newCenterPos, (currentRot,)*2,
+                        allThings, allPos)
         self.updateDisplay()
         
 class Ball(Game):
@@ -840,6 +855,7 @@ class Ball(Game):
                 # ball reaches the front of the player's body --> stop moving
                 self.stepX = 0
                 self.stepY = 0
+                pygame.time.wait(100)   # pause program for 100 ms
             else:
                 # ball reaches the front of the player's body --> bounce back
                 self.bounceBack1(random.choice['x','y'])
@@ -902,7 +918,7 @@ class Ball(Game):
             # checks if the player has scored
             if self.checkGoal(goalPosts):
                 scored = True
-            if self.stepX == 0 and self.stepY == 0:
+            if self.stepX == 0 and self.stepY == 0:   # ball stops moving
                 break
             self.decrementStep()   # decrement step size
             stepSize = math.sqrt(self.stepX**2+self.stepY**2)   # new step size
