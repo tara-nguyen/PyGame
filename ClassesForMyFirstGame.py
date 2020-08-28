@@ -632,9 +632,9 @@ class Player(Game):
 class Ball(Game):
     '''This class is a child of the Game class. This class has the following
     methods: __init__, blit, getPos, setCenterPos, getCenterPos, setMovingAngle,
-    getMovingAngle, getSinCos, setFirstStep, setVelocity, getVelocity,
-    getExtremes, setFinalStep1, setFinalStep2, hitGoalPosts, bounceBack1,
-    bounceBack2, meetPlayer, checkGoal, setStep, decrementStep, moveBall, 
+    getMovingAngle, getSinCos, setFirstStep, setStep, getStep, setVelocity, 
+    getVelocity, decrementStep, getExtremes, setFinalStep1, setFinalStep2, 
+    hitGoalPosts, bounceBack, checkBouncing, hitPlayer, checkGoal, moveBall, 
     resetBall, and updateBall.
     To get a brief description of each method, use the following syntax:
         <module name as imported>.Ball.<method name>.__doc__'''
@@ -691,13 +691,27 @@ class Ball(Game):
         self.stepX = stepSize * self.getSinCos()[0]
         self.stepY = stepSize * self.getSinCos()[1]
 
-    def setVelocity(self, stepSize):
+    def setStep(self, stepX, stepY):
+        '''This function sets the step size for the ball's movements.'''
+        self.stepX = stepX
+        self.stepY = stepY
+
+    def getStep(self):
+        '''This function returns the step size for the ball's movements.'''
+        return self.stepX, self.stepY
+
+    def setVelocity(self):
         '''This function sets the velocity of the ball.'''
-        self.velocity = self.stepX, self.stepY
+        self.velocity = self.getStep()
     
     def getVelocity(self):
         '''This function returns the current velocity of the ball.'''
         return self.velocity
+
+    def decrementStep(self):
+        '''This function decrements the step size to make the ball move slower.'''
+        factor = random.uniform(1.03, 1.05)   # a random real number
+        self.setStep(self.stepX/factor, self.stepY/factor)
 
     def getExtremes(self):
         '''This function returns the coordinates of the leftmost, rightmost, top, 
@@ -715,24 +729,23 @@ class Ball(Game):
         y-direction).
         distance is the distance from the ball to the boundary/goal post.'''
         if direction == 'x':
-            # ball reached either the left or the right side of the screen, or
-            # reached one of the goal posts
             self.stepX = distance
             self.stepY = self.stepX / (self.getSinCos()[0]/self.getSinCos()[1])
         else:
-            # ball reached either the top or the bottom of the screen
             self.stepY = distance
             self.stepX = self.stepY * (self.getSinCos()[0]/self.getSinCos()[1])
 
     def setFinalStep2(self, goalPosts):
-        '''This function handles ball movements right before the ball reaches
-        either the screen boundaries or the goal posts.
+        '''This function checks if the ball is about to reach either the screen
+        boundaries or the goal posts, and sets the step size accordingly.
         goalPosts denotes the x-coordinates and size of the goal posts.'''
+##        print('entered setFinalStep2')
         # the leftmost, rightmost, top, and bottom points on the ball
         left, right, top, bottom = self.getExtremes()
         # set the size of the final step before the ball reaches the
         # screen boundaries
         if self.stepX > left:
+##            print('approaching left screen boundary')
             self.setFinalStep1('x', left)
         if self.stepX < right - self.screenWidth:
             self.setFinalStep1('x', right - self.screenWidth)
@@ -752,9 +765,8 @@ class Ball(Game):
             if right < goalPosts[1]-goalPosts[2] and \
                self.stepX < right-(goalPosts[1]-goalPosts[2]):
                 self.setFinalStep1('x', right-(goalPosts[1]-goalPosts[2]))
-        # new coordinates of the ball center
-        self.setCenterPos(self.getCenterPos()[0]-self.stepX,
-                          self.getCenterPos()[1]-self.stepY)
+##        print('step size',self.stepX,self.stepY)
+##        print('ball center pos',self.getCenterPos())
     
     def hitGoalPosts(self, goalPosts):
         '''This function checks if the ball has hit the goal posts.
@@ -786,14 +798,16 @@ class Ball(Game):
             hitIn = True
         return hitOut, hitIn
     
-    def bounceBack1(self, switch):
+    def bounceBack(self, switch):
         '''This function modifies the velocity and angle to make the ball bounce
         back from a boundary (e.g., one of the screen boundaries or one of the
         goal posts).
         switch denotes whether the direction in which the ball is moving will be
         flipped laterally or vertically.'''
-        factor = random.uniform(1.03, 1.05)
+##        print('entered bounceBack')
+        factor = random.uniform(1.03, 1.05)   # a random real number
         if switch == 'x':
+##            print('ball bouncing back in the x-direction')
             # ball bouncing back in the x-direction
             self.setStep(self.getVelocity()[0]/-factor,
                          self.getVelocity()[1]/factor)
@@ -806,39 +820,50 @@ class Ball(Game):
                 self.setMovingAngle(-180 - self.getMovingAngle())
             else:
                 self.setMovingAngle(180 - self.getMovingAngle())
-        # new coordinates for the ball center
-        self.setCenterPos(self.getCenterPos()[0]-self.stepX,
-                          self.getCenterPos()[1]-self.stepY)
 
-    def bounceBack2(self, goalPosts):
-        '''This function handles ball movements when the ball reaches either the
-        screen boundaries or the goal posts.
+    def checkBouncing(self, goalPosts):
+        '''This function checks if the ball has reached either the screen
+        boundaries or the goal posts, in which case the ball will bounce back
+        and the function will return True. Otherwise the function will return
+        False.
         goalPosts denotes the x-coordinates and size of the goal posts.'''
+##        print('entered checkBouncing')
         # leftmost, rightmost, top, and bottom points on the ball
         left, right, top, bottom = self.getExtremes()
+        stepX, stepY = self.getStep()   # current step size
         # After reaching the screen boundaries, the ball will bounce back
         # and continue moving at a reduced speed.
         if left == 0 or right == self.screenWidth or \
            top == 0 or bottom == self.screenHeight:
             if left == 0 or right == self.screenWidth:
-                self.bounceBack1('x')
+##                print('reached screen boundary')
+                self.bounceBack('x')
             else:
-                self.bounceBack1('y')
+                self.bounceBack('y')
         # Ball will also bounce back if it hits the goal posts.
         if self.hitGoalPosts(goalPosts)[0]:
             if self.getCenterPos()[1] > goalPosts[-1] and \
                abs(self.getMovingAngle()) < 90:
                 # ball bouncing back in the y direction
-                self.bounceBack1('y')
+                self.bounceBack('y')
             else:
                 # ball bouncing back in the x direction
-                self.bounceBack1('x')
+                self.bounceBack('x')
         if self.hitGoalPosts(goalPosts)[1]:
             # ball bouncing back in the x direction
-            self.bounceBack1('x')
-
-    def meetPlayer(self, playerRot, feetMidpoint, minDist):
+            self.bounceBack('x')
+##        print('step size',self.stepX,self.stepY)
+##        print('ball center pos',self.getCenterPos())
+        # return True if the step size has been modified
+        if self.stepX != stepX or self.stepY != stepY:
+            return True
+        else:
+            return False
+    
+    def hitPlayer(self, playerRot, feetMidpoint, minDist):
         '''This function handles ball movements when it runs into the player.
+        The ball will stop moving if it hits the player from the front, but will
+        bounce back if it hits the player from the back.
         playerRot is the current rotation of the player (angle measured 
         in degrees).
         feetMidpoint is the midpoint of the line connecting the player's feet
@@ -855,11 +880,10 @@ class Ball(Game):
                 # ball reaches the front of the player's body --> stop moving
                 self.stepX = 0
                 self.stepY = 0
-                pygame.time.wait(100)   # pause program for 100 ms
             else:
-                # ball reaches the front of the player's body --> bounce back
-                self.bounceBack1(random.choice['x','y'])
-
+                # ball reaches the back of the player's body --> bounce back
+                self.bounceBack(random.choice(['x','y']))
+                
     def checkGoal(self, goalPosts):
         '''This function checks if the player has scored.
         goalPosts denotes the x-coordinates and size of the goal posts.''' 
@@ -871,16 +895,6 @@ class Ball(Game):
         else:
             return False
                 
-    def setStep(self, stepX, stepY):
-        '''This function sets the step size for the ball's movements.'''
-        self.stepX = stepX
-        self.stepY = stepY
-
-    def decrementStep(self):
-        '''This function decrements the step size to make the ball move slower.'''
-        factor = random.uniform(1.03, 1.05)
-        self.setStep(self.stepX/factor, self.stepY/factor)
-
     def moveBall(self, bodyAngle, stepSize, goalPosts, playerRot, feetMidpoint,
                  minDist, allThings, allPos, pressedKeys):
         '''This function handles ball movements when the ball is kicked.
@@ -902,25 +916,42 @@ class Ball(Game):
         self.setFirstStep(stepSize)   # initial step size
         scored = False
         while round(stepSize) > 0:
-            self.setVelocity(stepSize)
-            # final step before the ball reaches either the screen boundaries 
-            # or the goal posts
-            self.setFinalStep2(goalPosts)
-            # update display to show movement
-            self.updateBall(allThings, allPos)
-            self.updateDisplay()
-            # Ball will bounce back if it reaches either the screen boundaries 
-            # or the goal posts.
-            self.bounceBack2(goalPosts)
-            # Ball will stop moving if it comes back to the front of the player,
-            # but will bounce back if it hits the back of the player.
-            self.meetPlayer(playerRot, feetMidpoint, minDist)
-            # checks if the player has scored
-            if self.checkGoal(goalPosts):
+            self.setVelocity()
+##            print('velocity',self.getVelocity())
+##            print('ball center pos',self.getCenterPos())
+            if self.checkGoal(goalPosts):   # player has scored
                 scored = True
-            if self.stepX == 0 and self.stepY == 0:   # ball stops moving
-                break
+            # set the size of the final step before the ball reaches either the
+            # screen boundaries or the goal posts
+            self.setFinalStep2(goalPosts)
+            # new coordinates of the ball center
+            self.setCenterPos(self.getCenterPos()[0]-self.stepX,
+                              self.getCenterPos()[1]-self.stepY)
+            #update ball position and display to show movement
+            self.updateBall(allThings, allPos)
+            stepX, stepY = self.getStep()   # current step size
+##            print('current step size',self.getStep())
+            if self.checkBouncing(goalPosts):
+                # ball bouncing back after hitting either the screen boundaries
+                # or the goal posts
+                # new coordinates of the ball center
+                self.setCenterPos(self.getCenterPos()[0]-self.stepX,
+                                  self.getCenterPos()[1]-self.stepY)
+                # update ball position and display to show movement
+                self.updateBall(allThings, allPos)
+            # movement when ball hits player
+            self.hitPlayer(playerRot, feetMidpoint, minDist)
+            if self.stepX == 0 and self.stepY == 0:   # ball has stopped moving
+                break   # get out of while loop
+            elif self.stepX != stepX or self.stepY != stepY:
+                # new coordinates of the ball center
+                self.setCenterPos(self.getCenterPos()[0]-self.stepX,
+                                  self.getCenterPos()[1]-self.stepY)
+                # update ball position and display to show movement
+                self.updateBall(allThings, allPos)
+##            print('decrementing step size')
             self.decrementStep()   # decrement step size
+##            print()
             stepSize = math.sqrt(self.stepX**2+self.stepY**2)   # new step size
         # If the player scores, the ball will be placed at a random position
         # after it has stopped moving.
@@ -939,8 +970,10 @@ class Ball(Game):
         self.updateBall(allThings, allPos)   # update ball position
 
     def updateBall(self, allThings, allPos):
-        '''This function updates the position of the ball.
+        '''This function updates the position of the ball and updates the
+        display to show movements.
         allThings is a list of everything on the screen.
         allPos is a list of the positions of everything on the screen.'''
         move.update(self.screen, allThings, allPos, (self.ball,self.ball),
                     (self.getCenterPos(),))
+        self.updateDisplay()

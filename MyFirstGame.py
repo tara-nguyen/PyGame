@@ -507,7 +507,7 @@ ballWidth = ballCenter[0] * 2   # width (or diameter) of the ball
 # ball position
 ballPosX = random.uniform(0, screenWidth-ballWidth)
 ballPosY = random.uniform(screenHeight/2, screenHeight-ballWidth)
-ballPosX = screenCenter[0]-ballCenter[0]
+ballPosX = 10
 ballPosY = screenCenter[1]-ballCenter[1]
 ballPos = ballPosX, ballPosY
 # coordinates of center of the image, relative to the screen
