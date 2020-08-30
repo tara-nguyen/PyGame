@@ -1,6 +1,6 @@
 '''The following classes are defined: Game, Background, Goal, and Ball.
-For neatness, the Player class, which is a child of the Game class, is defined
-in a different module named PlayerClasses.'''
+For neatness, the Player class, which is a child class of Game, is defined in a
+different module named PlayerClasses.'''
 
 import pygame, random, math
 import CroppingImages as crop
@@ -95,7 +95,7 @@ class Game:
         return pressed, direction, moveType
         
 class Background(Game):
-    '''This class is a child of the Game class and has three methods: __init__, 
+    '''This class is a child class of Game and has three methods: __init__, 
     load, and blit.
     To get a brief description of each method, use the following syntax:
         <module name as imported>.Background.<method name>.__doc__'''

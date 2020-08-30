@@ -392,8 +392,8 @@ class Player(np.Game):
         self.footCenter = self.getCenter()[0]   # new center point
         
 class Goalkeeper(Player):
-    '''This class is a child of the Player class. This class has the following
-    methods: __init__, ...
+    '''This class is a child class of Player and has the following methods:
+    __init__, ...
     To get a brief description of each method, use the following syntax:
         <module name as imported>.Goalkeeper.<method name>.__doc__'''
     def __init__(self, screenSize):
@@ -405,8 +405,8 @@ class Goalkeeper(Player):
         self.bodyStartPos = self.bodyStartPosX, self.bodyStartPosY
         
 class Outfielder(Player):
-    '''This class is a child of the Player class. This class has the following
-    methods: __init__, chooseKickingFoot, and kickBall.
+    '''This class is a child class of Player and has the following methods:
+    __init__, chooseKickingFoot, and kickBall.
     To get a brief description of each method, use the following syntax:
         <module name as imported>.Outfielder.<method name>.__doc__'''
     def __init__(self, screenSize):
