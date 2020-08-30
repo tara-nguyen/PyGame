@@ -33,15 +33,23 @@ striker.blitBody()
 # x-coordinates and size of the goal posts
 goalPosts = goal.getPosts()
 
-# list of everything on the screen
-allThings = [bg.grass, goal.left, goal.middle, goal.right, goalkeeper.lFoot,
-             goalkeeper.rFoot, striker.lFoot, striker.rFoot, ball.ball,
-             goalkeeper.body, striker.body]
-# list of the positions of everything on the screen
-allPos = [bg.pos] + goal.getPos() + goalkeeper.getStartPos()[:2] + \
-         striker.getStartPos()[:2] + [ball.getStartPos()] + \
-         [goalkeeper.getStartPos()[2]] + [striker.getStartPos()[2]]
-# indexes of the striker's left foot and of his body
+numPlayers = 2   # number of players
+
+allThings = []   # list of everything on the screen
+allPos = []   # list of those things' positions
+# add to the lists
+bg.addToLists(allThings, allPos, 'pos', numPlayers)
+goal.addToLists(allThings, allPos, 'getPos', numPlayers)
+ball.addToLists(allThings, allPos, 'getStartPos', numPlayers)
+goalkeeper.addToLists(allThings, allPos, 'getStartPos', numPlayers)
+allThings, allPos = striker.addToLists(allThings, allPos, 'getStartPos',
+                                       numPlayers)
+# turn the lists into class attributes
+ball.getLists(allThings, allPos)
+goalkeeper.getLists(allThings, allPos)
+striker.getLists(allThings, allPos)
+
+# indexes of the striker's left foot and of his body in the lists
 strikerLFootIndex = allThings.index(striker.lFoot)
 strikerBodyIndex = allThings.index(striker.body)
     
@@ -65,21 +73,21 @@ while playing:
         striker.move(moveType, direction, ball.center, ball.getCenterPos())
     if pressedKeys[pygame.K_s] == 1:
         # 's' key has been pressed --> striker will kick the ball
-        # choose the foot that will kick the ball
-        striker.kickBall(ball.getCenterPos(), ball.center,
-                         allThings, allPos, strikerLFootIndex)
+        striker.kickBall(ball.getCenterPos(), ball.center, strikerLFootIndex)
         if striker.touchedBall:
             # foot has touched the ball --> ball will move
+            # current rotations of the players
+            playerRots = goalkeeper.getRotation(), striker.getRotation()
+            # midpoint of the line connecting the player's feet at their centers
+            feetMidpoints = goalkeeper.getMidpoint(), striker.getMidpoint()
             # nearest distance to the player that the ball can get
             minDist = ball.center[1] + striker.bodyCenterStart[1] + \
                       striker.feetOut - 3
             # move ball
-            ball.moveBall(
-                striker.getBodyAngle(ball.getCenterPos()), random.uniform(18,22),
-                goalPosts, striker.getRotation(), striker.getMidpoint(), minDist,
-                allThings, allPos, pressedKeys)
-            
+            ball.moveBall(striker.getBodyAngle(ball.getCenterPos()),
+                          random.uniform(18,22), goalPosts, 2, playerRots,
+                          feetMidpoints, minDist, pressedKeys)
     if striker.moved:
-        striker.updatePlayer(allThings, allPos,
-                             strikerLFootIndex, strikerBodyIndex)
-    bg.updateDisplay()
+        # update player position
+        striker.updatePlayer(strikerLFootIndex, strikerBodyIndex)
+    bg.updateDisplay()   # update display to show change

@@ -10,7 +10,7 @@ import MoveFunctions as move
 class Game:
     '''This class is the parent class Background, Goal, Player, and Ball.
     This class has the following methods: __init__, updateDisplay, getFile,
-    loadImage, and processMoveKeys.
+    loadImage, addToLists, getLists and processMoveKeys.
     To get a brief description of each method, use the following syntax:
         <module name as imported>.Game.<method name>.__doc__'''
     def __init__(self, screenSize):
@@ -47,6 +47,44 @@ class Game:
             # resize image
             image = pygame.transform.scale(image, (newWidth, newHeight))
         return image
+
+    def addToLists(self, allThings, allPos, methodName, numPlayers):
+        '''This function adds items to a list of everything on the screen
+        (allThings), and to a list of those things' positions (allPos). NOTE!!! 
+        For this function to work properly, the items must be added in the 
+        following order: things in the Background class first, followed by those 
+        in the Goal and the Ball classes, and finally things in the Player class.
+        methodName is the name of the method used to get the drawing positions.
+        numPlayers is the number of players in the game.'''
+        # add items to the list of everything on the screen
+        allThings += self.things
+        # add items to the list of those things' positions
+        if methodName == 'pos':   # Background class
+            allPos += [self.pos]
+        elif methodName == 'getPos':   # Goal class
+            allPos += self.getPos()
+        else:   # Ball class and Player class
+            allPos += self.getStartPos()
+        # rearrange lists so that the items representing the players' bodies are
+        # at the end of each list
+        if len(allThings) == 5 + numPlayers*3:   # end of list
+            allThingsTemp, allPosTemp = allThings[:4], allPos[:4]
+            for num in range(numPlayers):
+                allThingsTemp += allThings[(5+num*3):(5+num*3+2)]
+                allPosTemp += allPos[(5+num*3):(5+num*3+2)]
+            allThingsTemp += [allThings[4]] 
+            allPosTemp += [allPos[4]]
+            for num in range(numPlayers):
+                allThingsTemp += [allThings[5+num*3+2]]
+                allPosTemp += [allPos[5+num*3+2]]
+            allThings, allPos = allThingsTemp, allPosTemp
+            return allThings, allPos
+
+    def getLists(self, allThings, allPos):
+        '''This function turns the list of everything on the screen (allThings)
+        and the list of those things' positions (allPos) into class attributes.'''
+        self.allThings = allThings
+        self.allPos = allPos
 
     def processMoveKeys(self, pressedKeys):
         '''This function processes pressed keys that will initiate
@@ -103,17 +141,18 @@ class Background(Game):
         '''This function initializes the class and sets its core attributes.'''
         Game.__init__(self, screenSize)   # initialize the parent class
         self.grass = None   # contains nothing
-
+        
     def load(self, imageName):
         '''This function loads the background image into PyGame.'''
         self.grass = Game.loadImage(self, imageName,
                                     self.screenWidth, self.screenHeight)
-
+        
     def blit(self):
         '''This function draws the background image onto the screen.'''
         self.pos = 0, 0   # where the image will be drawn
         self.screen.blit(self.grass, self.pos)
-        
+        self.things = [self.grass]
+
 class Goal(Game):
     '''This class is a child class of Game and has the following methods:
     __init__, crop, load, setPos, blit, getPos, getCenter, and getCenterPos.
@@ -150,7 +189,7 @@ class Goal(Game):
                                 shiftLeft=(scale[0]-self.middleWidth)/2)
         self.right = self.crop(self.right, self.sideWidth, self.height,
                                shiftLeft=scale[0]-self.sideWidth-11)
-
+        
     def setPos(self):
         '''This function sets the positions where the goal parts will be drawn.'''
         self.lCenter, self.mCenter, self.rCenter = self.getCenter()
@@ -164,6 +203,7 @@ class Goal(Game):
         self.screen.blit(self.left, self.lPos)
         self.screen.blit(self.middle, self.mPos)
         self.screen.blit(self.right, self.rPos)
+        self.things = [self.left, self.middle, self.right]
         
     def getPos(self):
         '''This function returns the positions of the all three goal parts.'''
@@ -226,11 +266,12 @@ class Ball(Game):
         self.center = self.ball.get_rect().center   # center of the ball
         # coordinates of the center at the start of the program
         self.centerPos = X+self.center[0], Y+self.center[1]
+        self.things = [self.ball]
         
     def getStartPos(self):
         '''This function returns the position of the ball at the start of
         the program.'''
-        return self.startPos
+        return [self.startPos]
 
     def setCenterPos(self, X, Y):
         '''This function sets a new position for the ball center.'''
@@ -422,29 +463,34 @@ class Ball(Game):
         else:
             return False
     
-    def hitPlayer(self, playerRot, feetMidpoint, minDist):
+    def hitPlayer(self, numPlayers, playerRots, feetMidpoints, minDist):
         '''This function handles ball movements when it runs into the player.
         The ball will stop moving if it hits the player from the front, but will
         bounce back if it hits the player from the back.
-        playerRot is the current rotation of the player (angle measured 
-        in degrees).
-        feetMidpoint is the midpoint of the line connecting the player's feet
-        at their centers.
-        minDist is the nearest distance to the player that the ball can get.'''
-        # distance from ball to the midpoint, and angle (measured in degrees) of
-        # the ball with respect to the y-axis pointing down from the midpoint
-        dist, angle = line.getParams(feetMidpoint, self.getCenterPos())[2:4]
-        # difference between the current rotation of the player and the angle
-        # just computed
-        angleDiff = abs(playerRot - angle)
-        if dist <= minDist:
-            if angleDiff >= 100 and angleDiff <= 260:
-                # ball reaches the front of the player's body --> stop moving
-                self.stepX = 0
-                self.stepY = 0
-            else:
-                # ball reaches the back of the player's body --> bounce back
-                self.bounceBack(random.choice(['x','y']))
+        numPlayers is the number of players in the game.
+        playerRots is a tuple of the current rotations of the players (angles 
+        measured in degrees).
+        feetMidpoints is a tuple of the midpoint of the line connecting each 
+        player's feet at their centers.
+        minDist is the nearest distance to each player that the ball can get.'''
+        for i in range(numPlayers):
+            # distance from ball to the midpoint, and angle (measured in 
+            # degrees) of the ball with respect to the y-axis pointing down
+            # from the midpoint
+            dist, angle = line.getParams(feetMidpoints[i],
+                                         self.getCenterPos())[2:4]
+            # difference between the current rotation of the player and the 
+            # angle just computed
+            angleDiff = abs(playerRots[i] - angle)
+            if dist <= minDist:
+                if angleDiff >= 100 and angleDiff <= 260:
+                    # ball reaches the front of the player's body
+                    # stop moving
+                    self.stepX = 0
+                    self.stepY = 0
+                else:
+                    # ball reaches the back of the player's body --> bounce back
+                    self.bounceBack(random.choice(['x','y']))
                 
     def checkGoal(self, goalPosts):
         '''This function checks if the player has scored.
@@ -456,20 +502,19 @@ class Ball(Game):
             return True
         else:
             return False
-                
-    def moveBall(self, bodyAngle, stepSize, goalPosts, playerRot, feetMidpoint,
-                 minDist, allThings, allPos, pressedKeys):
+
+    def moveBall(self, bodyAngle, stepSize, goalPosts, numPlayers, playerRots, 
+                 feetMidpoints, minDist, pressedKeys):
         '''This function handles ball movements when the ball is kicked.
         bodyAngle is the angle (measured in degrees) of the body with respect to
         the y-axis pointing down from the ball.
         goalPosts denotes the x-coordinates and size of the goal posts.
-        playerRot is the current rotation of the player (angle measured in
-        degrees).
-        feetMidpoint is the midpoint of the line connecting the player's feet
-        at their centers.
-        minDist is the nearest distance to the player that the ball can get.
-        allThings is a list of everything on the screen.
-        allPos is a list of the positions of everything on the screen.
+        numPlayers is the number of players in the game.
+        playerRots is a tuple of the current rotations of the players (angles 
+        measured in degrees).
+        feetMidpoints is a tuple of the midpoint of the line connecting each 
+        player's feet at their centers.
+        minDist is the nearest distance to each player that the ball can get.
         pressedKeys is pygame.key.get_pressed(), which tells us which key has
         been pressed.'''
         # angle (measured in degrees) at which the ball will move, with respect
@@ -487,8 +532,8 @@ class Ball(Game):
             # new coordinates of the ball center
             self.setCenterPos(self.getCenterPos()[0]-self.stepX,
                               self.getCenterPos()[1]-self.stepY)
-            #update ball position and display to show movement
-            self.updateBall(allThings, allPos)
+            # update ball position and update display to show movement
+            self.updateBall()
             stepX, stepY = self.getStep()   # current step size
             if self.checkBouncing(goalPosts):
                 # ball bouncing back after hitting either the screen boundaries
@@ -496,39 +541,36 @@ class Ball(Game):
                 # new coordinates of the ball center
                 self.setCenterPos(self.getCenterPos()[0]-self.stepX,
                                   self.getCenterPos()[1]-self.stepY)
-                # update ball position and display to show movement
-                self.updateBall(allThings, allPos)
+                # update ball position and update display to show movement
+                self.updateBall()
             # movement when ball hits player
-            self.hitPlayer(playerRot, feetMidpoint, minDist)
+            self.hitPlayer(numPlayers, playerRots, feetMidpoints, minDist)
             if self.stepX == 0 and self.stepY == 0:   # ball has stopped moving
                 break   # get out of while loop
             elif self.stepX != stepX or self.stepY != stepY:
                 # new coordinates of the ball center
                 self.setCenterPos(self.getCenterPos()[0]-self.stepX,
                                   self.getCenterPos()[1]-self.stepY)
-                # update ball position and display to show movement
-                self.updateBall(allThings, allPos)
+                # update ball position and update display to show movement
+                self.updateBall()
             self.decrementStep()   # decrement step size
             stepSize = math.sqrt(self.stepX**2+self.stepY**2)   # new step size
         # If the player scores, the ball will be return to its original position
         # after it has stopped moving.
         if scored:
-            self.resetBall(allThings, allPos)
+            self.resetBall()
 
-    def resetBall(self, allThings, allPos):
+    def resetBall(self):
         '''This function puts the ball at its original position after the 
-        player scores.
-        allThings is a list of everything on the screen.
-        allPos is a list of the positions of everything on the screen.'''
-        self.setCenterPos(self.startPos[0]+self.center[0],
-                          self.startPos[1]+self.center[1])
-        self.updateBall(allThings, allPos)   # update ball position and display
+        player scores.'''
+        self.setCenterPos(self.getStartPos()[0][0]+self.center[0],
+                          self.getStartPos()[0][1]+self.center[1])
+        # update ball position and the display to show change
+        self.updateBall()   
 
-    def updateBall(self, allThings, allPos):
+    def updateBall(self):
         '''This function updates the position of the ball and updates the
-        display to show movements.
-        allThings is a list of everything on the screen.
-        allPos is a list of the positions of everything on the screen.'''
-        move.update(self.screen, allThings, allPos, (self.ball,self.ball),
-                    (self.getCenterPos(),))
+        display to show movements.'''
+        move.update(self.screen, self.allThings, self.allPos, 
+                    (self.ball,self.ball), (self.getCenterPos(),))
         self.updateDisplay()

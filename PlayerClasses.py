@@ -38,7 +38,7 @@ class Player(np.Game):
         # before any change/movement has been made)
         self.footStart = self.lFoot
         self.bodyStart = self.body
-
+        
     def getFootSize(self):
         '''This function returns the size of the feet.'''
         self.footWidth = self.lFoot.get_rect().width
@@ -114,12 +114,14 @@ class Player(np.Game):
         # draw the feet
         self.screen.blit(self.lFoot, self.lFootStartPos)
         self.screen.blit(self.rFoot, self.rFootStartPos)
-
+        self.things = [self.lFoot, self.rFoot] 
+        
     def blitBody(self, rotate=0):
         '''This function draws the body onto the screen.
         rotate is the angle (measured in degrees) by which the image will be
         rotated from the original upward rotation.'''
         self.screen.blit(self.body, self.bodyStartPos)
+        self.things += [self.body]
         
     def getStartPos(self):
         '''This function returns the positions of the feet and the body at the
@@ -357,38 +359,34 @@ class Player(np.Game):
         else:
             self.moveToBall(ballCenterPos, ballCenter)
         
-    def updatePlayer(self, allThings, allPos, lFootIndex, bodyIndex):
+    def updatePlayer(self, lFootIndex, bodyIndex):
         '''This function updates the positions and rotations of both the body
         and the feet.
-        allThings is a list of everything on the screen.
-        allPos is a list of the positions of everything on the screen.
-        lFootIndex, rFootIndex, bodyIndex are the indexes of the left foot and
-        of the body, respectively, in allThings and in allPos.'''
+        lFootIndex and bodyIndex are the indexes of the left foot and of the
+        body, respectively, in allThings and in allPos.'''
         moved = (self.lFoot, self.rFoot, self.body,
                  self.footStart, self.footStart, self.bodyStart)
         # new coordinates of the centers of the feet and the body
         newCenterPos = self.getCenterPos()
-        move.update(self.screen, allThings, allPos, moved, newCenterPos,
-                    rotate=(self.getMovingRotation(),)*3)
-        self.lFoot, self.rFoot = allThings[lFootIndex:lFootIndex+2]
-        self.body = allThings[bodyIndex]
+        move.update(self.screen, self.allThings, self.allPos, moved,
+                    newCenterPos, rotate=(self.getMovingRotation(),)*3)
+        self.lFoot, self.rFoot = self.allThings[lFootIndex:lFootIndex+2]
+        self.body = self.allThings[bodyIndex]
         # new center points
         self.footCenter, self.bodyCenter = self.getCenter()
 
-    def updateFoot(self, foot, newCenterPos, rotate,
-                   allThings, allPos, lFootIndex):
+    def updateFoot(self, foot, newCenterPos, rotate, lFootIndex):
         '''This function updates the positions and rotations of only the feet.
         newCenterPos is a tuple/list of the new coordinates of the center of 
         each foot.
         rotate is a tuple/list of the angles (measured in degrees) by which 
         the rotations of the feet have changed from those at the start of
         the program.
-        allThings is a list of everything on the screen.
-        allPos is a list of the positions of everything on the screen.
-        lFootIndex is the indexes of the left foot in allThings and in allPos.'''
+        lFootIndex is the index of the left foot in allThings and in allPos.'''
         moved = self.lFoot, self.rFoot, self.footStart, self.footStart
-        move.update(self.screen, allThings, allPos, moved, newCenterPos, rotate)
-        self.lFoot, self.rFoot = allThings[lFootIndex:lFootIndex+2]
+        move.update(self.screen, self.allThings, self.allPos, moved,
+                    newCenterPos, rotate)
+        self.lFoot, self.rFoot = self.allThings[lFootIndex:lFootIndex+2]
         self.footCenter = self.getCenter()[0]   # new center point
         
 class Goalkeeper(Player):
@@ -447,11 +445,9 @@ class Outfielder(Player):
                 self.kFootAngle = self.getFootAngle(ballCenterPos)[1]
                 return 'rFoot'   # right foot is the kicking foot
         
-    def kickBall(self, ballCenterPos, ballCenter, allThings, allPos, lFootIndex):
+    def kickBall(self, ballCenterPos, ballCenter, lFootIndex):
         '''This function moves a foot to make the player kick the ball.
         ballCenter is the ball center and ballCenterPos is its coordinates.
-        allThings is a list of everything on the screen.
-        allPos is a list of the positions of everything on the screen.
         lFootIndex is the indexes of the left foot in allThings and in allPos.'''
         # direction the player is currently facing (angle measured in degrees)
         currentRot = self.getRotation()
@@ -486,8 +482,7 @@ class Outfielder(Player):
             newCenterPos = self.getCenterPos()[0], newCenterPos
             rotate = currentRot, rotate
         # update display to show movement
-        self.updateFoot(kickingFoot, newCenterPos, rotate,
-                        allThings, allPos, lFootIndex)
+        self.updateFoot(kickingFoot, newCenterPos, rotate, lFootIndex)
         self.updateDisplay()
         pygame.time.wait(100)   # pause program for 100 ms
         # bring foot back to the position and rotation before the kick
@@ -495,6 +490,5 @@ class Outfielder(Player):
             newCenterPos = self.kFootCenterPos, self.getCenterPos()[1]
         else:   # right foot is the kicking foot
             newCenterPos = self.getCenterPos()[0], self.kFootCenterPos
-        self.updateFoot(kickingFoot, newCenterPos, (currentRot,)*2,
-                        allThings, allPos, lFootIndex)
+        self.updateFoot(kickingFoot, newCenterPos, (currentRot,)*2, lFootIndex)
         self.updateDisplay()
