@@ -14,7 +14,8 @@ List of files:
 
 #### Changes from `master` branch
 
-Changes to the screen and background:
+Changes to the game in general, to the screen, and to the background:
+- Add `addToLists()` and `getLists()` methods to the `Game` class
 - Reduce the screen size.
 - Add `load()` method to the `Background` class.
 
@@ -25,10 +26,11 @@ Changes to the player:
 - Add two classes, `Goalkeeper` and `Outfielder`, which are children of the `Player` class.
 - Add `getFootSize()`, `getBodySize()`, and `adjustFeetStartPos()` methods to the `Player` class.
 - Split the `blit()` method into two: `blitFeet()` and `blitBody()`.
-- Draw two players, a goalkeeper and an outfielder (striker), onto the screen.
-- Modify the `updatePlayer()` and `updateFoot()` methods to accomodate multiple players' movements.
+- Draw two players, a goalkeeper and an outfielder/striker, onto the screen.
+- Modify the `updatePlayer()` and `updateFoot()` methods to accommodate multiple players' movements.
 
 Changes to the ball:
 - Add `load()` method.
 - Put the ball at a fixed position at the start of the program. After the player scores, the ball will be returned to this position.
 - Reduce the speed.
+- Modify the `hitPlayer()` method to accommodate the presence of multiple players.
