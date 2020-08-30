@@ -1,9 +1,6 @@
-<<<<<<< HEAD
 '''This is the main program for the second version of a mini-game of football/
 soccer in PyGame. Compared to the first version, this version adds a goalkeeper.'''
 
-=======
->>>>>>> add-goalkeeper
 import pygame, sys, random
 import NonplayerClasses as nonplayer
 import PlayerClasses as player
@@ -39,17 +36,6 @@ striker.blitBody()
 # x-coordinates and size of the goal posts
 goalPosts = goal.getPosts()
 
-<<<<<<< HEAD
-# list of everything on the screen
-allThings = [bg.grass, goal.left, goal.middle, goal.right, goalkeeper.lFoot,
-             goalkeeper.rFoot, striker.lFoot, striker.rFoot, ball.ball,
-             goalkeeper.body, striker.body]
-# list of the positions of everything on the screen
-allPos = [bg.pos] + goal.getPos() + goalkeeper.getStartPos()[:2] + \
-         striker.getStartPos()[:2] + [ball.getStartPos()] + \
-         [goalkeeper.getStartPos()[2]] + [striker.getStartPos()[2]]
-# indexes of the striker's left foot and of his body
-=======
 numPlayers = 2   # number of players
 
 allThings = []   # list of everything on the screen
@@ -67,7 +53,6 @@ goalkeeper.getLists(allThings, allPos)
 striker.getLists(allThings, allPos)
 
 # indexes of the striker's left foot and of his body in the lists
->>>>>>> add-goalkeeper
 strikerLFootIndex = allThings.index(striker.lFoot)
 strikerBodyIndex = allThings.index(striker.body)
     
@@ -91,13 +76,6 @@ while playing:
         striker.move(moveType, direction, ball.center, ball.getCenterPos())
     if pressedKeys[pygame.K_s] == 1:
         # 's' key has been pressed --> striker will kick the ball
-<<<<<<< HEAD
-        # choose the foot that will kick the ball
-        striker.kickBall(ball.getCenterPos(), ball.center,
-                         allThings, allPos, strikerLFootIndex)
-        if striker.touchedBall:
-            # foot has touched the ball --> ball will move
-=======
         striker.kickBall(ball.getCenterPos(), ball.center, strikerLFootIndex)
         if striker.touchedBall:
             # foot has touched the ball --> ball will move
@@ -105,22 +83,10 @@ while playing:
             playerRots = goalkeeper.getRotation(), striker.getRotation()
             # midpoint of the line connecting the player's feet at their centers
             feetMidpoints = goalkeeper.getMidpoint(), striker.getMidpoint()
->>>>>>> add-goalkeeper
             # nearest distance to the player that the ball can get
             minDist = ball.center[1] + striker.bodyCenterStart[1] + \
                       striker.feetOut - 3
             # move ball
-<<<<<<< HEAD
-            ball.moveBall(
-                striker.getBodyAngle(ball.getCenterPos()), random.uniform(18,22),
-                goalPosts, striker.getRotation(), striker.getMidpoint(), minDist,
-                allThings, allPos, pressedKeys)
-            
-    if striker.moved:
-        striker.updatePlayer(allThings, allPos,
-                             strikerLFootIndex, strikerBodyIndex)
-    bg.updateDisplay()
-=======
             ball.moveBall(striker.getBodyAngle(ball.getCenterPos()),
                           random.uniform(18,22), goalPosts, 2, playerRots,
                           feetMidpoints, minDist, pressedKeys)
@@ -128,4 +94,3 @@ while playing:
         # update player position
         striker.updatePlayer(strikerLFootIndex, strikerBodyIndex)
     bg.updateDisplay()   # update display to show change
->>>>>>> add-goalkeeper
