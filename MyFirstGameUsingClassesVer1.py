@@ -1,3 +1,6 @@
+'''This is the main program for the first version of a mini-game of football/
+soccer in PyGame.'''
+
 import pygame, sys, random
 import ClassesForMyFirstGame as game
 

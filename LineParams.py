@@ -1,3 +1,8 @@
+'''This module defines two functions (getParams and getLine) that return infor-
+mation about points and about the line connecting those points.
+To get a brief description of each function, use the following syntax:
+    <module name as imported>.<function name>.__doc__'''
+
 import math, random
 
 def getParams(point1, point2):

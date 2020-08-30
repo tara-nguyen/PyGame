@@ -1,6 +1,8 @@
 '''The following classes are defined: Game, Background, Goal, and Ball.
 For neatness, the Player class, which is a child class of Game, is defined in a
-different module named PlayerClasses.'''
+different module named PlayerClasses.
+To get a brief description of each class, use the following syntax:
+    <module name as imported>.<class name>.__doc__'''
 
 import pygame, random, math
 import CroppingImages as crop

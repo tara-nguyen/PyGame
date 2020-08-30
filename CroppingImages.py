@@ -1,3 +1,8 @@
+'''This module defines two functions (newSurfaceSize and cropImage) that allows
+cropping of images in PyGame.
+To get a brief description of each function, use the following syntax:
+    <module name as imported>.<function name>.__doc__'''
+
 import pygame, sys
 
 def newSurfaceSize(image, cropMethod, newWidth, newHeight):

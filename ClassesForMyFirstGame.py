@@ -1,4 +1,6 @@
-'''The following classes are defined: Game, Background, Goal, Player, and Ball.'''
+'''The following classes are defined: Game, Background, Goal, Player, and Ball.
+To get a brief description of each class, use the following syntax:
+    <module name as imported>.<class name>.__doc__'''
 
 import pygame, random, math
 import CroppingImages as crop

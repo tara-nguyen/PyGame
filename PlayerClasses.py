@@ -1,3 +1,6 @@
+'''This module defines the Player class. To get a brief description of the class,
+use the following syntax: <module name as imported>.Player.__doc__'''
+
 import pygame, random, math
 import LineParams as line
 import MoveFunctions as move

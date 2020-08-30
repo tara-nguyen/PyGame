@@ -1,3 +1,6 @@
+'''This is the main program for the second version of a mini-game of football/
+soccer in PyGame. Compared to the first version, this version adds a goalkeeper.'''
+
 import pygame, sys, random
 import NonplayerClasses as nonplayer
 import PlayerClasses as player
