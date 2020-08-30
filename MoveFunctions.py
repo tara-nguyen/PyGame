@@ -1,3 +1,8 @@
+'''This module defines five functions that allow objects in PyGame to move. They
+are: update, reachedBoundaries, moveCircle, moveStraight, and moveToPoint.
+To get a brief description of each function, use the following syntax:
+    <module name as imported>.<function name>.__doc__'''
+
 import pygame, math
 import LineParams as line
 

@@ -1,3 +1,7 @@
+'''This is the main program for a mini-game of football/soccer in PyGame.
+Functions that will be used in the program at defined at the beginning of
+this module.'''
+
 import pygame, sys, random, math
 import CroppingImages as crop
 import LineParams as line
