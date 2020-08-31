@@ -15,7 +15,8 @@ class Player(np.Game):
     setMovingRotation, getMovingRotation, getBodyAngle, getFootAngle, 
     feetToFront, setStep, getDistanceMoved, getDistanceToBall, getSinCos, 
     getEnding, moveAroundBall, moveStraight, moveToBall, move, updatePlayer,
-    and updateFoot.
+    updateFeet, chooseKickingFoot, prepareBallKick, updateKickingFoot, and
+    checkBallTouch.
     To get a brief description of each method, use the following syntax:
         <module name as imported>.Player.<method name>.__doc__'''
     def __init__(self, screenSize):
@@ -28,6 +29,7 @@ class Player(np.Game):
     def load(self, imageName1, imageName2):
         '''This function loads images of the player's feet and body into PyGame
         and rotates them 90 degrees counterclockwise.'''
+        # temporary sizes of the feet and of the body
         footWidth, footHeight = 44, 30
         bodyWidth, bodyHeight = 52, 76
         self.lFoot = np.Game.loadImage(self, imageName1, footWidth, footHeight)
@@ -160,7 +162,7 @@ class Player(np.Game):
         return self.midPoint
 
     def getRotation(self):
-        '''This function returns the current rotation of the player, i.e., the
+        '''This function returns the player's current rotation, i.e., the
         direction the player is currently facing. It is an angle, measured in
         degrees, formed by two lines: (1) the line connecting the body center
         and the midpoint (the point at the middle of the line connecting the 
@@ -378,47 +380,21 @@ class Player(np.Game):
         # new center points
         self.footCenter, self.bodyCenter = self.getCenter()
 
-    def updateFoot(self, foot, newCenterPos, rotate, lFootIndex):
+    def updateFeet(self, foot, newCenterPos, rotate, lFootIndex):
         '''This function updates the positions and rotations of only the feet.
         newCenterPos is a tuple/list of the new coordinates of the center of 
         each foot.
         rotate is a tuple/list of the angles (measured in degrees) by which 
         the rotations of the feet have changed from those at the start of
         the program.
-        lFootIndex is the index of the left foot in allThings and in allPos.'''
+        lFootIndex is the index of the left foot in the list of everything on
+        the screen.'''
         moved = self.lFoot, self.rFoot, self.footStart, self.footStart
         move.update(self.screen, self.allThings, self.allPos, moved,
                     newCenterPos, rotate)
         self.lFoot, self.rFoot = self.allThings[lFootIndex:lFootIndex+2]
         self.footCenter = self.getCenter()[0]   # new center point
-        
-class Goalkeeper(Player):
-    '''This class is a child class of Player and has the following methods:
-    __init__, ...
-    To get a brief description of each method, use the following syntax:
-        <module name as imported>.Goalkeeper.<method name>.__doc__'''
-    def __init__(self, screenSize):
-        '''This function initializes the class and sets its core attributes.'''
-        Player.__init__(self, screenSize)   # initialize the parent class
-        # body position at the start of the program
-        self.bodyStartPosX = (self.screenWidth - 76) / 2
-        self.bodyStartPosY = 80
-        self.bodyStartPos = self.bodyStartPosX, self.bodyStartPosY
-        
-class Outfielder(Player):
-    '''This class is a child class of Player and has the following methods:
-    __init__, chooseKickingFoot, and kickBall.
-    To get a brief description of each method, use the following syntax:
-        <module name as imported>.Outfielder.<method name>.__doc__'''
-    def __init__(self, screenSize):
-        '''This function initializes the class and sets its core attributes.'''
-        Player.__init__(self, screenSize)   # initialize the parent class
-        # body position at the start of the program
-        self.bodyStartPosX = random.uniform(20, self.screenWidth-96)
-        self.bodyStartPosY = random.uniform(self.screenHeight-150,
-                                            self.screenHeight-100)
-        self.bodyStartPos = self.bodyStartPosX, self.bodyStartPosY
-        
+
     def chooseKickingFoot(self, ballCenterPos):
         '''This function chooses the foot that will kick the ball, gets the
         angle (measured in degrees) of the foot with respect to the y-axis
@@ -448,16 +424,19 @@ class Outfielder(Player):
                 self.kFootAngle = self.getFootAngle(ballCenterPos)[1]
                 return 'rFoot'   # right foot is the kicking foot
         
-    def kickBall(self, ballCenterPos, ballCenter, lFootIndex):
-        '''This function moves a foot to make the player kick the ball.
-        ballCenter is the ball center and ballCenterPos is its coordinates.
-        lFootIndex is the indexes of the left foot in allThings and in allPos.'''
-        # direction the player is currently facing (angle measured in degrees)
+    def prepareBallKick(self, kickingFoot, ballCenterPos, ballCenter):
+        '''This function prepares the foot for the kicking motion and returns
+        four values:
+        (1) the player's current rotation (angle measured in degrees),
+        (2) the point to which the kicking foot will move,
+        (3) the new coordinates of the foot's center during the kicking motion, and
+        (4) the foot's new rotation (angle measured in degrees).
+        kickingFoot is the foot that will kick the ball.
+        ballCenter is the ball center and ballCenterPos is its coordinates.'''
+        # player's current rotation (angle measured in degrees)
         currentRot = self.getRotation()
         # distance between the ball and each of the player's feet
         lFootToBall, rFootToBall = self.getDistanceToBall(ballCenterPos)
-        # choose the foot that will kick the ball
-        kickingFoot = self.chooseKickingFoot(ballCenterPos)
         # point to which the kicking foot will move
         endPoint = self.getEnding(
             ballCenterPos, self.footCenterStart[1]+ballCenter[1],
@@ -473,25 +452,105 @@ class Outfielder(Player):
         # move foot
         newCenterPos, rotate = move.moveToPoint(endPoint, self.kFootCenterPos,
                                                 endAngle=currentRot)
-        if newCenterPos == endPoint:
-            # foot has touched the ball
-            self.touchedBall = True
-        else:
-            self.touchedBall = False
+        return currentRot, endPoint, newCenterPos, rotate
+
+    def updateKickingFoot(self, kickingFoot, newCenterPos, rotate, currentRot,
+                          lFootIndex):
+        '''This function updates the position and rotation of the foot that will
+        kick the ball during and after the kick.
+        kickingFoot is the foot that will kick the ball.
+        newCenterPos is the new coordinates of the foot's center during the
+        kicking motion.
+        rotate is the foot's new angle (measured in degrees) when it kicks the
+        ball, with respect to the y-axis pointing down from the ball.
+        currentRot is player's current rotation (angle measured in degrees).
+        lFootIndex is the indexes of the left foot in the list of everything on
+        the screen.'''
         if kickingFoot == 'lFoot':   # left foot is the kicking foot
             newCenterPos = newCenterPos, self.getCenterPos()[1]
             rotate = rotate, currentRot
         else:   # right foot is the kicking foot
             newCenterPos = self.getCenterPos()[0], newCenterPos
             rotate = currentRot, rotate
-        # update display to show movement
-        self.updateFoot(kickingFoot, newCenterPos, rotate, lFootIndex)
+        # update foot position and update display to show movement
+        self.updateFeet(kickingFoot, newCenterPos, rotate, lFootIndex)
         self.updateDisplay()
         pygame.time.wait(100)   # pause program for 100 ms
-        # bring foot back to the position and rotation before the kick
+        # bring foot back to its position and rotation before the kick
         if kickingFoot == 'lFoot':   # left foot is the kicking foot
             newCenterPos = self.kFootCenterPos, self.getCenterPos()[1]
         else:   # right foot is the kicking foot
             newCenterPos = self.getCenterPos()[0], self.kFootCenterPos
-        self.updateFoot(kickingFoot, newCenterPos, (currentRot,)*2, lFootIndex)
-        self.updateDisplay()
+        # update foot position to show movement
+        self.updateFeet(kickingFoot, newCenterPos, (currentRot,)*2, lFootIndex)
+
+    def checkBallTouch(self, newCenterPos, endPoint):
+        '''This function checks if the foot has touched the ball.
+        newCenterPos is the new coordinates of the foot's center when it kicks
+        the ball.
+        endPoint is the point to which the foot will move.'''
+        if newCenterPos == endPoint:   # foot has touched ball
+            self.touchedBall = True
+        else:
+            self.touchedBall = False
+
+class Goalkeeper(Player):
+    '''This class is a child class of Player and has two methods: __init__
+    and kickBall.
+    To get a brief description of each method, use the following syntax:
+        <module name as imported>.Goalkeeper.<method name>.__doc__'''
+    def __init__(self, screenSize):
+        '''This function initializes the class and sets its core attributes.'''
+        Player.__init__(self, screenSize)   # initialize the parent class
+        # body position at the start of the program
+        self.bodyStartPosX = (self.screenWidth - 76) / 2
+        self.bodyStartPosY = 80
+        self.bodyStartPos = self.bodyStartPosX, self.bodyStartPosY
+
+    def kickBall(self, ballCenterPos, ballCenter, lFootIndex):
+        '''This function moves the foot to kick the ball.
+        ballCenter is the ball center and ballCenterPos is its coordinates.
+        lFootIndex is the index of the left foot in allThings and in allPos.'''
+        # choose the foot that will kick the ball
+        kickingFoot = self.chooseKickingFoot(ballCenterPos)
+        # prepare the foot for the kicking motion
+        currentRot, endPoint, newCenterPos, rotate = \
+                    self.prepareBallKick(kickingFoot, ballCenterPos, ballCenter)
+        # check if the foot has touched the ball
+        self.checkBallTouch(newCenterPos, endPoint)
+        if self.touchedBall:   # foot has touched ball --> update foot
+            self.updateKickingFoot(kickingFoot, newCenterPos, rotate,
+                                   currentRot, lFootIndex)
+        
+class Outfielder(Player):
+    '''This class is a child class of Player and has two methods: __init__
+    and kickBall.
+    To get a brief description of each method, use the following syntax:
+        <module name as imported>.Outfielder.<method name>.__doc__'''
+    def __init__(self, screenSize):
+        '''This function initializes the class and sets its core attributes.'''
+        Player.__init__(self, screenSize)   # initialize the parent class
+        # body position at the start of the program
+        self.bodyStartPosX = random.uniform(20, self.screenWidth-96)
+        self.bodyStartPosY = random.uniform(self.screenHeight-150,
+                                            self.screenHeight-100)
+        self.bodyStartPos = self.bodyStartPosX, self.bodyStartPosY
+
+    def kickBall(self, ballCenterPos, ballCenter, gkHasBall, lFootIndex):
+        '''This function moves the foot to kick the ball.
+        ballCenter is the ball center and ballCenterPos is its coordinates.
+        gkHasBall is whether or not the goalkeeper currently has the ball. If
+        yes, the outfielder cannot perform the kicking motion.
+        lFootIndex is the index of the left foot in the list of everything on
+        the screen.'''
+        # choose the foot that will kick the ball
+        kickingFoot = self.chooseKickingFoot(ballCenterPos)
+        # prepare the foot for the kicking motion
+        currentRot, endPoint, newCenterPos, rotate = \
+                    self.prepareBallKick(kickingFoot, ballCenterPos, ballCenter)
+        if gkHasBall == False:
+            # update foot
+            self.updateKickingFoot(kickingFoot, newCenterPos, rotate,
+                                   currentRot, lFootIndex)
+        # check if the foot has touched the ball
+        self.checkBallTouch(newCenterPos, endPoint)
