@@ -55,7 +55,10 @@ striker.getLists(allThings, allPos)
 # indexes of the striker's left foot and of his body in the lists
 strikerLFootIndex = allThings.index(striker.lFoot)
 strikerBodyIndex = allThings.index(striker.body)
-    
+# indexes of the striker's left foot and of his body in the lists
+gkLFootIndex = allThings.index(goalkeeper.lFoot)
+gkBodyIndex = allThings.index(goalkeeper.body)
+
 bg.frame   # initialize clock
 
 playing = True
@@ -67,6 +70,7 @@ while playing:
             pygame.quit()
             sys.exit()   # prevents getting an error message when quitting the game
 
+    gkHasBall = False
     striker.moved = False
     pressedKeys = pygame.key.get_pressed()
     # process keys used for player movements
@@ -75,21 +79,30 @@ while playing:
         # one of the keys used for player movements has been pressed
         striker.move(moveType, direction, ball.center, ball.getCenterPos())
     if pressedKeys[pygame.K_s] == 1:
-        # 's' key has been pressed --> striker will kick the ball
-        striker.kickBall(ball.getCenterPos(), ball.center, strikerLFootIndex)
-        if striker.touchedBall:
-            # foot has touched the ball --> ball will move
-            # current rotations of the players
+        # 's' key has been pressed --> player will kick the ball
+        goalkeeper.kickBall(ball.getCenterPos(), ball.center, gkLFootIndex)
+        # The ball will move if the foot touches it.
+        if goalkeeper.touchedBall:   # goalkeeper has the ball
+            gkHasBall = True
+        striker.kickBall(ball.getCenterPos(), ball.center, gkHasBall,
+                         strikerLFootIndex)
+        if goalkeeper.touchedBall or striker.touchedBall:
+            # player's current rotation
             playerRots = goalkeeper.getRotation(), striker.getRotation()
             # midpoint of the line connecting the player's feet at their centers
             feetMidpoints = goalkeeper.getMidpoint(), striker.getMidpoint()
             # nearest distance to the player that the ball can get
             minDist = ball.center[1] + striker.bodyCenterStart[1] + \
                       striker.feetOut - 3
-            # move ball
-            ball.moveBall(striker.getBodyAngle(ball.getCenterPos()),
-                          random.uniform(18,22), goalPosts, 2, playerRots,
-                          feetMidpoints, minDist, pressedKeys)
+            if goalkeeper.touchedBall:   # goalkeeper kicks the ball
+                ball.moveBall(goalkeeper.getBodyAngle(ball.getCenterPos()),
+                              random.uniform(18,22), goalPosts, 2, playerRots,
+                              feetMidpoints, minDist, pressedKeys)
+            else:   # striker kicks the ball
+                ball.moveBall(striker.getBodyAngle(ball.getCenterPos()),
+                              random.uniform(18,22), goalPosts, 2, playerRots,
+                              feetMidpoints, minDist, pressedKeys)
+            
     if striker.moved:
         # update player position
         striker.updatePlayer(strikerLFootIndex, strikerBodyIndex)
