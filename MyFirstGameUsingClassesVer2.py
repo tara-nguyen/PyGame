@@ -8,7 +8,7 @@ import PlayerClasses as player
 pygame.init()   # start pygame
 
 pygame.display.set_caption('My First Game')   # game title
-screenSize = 400, 500   # screen size
+screenSize = 500, 500   # screen size
 
 # create objects that will appear on the screen
 bg = nonplayer.Background(screenSize)
@@ -36,7 +36,8 @@ striker.blitBody()
 goalPosts = goal.getPosts()   # x-coordinates and size of the goal posts
 
 numPlayers = 2   # number of players
-
+gkStartSpeed = goalkeeper.speed   # goalkeeper's initial speed
+    
 allThings = []   # list of everything on the screen
 allPos = []   # list of those things' positions
 # add to the lists
@@ -85,21 +86,18 @@ while playing:
                          strikerLFootIndex)
         # The ball will move if the foot touches it.
         if goalkeeper.touchedBall or striker.touchedBall:
-            # players' current rotations
-            playerRots = goalkeeper.getRotation(), striker.getRotation()
-            # midpoint of the line connecting the player's feet at their centers
-            feetMidpoints = goalkeeper.getMidpoint(), striker.getMidpoint()
             # nearest distance to the player that the ball can get
             minDist = ball.center[1] + striker.bodyCenterStart[1] + \
-                      striker.feetOut - 3
+                      striker.feetOut - 5
             if goalkeeper.touchedBall:   # goalkeeper kicks the ball
+                goalkeeper.speed = gkStartSpeed   # reset goalkeeper's speed
                 # angle (measured in degrees) of the body with respect to the
                 # y-axis pointing down from the ball
                 bodyAngle = goalkeeper.getBodyAngle(ball.getCenterPos())
                 # angle (measured in degrees) at which the ball will move, with
                 # respect to the y-axis pointing up from the current ball center
                 ball.setMovingAngle(random.uniform(bodyAngle-1, bodyAngle+1))
-                # initial step size
+                # initial step size of the ball
                 stepSize = random.uniform(18, 22)
                 ball.setFirstStep(stepSize)
                 ball.moving = True
@@ -107,8 +105,14 @@ while playing:
                     # move goalkeeper between goal posts
                     goalkeeper.move(goalPosts)   
                     goalkeeper.updatePlayer(gkLFootIndex, gkBodyIndex)
+                    # all players' current rotations
+                    playerRots = goalkeeper.getRotation(), striker.getRotation()
+                    # point right between each player's feet
+                    feetMidpoints = (goalkeeper.getMidpoint(),
+                                     striker.getMidpoint())
                     if ball.checkGoal(goalPosts):   # ball in goal
                         ball.inGoal = True
+                    # move ball
                     ball.move(stepSize, goalPosts, numPlayers, playerRots,
                               feetMidpoints, minDist)
                     # new step size
@@ -120,7 +124,7 @@ while playing:
                 # angle (measured in degrees) at which the ball will move, with
                 # respect to the y-axis pointing up from the current ball center
                 ball.setMovingAngle(random.uniform(bodyAngle-1, bodyAngle+1))
-                # initial step size
+                # initial step size of the ball
                 stepSize = random.uniform(18, 22)
                 ball.setFirstStep(stepSize)
                 ball.moving = True
@@ -128,18 +132,27 @@ while playing:
                     # move goalkeeper between goal posts
                     goalkeeper.move(goalPosts)   
                     goalkeeper.updatePlayer(gkLFootIndex, gkBodyIndex)
+                    # all players' current rotations
+                    playerRots = goalkeeper.getRotation(), striker.getRotation()
+                    # point right between each player's feet
+                    feetMidpoints = (goalkeeper.getMidpoint(),
+                                     striker.getMidpoint())
                     if ball.checkGoal(goalPosts):   # ball in goal
                         ball.inGoal = True
+                    # move ball
                     ball.move(stepSize, goalPosts, numPlayers, playerRots,
                               feetMidpoints, minDist)
-                    # new step size
+                    if ball.gkCaught:   # goalkeeper has the ball
+                        goalkeeper.speed = 0
+                    # current step size
                     stepSize = math.sqrt(ball.stepX**2+ball.stepY**2)   
 
     # If in goal, the ball will be return to its original position after it has
     # stopped moving.
     if ball.inGoal:
-        ball.resetBall()        
-        
+        ball.resetBall()
+        goalkeeper.speed = gkStartSpeed   # reset goalkeeper's speed
+
     goalkeeper.move(goalPosts)   # move goalkeeper between goal posts
     goalkeeper.updatePlayer(gkLFootIndex, gkBodyIndex)   # update player
                 
