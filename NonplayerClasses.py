@@ -469,7 +469,7 @@ class Ball(Game):
     def hitPlayer(self, numPlayers, playerRots, feetMidpoints, minDist):
         '''This function handles ball movements when it runs into the player.
         The ball will stop moving if it hits the player from the front, but will
-        bounce back if it hits the player from the back.
+        bounce back if it hits the player from the side or from the back.
         numPlayers is the number of players in the game.
         playerRots is a tuple of the players' current rotations (angles measured
         in degrees). The goalkeeper's comes first.
@@ -487,16 +487,16 @@ class Ball(Game):
             # angle just computed
             angleDiff = abs(playerRots[i] - angle)
             if dist <= minDist:
-                if angleDiff >= 110 and angleDiff <= 250:
+                if angleDiff >= 120 and angleDiff <= 240:
                     # ball reaches the front of the player's body
                     self.setStep(0, 0)   # stop moving
-                    if i == 0:   # the player is the goalkeper
+                    if i == 0:   # goalkeeper has the ball
                         self.gkCaught = True
+                    break
                 else:
                     # ball reaches the back of the player's body --> bounce back
                     self.bounceBack(random.choice(['x','y']))
-                    print('reached body back')
-                
+                    
     def checkGoal(self, goalPosts):
         '''This function checks if the player has scored.
         goalPosts denotes the x-coordinates and size of the goal posts.''' 
@@ -540,14 +540,13 @@ class Ball(Game):
         self.hitPlayer(numPlayers, playerRots, feetMidpoints, minDist)
         if self.stepX == 0 and self.stepY == 0:   # ball has stopped moving
             self.moving = False
-        elif self.stepX != stepX or self.stepY != stepY:
+        if self.stepX != stepX or self.stepY != stepY:
             # new coordinates of the ball center
             self.setCenterPos(self.getCenterPos()[0]-self.stepX,
                               self.getCenterPos()[1]-self.stepY)
             # update ball position and update display to show movement
             self.updateBall()
-        if self.moving:
-            self.decrementStep()   # decrement step size
+        self.decrementStep()   # decrement step size
 
     def resetBall(self):
         '''This function puts the ball at its original position after the 

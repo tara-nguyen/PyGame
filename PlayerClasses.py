@@ -64,7 +64,6 @@ class Player(np.Game):
         # holder variables for the centers at the start of the program
         self.footCenterStart = self.footCenter
         self.bodyCenterStart = self.bodyCenter
-        print(self.bodyCenterStart)
         # coordinates of the body center at the start of the program
         self.bodyCenterPos = (self.bodyStartPos[0]+self.bodyCenterStart[0],
                               self.bodyStartPos[1]+self.bodyCenterStart[1])
@@ -497,7 +496,8 @@ class Goalkeeper(Player):
         self.bodyStartPosX = (self.screenWidth - 76) / 2
         self.bodyStartPosY = 80
         self.bodyStartPos = self.bodyStartPosX, self.bodyStartPosY
-        self.movingDirection = random.choice(['l', 'r'])
+        self.movingDirection = random.choice([1, -1])   # left or right
+        self.speed = 5   # number of pixels the goalkeeper moves per movement
 
     def move(self, goalPosts):
         '''This function makes the goalkeeper move between the goal posts, only
@@ -509,23 +509,22 @@ class Goalkeeper(Player):
         # points to which the player will move
         lEndPoint = goalPosts[0]+goalPosts[2]+self.getCenter()[1][0]
         rEndPoint = goalPosts[1]-goalPosts[2]-self.getCenter()[1][0]
-        stepSize = 5
-        if self.movingDirection == 'r':   # playing is moving to the right
+        if self.movingDirection == 1:   # playing is moving to the right
             if self.getCenterPos()[2][0] >= rEndPoint:   # reached right post
-                self.movingDirection = 'l'   # change direction
-                stepSize *= -1   # negative step size
+                self.movingDirection = -1   # change direction
         else:   # player is moving left
-            stepSize *= -1   # negative step size
             if self.getCenterPos()[2][0] <= lEndPoint:   # reached left post
-                self.movingDirection = 'r'   # change direction
-                stepSize *= -1   # positive step size
+                self.movingDirection = 1   # change direction
         # move player
-        self.setCenterPos('body', self.getCenterPos()[2][0]+stepSize,
-                          self.getCenterPos()[2][1])
-        self.setCenterPos('lFoot', self.getCenterPos()[0][0]+stepSize,
-                          self.getCenterPos()[0][1])
-        self.setCenterPos('rFoot', self.getCenterPos()[1][0]+stepSize,
-                          self.getCenterPos()[1][1])
+        self.setCenterPos(
+            'body', self.getCenterPos()[2][0]+self.speed*self.movingDirection,
+            self.getCenterPos()[2][1])
+        self.setCenterPos(
+            'lFoot', self.getCenterPos()[0][0]+self.speed*self.movingDirection,
+            self.getCenterPos()[0][1])
+        self.setCenterPos(
+            'rFoot', self.getCenterPos()[1][0]+self.speed*self.movingDirection,
+            self.getCenterPos()[1][1])
             
     def kickBall(self, ballCenterPos, ballCenter, lFootIndex):
         '''This function moves the foot to kick the ball.
