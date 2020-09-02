@@ -14,7 +14,7 @@ class Player(np.Game):
     getCenter, setCenterPos, getCenterPos, getMidpoint, getRotation, 
     setMovingRotation, getMovingRotation, getBodyAngle, getFootAngle, 
     feetToFront, setStep, getDistanceMoved, getDistanceToBall, getSinCos, 
-    getEnding, moveAroundBall, moveStraight, moveToBall, move, updatePlayer,
+    getEnding, moveAroundBall, moveStraight, moveToBall, updatePlayer,
     updateFeet, chooseKickingFoot, prepareBallKick, updateKickingFoot, and
     checkBallTouch.
     To get a brief description of each method, use the following syntax:
@@ -64,6 +64,7 @@ class Player(np.Game):
         # holder variables for the centers at the start of the program
         self.footCenterStart = self.footCenter
         self.bodyCenterStart = self.bodyCenter
+        print(self.bodyCenterStart)
         # coordinates of the body center at the start of the program
         self.bodyCenterPos = (self.bodyStartPos[0]+self.bodyCenterStart[0],
                               self.bodyStartPos[1]+self.bodyCenterStart[1])
@@ -269,11 +270,11 @@ class Player(np.Game):
 
     def moveAroundBall(self, ballCenterPos, direction):
         '''This function rotates both the feet and the body around the ball.
-        ballCenterPos is the coordinates of the ball center.
+        ballCenterPos is the coordinates of the ball's center.
         direction denotes which way the body/foot will move.'''
         self.setStep(10, 10)   # set step size
         # current angle (measured in degrees) of the body with respect to the 
-        # y-axis pointing down from the ball
+        # y-axis pointing down from the target
         bodyAngle = self.getBodyAngle(ballCenterPos)
         # rotate body
         newCenterPos, rotate = move.moveCircle(
@@ -327,13 +328,14 @@ class Player(np.Game):
                 # player facing the wrong direction
                 self.feetToFront(newCenterPos)   # move feet to front of body
 
-    def moveToBall(self, ballCenterPos, ballCenter):
+    def moveToBall(self, ballCenter, ballCenterPos):
         '''This function moves both the feet and the body toward the ball.
-        ballCenterPos is the coordinates of the ball center.'''
-        # point to which the body will move and the direction the body will
-        # face when it reaches the endpoint (angle measured in degrees)
+        ballCenter is the ball's center and ballCenterPos is its coordinates.'''
+        # point to which the body will move and direction the player will
+        # face when he reaches that point
         endPoint, endAngle = self.getEnding(
-            ballCenterPos, self.bodyCenterStart[1]+self.feetOut+ballCenter[1],
+            ballCenterPos,
+            self.bodyCenterStart[1]+self.feetOut+ballCenter[1],
             self.getBodyAngle(ballCenterPos))
         # move body
         newCenterPos, rotate = move.moveToPoint(
@@ -353,22 +355,11 @@ class Player(np.Game):
                               self.getCenterPos()[1][1]+moveY)
             self.feetToFront(endPoint)   # move feet to front of body
 
-    def move(self, moveType, direction, ballCenter, ballCenterPos):
-        '''This function moves the player according to the specified type
-        of movement.
-        ballCenter is the ball center and ballCenterPos is its coordinates.'''
-        if moveType == 'circle':
-            self.moveAroundBall(ballCenterPos, direction)
-        elif moveType == 'straight':
-            self.moveStraight(direction)
-        else:
-            self.moveToBall(ballCenterPos, ballCenter)
-        
     def updatePlayer(self, lFootIndex, bodyIndex):
         '''This function updates the positions and rotations of both the body
         and the feet.
         lFootIndex and bodyIndex are the indexes of the left foot and of the
-        body, respectively, in allThings and in allPos.'''
+        body, respectively, in the list of everything on the screen.'''
         moved = (self.lFoot, self.rFoot, self.body,
                  self.footStart, self.footStart, self.bodyStart)
         # new coordinates of the centers of the feet and the body
@@ -495,8 +486,8 @@ class Player(np.Game):
             self.touchedBall = False
 
 class Goalkeeper(Player):
-    '''This class is a child class of Player and has two methods: __init__
-    and kickBall.
+    '''This class is a child class of Player and has two methods: __init__,
+    move, and kickBall.
     To get a brief description of each method, use the following syntax:
         <module name as imported>.Goalkeeper.<method name>.__doc__'''
     def __init__(self, screenSize):
@@ -506,7 +497,36 @@ class Goalkeeper(Player):
         self.bodyStartPosX = (self.screenWidth - 76) / 2
         self.bodyStartPosY = 80
         self.bodyStartPos = self.bodyStartPosX, self.bodyStartPosY
+        self.movingDirection = random.choice(['l', 'r'])
 
+    def move(self, goalPosts):
+        '''This function makes the goalkeeper move between the goal posts, only
+        stopping when he catches the ball (i.e., when the ball hits the front of
+        his body).
+        goalPosts denotes the x-coordinates and size of the goal posts.'''
+        # player's current rotation (angle measured in degrees)
+        currentRot = self.getRotation()
+        # points to which the player will move
+        lEndPoint = goalPosts[0]+goalPosts[2]+self.getCenter()[1][0]
+        rEndPoint = goalPosts[1]-goalPosts[2]-self.getCenter()[1][0]
+        stepSize = 5
+        if self.movingDirection == 'r':   # playing is moving to the right
+            if self.getCenterPos()[2][0] >= rEndPoint:   # reached right post
+                self.movingDirection = 'l'   # change direction
+                stepSize *= -1   # negative step size
+        else:   # player is moving left
+            stepSize *= -1   # negative step size
+            if self.getCenterPos()[2][0] <= lEndPoint:   # reached left post
+                self.movingDirection = 'r'   # change direction
+                stepSize *= -1   # positive step size
+        # move player
+        self.setCenterPos('body', self.getCenterPos()[2][0]+stepSize,
+                          self.getCenterPos()[2][1])
+        self.setCenterPos('lFoot', self.getCenterPos()[0][0]+stepSize,
+                          self.getCenterPos()[0][1])
+        self.setCenterPos('rFoot', self.getCenterPos()[1][0]+stepSize,
+                          self.getCenterPos()[1][1])
+            
     def kickBall(self, ballCenterPos, ballCenter, lFootIndex):
         '''This function moves the foot to kick the ball.
         ballCenter is the ball center and ballCenterPos is its coordinates.
@@ -523,7 +543,7 @@ class Goalkeeper(Player):
                                    currentRot, lFootIndex)
         
 class Outfielder(Player):
-    '''This class is a child class of Player and has two methods: __init__
+    '''This class is a child class of Player and has two methods: __init__, move,
     and kickBall.
     To get a brief description of each method, use the following syntax:
         <module name as imported>.Outfielder.<method name>.__doc__'''
@@ -536,6 +556,17 @@ class Outfielder(Player):
                                             self.screenHeight-100)
         self.bodyStartPos = self.bodyStartPosX, self.bodyStartPosY
 
+    def move(self, moveType, direction, ballCenter, ballCenterPos):
+        '''This function moves the striker according to the specified type
+        of movement.
+        ballCenter is the ball's center and ballCenterPos is its coordinates.'''
+        if moveType == 'circle':
+            self.moveAroundBall(ballCenterPos, direction)
+        elif moveType == 'straight':
+            self.moveStraight(direction)
+        else:
+            self.moveToBall(ballCenter, ballCenterPos)
+        
     def kickBall(self, ballCenterPos, ballCenter, gkHasBall, lFootIndex):
         '''This function moves the foot to kick the ball.
         ballCenter is the ball center and ballCenterPos is its coordinates.
