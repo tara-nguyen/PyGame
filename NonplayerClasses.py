@@ -246,7 +246,7 @@ class Ball(Game):
     setMovingAngle, getMovingAngle, getSinCos, setFirstStep, setStep, getStep, 
     setVelocity, getVelocity, decrementStep, getExtremes, setFinalStep1, 
     setFinalStep2, hitGoalPosts, bounceBack, checkBouncing, hitPlayer, 
-    checkGoal, moveBall, resetBall, and updateBall.
+    checkGoal, move, resetBall, and updateBall.
     To get a brief description of each method, use the following syntax:
         <module name as imported>.Ball.<method name>.__doc__'''
     def __init__(self, screenSize):
@@ -254,6 +254,7 @@ class Ball(Game):
         Game.__init__(self, screenSize)   # initialize the parent class
         self.ball = None   # contains nothing
         self.diameter = 36
+        self.gkCaught = False
 
     def load(self, imageName):
         '''This function loads the ball image into PyGame.'''
@@ -470,11 +471,12 @@ class Ball(Game):
         The ball will stop moving if it hits the player from the front, but will
         bounce back if it hits the player from the back.
         numPlayers is the number of players in the game.
-        playerRots is a tuple of the current rotations of the players (angles 
-        measured in degrees).
+        playerRots is a tuple of the players' current rotations (angles measured
+        in degrees). The goalkeeper's comes first.
         feetMidpoints is a tuple of the midpoint of the line connecting each 
-        player's feet at their centers.
+        player's feet at their centers. Again, the goalkeeper's comes first.
         minDist is the nearest distance to each player that the ball can get.'''
+        self.gkCaught = False   # ball hasn't been caught by the goalkeeper
         for i in range(numPlayers):
             # distance from ball to the midpoint, and angle (measured in 
             # degrees) of the ball with respect to the y-axis pointing down
@@ -485,14 +487,15 @@ class Ball(Game):
             # angle just computed
             angleDiff = abs(playerRots[i] - angle)
             if dist <= minDist:
-                if angleDiff >= 100 and angleDiff <= 260:
+                if angleDiff >= 110 and angleDiff <= 250:
                     # ball reaches the front of the player's body
-                    # stop moving
-                    self.stepX = 0
-                    self.stepY = 0
+                    self.setStep(0, 0)   # stop moving
+                    if i == 0:   # the player is the goalkeper
+                        self.gkCaught = True
                 else:
                     # ball reaches the back of the player's body --> bounce back
                     self.bounceBack(random.choice(['x','y']))
+                    print('reached body back')
                 
     def checkGoal(self, goalPosts):
         '''This function checks if the player has scored.
@@ -505,62 +508,46 @@ class Ball(Game):
         else:
             return False
 
-    def moveBall(self, bodyAngle, stepSize, goalPosts, numPlayers, playerRots, 
-                 feetMidpoints, minDist, pressedKeys):
+    def move(self, stepSize, goalPosts, numPlayers, playerRots, feetMidpoints,
+             minDist):
         '''This function handles ball movements when the ball is kicked.
-        bodyAngle is the angle (measured in degrees) of the body with respect to
-        the y-axis pointing down from the ball.
         goalPosts denotes the x-coordinates and size of the goal posts.
         numPlayers is the number of players in the game.
         playerRots is a tuple of the current rotations of the players (angles 
         measured in degrees).
         feetMidpoints is a tuple of the midpoint of the line connecting each 
         player's feet at their centers.
-        minDist is the nearest distance to each player that the ball can get.
-        pressedKeys is pygame.key.get_pressed(), which tells us which key has
-        been pressed.'''
-        # angle (measured in degrees) at which the ball will move, with respect
-        # to the y-axis pointing up from the current ball center
-        self.setMovingAngle(random.uniform(bodyAngle-1, bodyAngle+1))
-        self.setFirstStep(stepSize)   # initial step size
-        scored = False
-        while round(stepSize) > 0:
-            self.setVelocity()
-            if self.checkGoal(goalPosts):   # player has scored
-                scored = True
-            # set the size of the final step before the ball reaches either the
-            # screen boundaries or the goal posts
-            self.setFinalStep2(goalPosts)
+        minDist is the nearest distance to each player that the ball can get.'''
+        self.setVelocity()   # ball's velocity
+        # set the size of the final step before the ball reaches either the
+        # screen boundaries or the goal posts
+        self.setFinalStep2(goalPosts)
+        # new coordinates of the ball center
+        self.setCenterPos(self.getCenterPos()[0]-self.stepX,
+                          self.getCenterPos()[1]-self.stepY)
+        # update ball position and update display to show movement
+        self.updateBall()
+        stepX, stepY = self.getStep()   # current step size
+        if self.checkBouncing(goalPosts):
+            # ball bouncing back after hitting either the screen boundaries
+            # or the goal posts
             # new coordinates of the ball center
             self.setCenterPos(self.getCenterPos()[0]-self.stepX,
                               self.getCenterPos()[1]-self.stepY)
             # update ball position and update display to show movement
             self.updateBall()
-            stepX, stepY = self.getStep()   # current step size
-            if self.checkBouncing(goalPosts):
-                # ball bouncing back after hitting either the screen boundaries
-                # or the goal posts
-                # new coordinates of the ball center
-                self.setCenterPos(self.getCenterPos()[0]-self.stepX,
-                                  self.getCenterPos()[1]-self.stepY)
-                # update ball position and update display to show movement
-                self.updateBall()
-            # movement when ball hits player
-            self.hitPlayer(numPlayers, playerRots, feetMidpoints, minDist)
-            if self.stepX == 0 and self.stepY == 0:   # ball has stopped moving
-                break   # get out of while loop
-            elif self.stepX != stepX or self.stepY != stepY:
-                # new coordinates of the ball center
-                self.setCenterPos(self.getCenterPos()[0]-self.stepX,
-                                  self.getCenterPos()[1]-self.stepY)
-                # update ball position and update display to show movement
-                self.updateBall()
+        # movement when ball hits player
+        self.hitPlayer(numPlayers, playerRots, feetMidpoints, minDist)
+        if self.stepX == 0 and self.stepY == 0:   # ball has stopped moving
+            self.moving = False
+        elif self.stepX != stepX or self.stepY != stepY:
+            # new coordinates of the ball center
+            self.setCenterPos(self.getCenterPos()[0]-self.stepX,
+                              self.getCenterPos()[1]-self.stepY)
+            # update ball position and update display to show movement
+            self.updateBall()
+        if self.moving:
             self.decrementStep()   # decrement step size
-            stepSize = math.sqrt(self.stepX**2+self.stepY**2)   # new step size
-        # If the player scores, the ball will be return to its original position
-        # after it has stopped moving.
-        if scored:
-            self.resetBall()
 
     def resetBall(self):
         '''This function puts the ball at its original position after the 
