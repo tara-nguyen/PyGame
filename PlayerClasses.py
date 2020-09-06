@@ -12,10 +12,11 @@ class Player(np.Game):
     This class has the following methods: __init__, load, getFootSize, 
     getBodySize, setStartPos, adjustStartPos, blitFeet, blitBody, getStartPos, 
     getCenter, setCenterPos, getCenterPos, getMidpoint, getRotation, 
-    getBodyAngle, getFootAngle, setMovingRotation, getMovingRotation,
-    feetToFront, setStep, getDistanceMoved, getDistanceToBall, getEnding,
-    moveAroundBall, moveStraight, moveToBall, updatePlayer, updateFeet,
-    chooseKickingFoot, prepareBallKick, updateKickingFoot, and checkBallTouch.
+    getPlayerBox, getBodyAngle, getFootAngle, setMovingRotation, 
+    getMovingRotation, feetToFront, setStep, getDistanceMoved, getDistanceToBall, 
+    getEnding, moveAroundBall, moveStraight, moveToBall, updatePlayer, 
+    updateFeet, chooseKickingFoot, prepareBallKick, updateKickingFoot, and
+    checkBallTouch.
     To get a brief description of each method, use the following syntax:
         <module name as imported>.Player.<method name>.__doc__'''
     def __init__(self, screenSize):
