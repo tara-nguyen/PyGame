@@ -12,11 +12,10 @@ class Player(np.Game):
     This class has the following methods: __init__, load, getFootSize, 
     getBodySize, setStartPos, adjustStartPos, blitFeet, blitBody, getStartPos, 
     getCenter, setCenterPos, getCenterPos, getMidpoint, getRotation, 
-    setMovingRotation, getMovingRotation, getBodyAngle, getFootAngle, 
-    feetToFront, setStep, getDistanceMoved, getDistanceToBall, getSinCos, 
-    getEnding, moveAroundBall, moveStraight, moveToBall, updatePlayer,
-    updateFeet, chooseKickingFoot, prepareBallKick, updateKickingFoot, and
-    checkBallTouch.
+    getBodyAngle, getFootAngle, setMovingRotation, getMovingRotation,
+    feetToFront, setStep, getDistanceMoved, getDistanceToBall, getEnding,
+    moveAroundBall, moveStraight, moveToBall, updatePlayer, updateFeet,
+    chooseKickingFoot, prepareBallKick, updateKickingFoot, and checkBallTouch.
     To get a brief description of each method, use the following syntax:
         <module name as imported>.Player.<method name>.__doc__'''
     def __init__(self, screenSize):
@@ -172,18 +171,6 @@ class Player(np.Game):
                                          self.getCenterPos()[2])[3]
         return self.currentRot
 
-    def setMovingRotation(self, rotate):
-        '''This function sets the angle (measured in degrees) by which the 
-        rotation of the player has changed, after a movement, from that at the
-        start of the program.'''
-        self.rotate = rotate
-        
-    def getMovingRotation(self):
-        '''This function returns the angle (measured in degrees) by which the 
-        rotation of the player has changed, after a movement, from that at the
-        start of the program.'''
-        return self.rotate
-
     def getBodyAngle(self, target):
         '''This function returns the angle (measured in degrees) of the body
         with respect to the y-axis pointing down from a point.
@@ -201,6 +188,18 @@ class Player(np.Game):
         rFootAngle = line.getParams(target, self.getCenterPos()[1])[3]
         return lFootAngle, rFootAngle
     
+    def setMovingRotation(self, rotate):
+        '''This function sets the angle (measured in degrees) by which the 
+        rotation of the player has changed, after a movement, from that at the
+        start of the program.'''
+        self.rotate = rotate
+        
+    def getMovingRotation(self):
+        '''This function returns the angle (measured in degrees) by which the 
+        rotation of the player has changed, after a movement, from that at the
+        start of the program.'''
+        return self.rotate
+
     def feetToFront(self, target):
         '''This function moves the feet to the front of the body.
         target is either the coordinates of the point around which the player 
@@ -243,12 +242,6 @@ class Player(np.Game):
         rFootToBall = line.getParams(ballCenterPos, self.getCenterPos()[1])[2]
         return lFootToBall, rFootToBall
         
-    def getSinCos(self, angle):
-        '''This function returns the sine and cosine of an angle.'''
-        sine = math.sin(angle * math.pi/180)
-        cosine = math.cos(angle * math.pi/180)
-        return sine, cosine
-        
     def getEnding(self, ballCenterPos, finalDist, angle):
         '''This function returns the point to which the body/foot will move when
         it's headed for the ball, along with the direction the body/foot will 
@@ -259,8 +252,8 @@ class Player(np.Game):
         angle is the current angle (measured in degrees) of the body/foot with
         respect to the y-axis pointing down from the ball.'''
         # point to which the body will move
-        endPointX = ballCenterPos[0] + finalDist * self.getSinCos(angle)[0]
-        endPointY = ballCenterPos[1] + finalDist * self.getSinCos(angle)[1]
+        endPointX = ballCenterPos[0] + finalDist * np.getTrig(angle)[0]
+        endPointY = ballCenterPos[1] + finalDist * np.getTrig(angle)[1]
         endPoint = endPointX, endPointY
         # final rotation, i.e., direction the body will face when it reaches
         # the endpoint (angle measured in degrees)

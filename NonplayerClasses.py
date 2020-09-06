@@ -2,7 +2,11 @@
 For neatness, the Player class, which is a child class of Game, is defined in a
 different module named PlayerClasses.
 To get a brief description of each class, use the following syntax:
-    <module name as imported>.<class name>.__doc__'''
+    <module name as imported>.<class name>.__doc__
+Two functions not belonging to any of the classes, isBetween() and getTrig(),
+are also defined before the Ball class is defined. To get a brief description of
+each of these functions, use the following syntax:
+    <module name as imported>.<function name>.__doc__'''
 
 import pygame, random, math
 import CroppingImages as crop
@@ -10,7 +14,7 @@ import LineParams as line
 import MoveFunctions as move
 
 class Game:
-    '''This class is the parent class Background, Goal, Player, and Ball.
+    '''This class is the parent class of Background, Goal, Player, and Ball.
     This class has the following methods: __init__, updateDisplay, getFile,
     loadImage, addToLists, getLists and processMoveKeys.
     To get a brief description of each method, use the following syntax:
@@ -240,13 +244,35 @@ class Goal(Game):
         postWidth, postHeight = 11, self.height
         return leftPost, rightPost, postWidth, postHeight
 
+def isBetween(x, number1, number2):
+    '''This function checks if a number x is between two given numbers.'''
+    if number1 == number2:
+        return 'The two given numbers are the same.'
+    else:
+        larger = max(number1, number2)   # the larger of the two given numbers
+        smaller = min(number1, number2)   # the smaller of the two given numbers
+        if x >= smaller and x <= larger:
+            return True
+        else:
+            return False
+
+def getTrig(angle):
+    '''This function returns the sine, cosine, and tangent of an angle.'''
+    sin = math.sin(angle * math.pi/180)
+    cos = math.cos(angle * math.pi/180)
+    if cos != 0:
+        tan = sin/cos
+    else:
+        tan = None
+    return sin, cos, tan
+    
 class Ball(Game):
     '''This class is a child class of Game and has the following methods:
     __init__, load, blit, getStartPos, setCenterPos, getCenterPos, 
-    setMovingAngle, getMovingAngle, getSinCos, setFirstStep, setStep, getStep, 
-    setVelocity, getVelocity, decrementStep, getExtremes, setFinalStep1, 
-    setFinalStep2, hitGoalPosts, bounceBack, checkBouncing, hitPlayer, 
-    checkGoal, move, resetBall, and updateBall.
+    setMovingAngle, getMovingAngle, setFirstStep, setStep, getStep, setVelocity,
+    getVelocity, decrementStep, getExtremes, setFinalStep1, setFinalStep2,
+    hitGoalPosts, bounceBack, checkBouncing, hitPlayer, checkGoal, move,
+    resetBall, and updateBall.
     To get a brief description of each method, use the following syntax:
         <module name as imported>.Ball.<method name>.__doc__'''
     def __init__(self, screenSize):
@@ -296,16 +322,10 @@ class Ball(Game):
         up from the current ball center.'''
         return self.movingAngle
 
-    def getSinCos(self):
-        '''This function returns the sine and cosine of the moving angle.'''
-        sine = math.sin(self.movingAngle * math.pi/180)
-        cosine = math.cos(self.movingAngle * math.pi/180)
-        return sine, cosine
-        
     def setFirstStep(self, stepSize):
         '''This function sets the size of the first step that ball will make.'''
-        self.stepX = stepSize * self.getSinCos()[0]
-        self.stepY = stepSize * self.getSinCos()[1]
+        self.stepX = stepSize * getTrig(self.getMovingAngle())[0]
+        self.stepY = stepSize * getTrig(self.getMovingAngle())[1]
 
     def setStep(self, stepX, stepY):
         '''This function sets the step size for the ball's movements.'''
@@ -346,10 +366,10 @@ class Ball(Game):
         distance is the distance from the ball to the boundary/goal post.'''
         if direction == 'x':
             self.stepX = distance
-            self.stepY = self.stepX / (self.getSinCos()[0]/self.getSinCos()[1])
+            self.stepY = self.stepX / getTrig(self.getMovingAngle())[2]
         else:
             self.stepY = distance
-            self.stepX = self.stepY * (self.getSinCos()[0]/self.getSinCos()[1])
+            self.stepX = self.stepY * getTrig(self.getMovingAngle())[2]
 
     def setFinalStep2(self, goalPosts):
         '''This function checks if the ball is about to reach either the screen
@@ -382,28 +402,26 @@ class Ball(Game):
     
     def hitGoalPosts(self, goalPosts):
         '''This function checks if the ball has hit the goal posts.
-        goalPosts denotes the x-coordinates and size of the goal posts.
-        currentRot is the current rotation of the player (angle measured in
-        degrees).'''
+        goalPosts denotes the x-coordinates and size of the goal posts.'''
         hitOut, hitIn = False, False
         # leftmost, rightmost, top, and bottom points on the ball
         left, right, top, bottom = self.getExtremes()
         # conditions for hitting the outside of the posts
-        hitLPFromOut = top < goalPosts[-1] and left < goalPosts[0] and \
-                       right >= goalPosts[0] and self.getMovingAngle() < 0 and \
-                       self.getMovingAngle() > -180
-        hitRPFromOut = top < goalPosts[-1] and right > goalPosts[1] and \
-                       left <= goalPosts[1] and self.getMovingAngle() > 0 and \
-                       self.getMovingAngle() < 180
+        hitLPFromOut = top < goalPosts[-1] and \
+                       isBetween(self.getMovingAngle(),-180,0) and \
+                       left < goalPosts[0] and right >= goalPosts[0]
+        hitRPFromOut = top < goalPosts[-1] and \
+                       isBetween(self.getMovingAngle(),180,0) and \
+                       right > goalPosts[1] and left <= goalPosts[1]
         # conditions for hitting the inside of the posts
         hitLPFromIn = top < goalPosts[-1] and \
+                      isBetween(self.getMovingAngle(),180,0) and \
                       right > goalPosts[0]+goalPosts[2] and \
-                      left <= goalPosts[0]+goalPosts[2] and \
-                      self.getMovingAngle() > 0 and self.getMovingAngle() < 180
+                      left <= goalPosts[0]+goalPosts[2]
         hitRPFromIn = top < goalPosts[-1] and \
+                      isBetween(self.getMovingAngle(),-180,0) and \
                       left < goalPosts[1]-goalPosts[2] and \
-                      right >= goalPosts[1]-goalPosts[2] and \
-                      self.getMovingAngle() < 0 and self.getMovingAngle() > -180
+                      right >= goalPosts[1]-goalPosts[2]
         if hitLPFromOut or hitRPFromOut:
             hitOut = True
         elif hitLPFromIn or hitRPFromIn:
@@ -478,24 +496,35 @@ class Ball(Game):
         minDist is the nearest distance to each player that the ball can get.'''
         self.gkCaught = False   # ball hasn't been caught by the goalkeeper
         for i in range(numPlayers):
+##            if i == 0:
+##                print('goalkeeper')
+##            else:
+##                print('outfielder')
             # distance from ball to the midpoint, and angle (measured in 
             # degrees) of the ball with respect to the y-axis pointing down
             # from the midpoint
+##            print('midpoint',feetMidpoints[i])
+##            print('ball center pos',self.getCenterPos())
             dist, angle = line.getParams(feetMidpoints[i],
                                          self.getCenterPos())[2:4]
             # difference between the current rotation of the player and the 
             # angle just computed
             angleDiff = abs(playerRots[i] - angle)
+##            print('distance from ball to midpoint',dist)
+##            print('player rotation - ball angle =',angleDiff)
             if dist <= minDist:
                 if angleDiff >= 120 and angleDiff <= 240:
+##                    print('reached body front')
                     # ball reaches the front of the player's body
                     self.setStep(0, 0)   # stop moving
                     if i == 0:   # goalkeeper has the ball
                         self.gkCaught = True
                     break
                 else:
+##                    print('reached body side/back')
                     # ball reaches the back of the player's body --> bounce back
                     self.bounceBack(random.choice(['x','y']))
+##            print('\n')
                     
     def checkGoal(self, goalPosts):
         '''This function checks if the player has scored.
