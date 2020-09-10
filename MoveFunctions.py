@@ -80,23 +80,23 @@ def reachedBoundaries(boundaryX, boundaryY, point, direction, quarter):
     quarter is the quarter in the xy-plane (with the y-axis pointing downward)
     in which the object is currently staying.'''
     if direction == 'counterclockwise' or direction == 'right':
-        if boundaryX != False:
+        if boundaryX != None:
             if quarter == 1 and point[0] >= boundaryX[1]:
                 return True
             elif quarter == 3 and point[0] <= boundaryX[0]:
                 return True
-        if boundaryY != False:
+        if boundaryY != None:
             if quarter == 2 and point[1] <= boundaryY[0]:
                 return True
             elif quarter == 4 and point[1] >= boundaryY[1]:
                 return True
     elif direction == 'clockwise' or direction == 'left':
-        if boundaryX != False:
+        if boundaryX != None:
             if quarter == 2 and point[0] >= boundaryX[1]:
                 return True
             elif quarter == 4 and point[0] <= boundaryX[0]:
                 return True
-        if boundaryY != False:
+        if boundaryY != None:
             if quarter == 1 and point[1] >= boundaryY[1]:
                 return True
             elif quarter == 3 and point[1] <= boundaryY[0]:
@@ -104,9 +104,8 @@ def reachedBoundaries(boundaryX, boundaryY, point, direction, quarter):
     else:
         return False
 
-def moveCircle(rotCenter, currentCenterPos, direction,
-               step=10, maxRotation=False,
-               boundaryX=False, boundaryY=False, objCenter=False):
+def moveCircle(rotCenter, currentCenterPos, direction, step=10,
+               maxRotation=None, boundaryX=None, boundaryY=None, objCenter=None):
     '''This function rotates an object around a point or around another object.
     rotCenter is the point or the center of the object around which the moving
     object rotates.
@@ -121,10 +120,10 @@ def moveCircle(rotCenter, currentCenterPos, direction,
     # radius, current angle (measured in degrees), and current quarter
     r, currentAngle, quarter = line.getParams(rotCenter, currentCenterPos)[2:]
     # set boundaries
-    if boundaryX != False and objCenter != False:
+    if boundaryX != None and objCenter != None:
         boundaryX[0] += objCenter[0]   # smallest possible x (left boundary)
         boundaryX[1] -= objCenter[0]   # largest possible x (right boundary)
-    if boundaryY != False and objCenter != False:
+    if boundaryY != None and objCenter != None:
         boundaryY[0] += objCenter[1]   # smallest possible y (upper boundary)
         boundaryY[1] -= objCenter[1]   # largest possible y (lower boundary)
     # check boundaries: stop moving if object has reached a boundary
@@ -134,24 +133,24 @@ def moveCircle(rotCenter, currentCenterPos, direction,
     # check direction
     elif direction == 'counterclockwise' or direction == 'right':
         # check maximum rotation
-        if maxRotation != False:
+        if maxRotation != None:
             if currentAngle >= maxRotation:
                 # object has reached maximum rotation --> stop moving
                 step = 0
-            if step >= maxRotation-currentAngle:
+            if step >= maxRotation - currentAngle:
                 # final step before reaching maximum rotation
-                step = maxRotation-currentAngle
+                step = maxRotation - currentAngle
     else:
         step *= -1   # negative step size
-        maxRotation *= -1
         # check maximum rotation
-        if maxRotation != False:
+        if maxRotation != None:
+            maxRotation *= -1   # negative rotation
             if currentAngle <= maxRotation:
                 # object has reached maximum rotation --> stop moving
                 step = 0
-            if step <= maxRotation-currentAngle:
+            if step <= maxRotation - currentAngle:
                 # final step before reaching maximum rotation
-                step = maxRotation-currentAngle
+                step = maxRotation - currentAngle
     rotate = currentAngle + step   # new angle (measured in degrees)
     # make sure the angle is between -180 and 180 degrees
     if rotate > 180:
@@ -183,7 +182,7 @@ def moveCircle(rotCenter, currentCenterPos, direction,
     return newCenterPos, rotate
 
 def moveStraight(center, currentCenterPos, direction, stepX=10, stepY=10,
-                 boundaryX=False, boundaryY=False):
+                 boundaryX=None, boundaryY=None):
     '''This function moves an object on a straight line.
     center is the object's center point.
     currentCenterPos refers to the current coordinates of the object's center.
@@ -194,10 +193,10 @@ def moveStraight(center, currentCenterPos, direction, stepX=10, stepY=10,
     ranges, respectively, of the area in which the object is allowed to move.
     objCenter is the object's center point.'''
     # set boundaries
-    if boundaryX != False:
+    if boundaryX != None:
         boundaryX[0] += center[0]   # smallest possible x (left boundary)
         boundaryX[1] -= center[0]   # largest possible x (right boundary)
-    if boundaryY != False:
+    if boundaryY != None:
         boundaryY[0] += center[1]   # smallest possible y (upper boundary)
         boundaryY[1] -= center[1]   # largest possible y (lower boundary)
     # check direction
@@ -205,7 +204,7 @@ def moveStraight(center, currentCenterPos, direction, stepX=10, stepY=10,
         stepX = 0   # no lateral movement
         stepY *= -1   # negative step size
         rotate = 0   # new angle (measured in degrees)
-        if boundaryY != False:
+        if boundaryY != None:
             if currentCenterPos[1] <= boundaryY[0]:
                 # object has reached boundary --> stop moving
                 stepY = 0
@@ -215,7 +214,7 @@ def moveStraight(center, currentCenterPos, direction, stepX=10, stepY=10,
     elif direction == 'down':
         stepX = 0   # no lateral movement
         rotate = 180   # new angle (measured in degrees)
-        if boundaryY != False:
+        if boundaryY != None:
             if currentCenterPos[1] >= boundaryY[1]:
                 # object has reached boundary --> stop moving
                 stepY = 0
@@ -226,7 +225,7 @@ def moveStraight(center, currentCenterPos, direction, stepX=10, stepY=10,
         stepX *= -1   # negative step size
         stepY = 0   # no vertical movement
         rotate = 90   # new angle (measured in degrees)
-        if boundaryX != False:
+        if boundaryX != None:
             if currentCenterPos[0] <= boundaryX[0]:
                 # object has reached boundary --> stop moving
                 stepX = 0
@@ -236,7 +235,7 @@ def moveStraight(center, currentCenterPos, direction, stepX=10, stepY=10,
     elif direction == 'right':
         stepY = 0   # no vertical movement
         rotate = -90   # new angle (measured in degrees)
-        if boundaryX != False:
+        if boundaryX != None:
             if currentCenterPos[0] >= boundaryX[1]:
                 # object has reached boundary --> stop moving
                 stepX = 0
