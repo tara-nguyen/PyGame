@@ -40,16 +40,16 @@ class Game:
         file = './ImagesInPyGame/' + imageName + '.png'
         return file
 
-    def loadImage(self, imageName, newWidth=False, newHeight=False):
+    def loadImage(self, imageName, newWidth=None, newHeight=None):
         '''This function loads an image into PyGame and resizes it if required.'''
         image = pygame.image.load(self.getFile(imageName)).convert_alpha()
-        if newWidth != False and newHeight == False:
+        if newWidth != None and newHeight == None:
             # change the width but not the height
             newHeight = image.get_rect().height
-        if newWidth == False and newHeight != False:
+        if newWidth == None and newHeight != None:
             # change the height but not the width
             newWidth = image.get_rect().width
-        if newWidth != False or newHeight != False:
+        if newWidth != None or newHeight != None:
             # resize image
             image = pygame.transform.scale(image, (newWidth, newHeight))
         return image
@@ -399,7 +399,7 @@ class Ball(Game):
             if right < goalPosts[1]-goalPosts[2] and \
                self.stepX < right-(goalPosts[1]-goalPosts[2]):
                 self.setFinalStep1('x', right-(goalPosts[1]-goalPosts[2]))
-    
+
     def hitGoalPosts(self, goalPosts):
         '''This function checks if the ball has hit the goal posts.
         goalPosts denotes the x-coordinates and size of the goal posts.'''
@@ -496,35 +496,24 @@ class Ball(Game):
         minDist is the nearest distance to each player that the ball can get.'''
         self.gkCaught = False   # ball hasn't been caught by the goalkeeper
         for i in range(numPlayers):
-##            if i == 0:
-##                print('goalkeeper')
-##            else:
-##                print('outfielder')
             # distance from ball to the midpoint, and angle (measured in 
             # degrees) of the ball with respect to the y-axis pointing down
             # from the midpoint
-##            print('midpoint',feetMidpoints[i])
-##            print('ball center pos',self.getCenterPos())
             dist, angle = line.getParams(feetMidpoints[i],
                                          self.getCenterPos())[2:4]
             # difference between the current rotation of the player and the 
             # angle just computed
             angleDiff = abs(playerRots[i] - angle)
-##            print('distance from ball to midpoint',dist)
-##            print('player rotation - ball angle =',angleDiff)
             if dist <= minDist:
                 if angleDiff >= 120 and angleDiff <= 240:
-##                    print('reached body front')
                     # ball reaches the front of the player's body
                     self.setStep(0, 0)   # stop moving
                     if i == 0:   # goalkeeper has the ball
                         self.gkCaught = True
                     break
                 else:
-##                    print('reached body side/back')
                     # ball reaches the back of the player's body --> bounce back
                     self.bounceBack(random.choice(['x','y']))
-##            print('\n')
                     
     def checkGoal(self, goalPosts):
         '''This function checks if the player has scored.

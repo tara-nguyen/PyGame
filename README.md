@@ -31,9 +31,9 @@ Changes to the goal:
 
 Changes to the player:
 - Add two classes, `Goalkeeper` and `Outfielder`, which are children of the `Player` class.
-- Add `getFootSize()`, `getBodySize()`, and `adjustFeetStartPos()` methods to the `Player` class.
+- Add `adjustFeetStartPos()` method to the `Player` class.
 - Split the `blit()` method into two: `blitFeet()` and `blitBody()`.
-- Remove the `getSinCos()` method
+- Remove the `getSinCos()` method.
 - Move the `move()` method in the `Player` class to the `Outfielder` class. The `Goalkeeper` class has its own `move()` method.
 - Modify the `updatePlayer()` and `updateFoot()` methods to accommodate multiple players' movements.
 - Split the `kickBall()` method in the `Player` class into: `prepareBallKick()`, `updateKickingFoot()`, and `checkBallTouch()` in that class, as well as the `kickBall()` method in each of the child classes.
