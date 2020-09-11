@@ -2,6 +2,7 @@
 use the following syntax: <module name as imported>.Player.__doc__'''
 
 import pygame, random, math
+import CroppingImages as crop
 import LineParams as line
 import MoveFunctions as move
 import NonplayerClasses as np
@@ -9,14 +10,12 @@ import NonplayerClasses as np
 class Player(np.Game):
     '''This class is a child class of Game, which is defined in the module
     NonplayerClass.py. It's also the parent class of Goalkeeper and Outfielder.
-    This class has the following methods: __init__, load, getFootSize, 
-    getBodySize, setStartPos, adjustStartPos, blitFeet, blitBody, getStartPos, 
-    getCenter, setCenterPos, getCenterPos, getMidpoint, getRotation, 
-    getPlayerBox, getBodyAngle, getFootAngle, setMovingRotation, 
-    getMovingRotation, feetToFront, setStep, getDistanceMoved, getDistanceToBall, 
-    getEnding, moveAroundBall, moveStraight, moveToBall, updatePlayer, 
-    updateFeet, chooseKickingFoot, prepareBallKick, updateKickingFoot, and
-    checkBallTouch.
+    This class has the following methods: __init__, load, getCenter,
+    setStartPos, adjustStartPos, blitFeet, blitBody, getStartPos, setCenterPos,
+    getCenterPos, getMidpoint, getRotation, getBodyAngle, getFootAngle,
+    setMovingRotation, getMovingRotation, feetToFront, setStep, getDistanceMoved, getDistanceToBall, getEnding, moveAroundBall,
+    moveStraight, moveToBall, updatePlayer, updateFeet, chooseKickingFoot,
+    prepareBallKick, updateKickingFoot, and checkBallTouch.
     To get a brief description of each method, use the following syntax:
         <module name as imported>.Player.<method name>.__doc__'''
     def __init__(self, screenSize):
@@ -27,51 +26,40 @@ class Player(np.Game):
         self.body = None
         
     def load(self, imageName1, imageName2):
-        '''This function loads images of the player's feet and body into PyGame
+        '''This function loads images of the player's foot and body into PyGame
         and rotates them 90 degrees counterclockwise.'''
-        # temporary sizes of the feet and of the body
-        footWidth, footHeight = 44, 30
-        bodyWidth, bodyHeight = 52, 76
-        self.lFoot = np.Game.loadImage(self, imageName1, footWidth, footHeight)
-        self.rFoot = self.lFoot
-        self.body = np.Game.loadImage(self, imageName2, bodyWidth, bodyHeight)
-        # rotate
+        # load images
+        self.lFoot = np.Game.loadImage(self, imageName1, 44, 30)
+        self.body = np.Game.loadImage(self, imageName2, 52, 76)
+        # rotate 90 degrees clockwise
         self.lFoot = pygame.transform.rotate(self.lFoot, 90)
-        self.rFoot = pygame.transform.rotate(self.rFoot, 90)
+        self.rFoot = self.lFoot
         self.body = pygame.transform.rotate(self.body, 90)
         # duplicates to hold the images at the start of the program (i.e.,
         # before any change/movement has been made)
         self.footStart = self.lFoot
         self.bodyStart = self.body
+        # holder variables for the centers at the start of the program
+        self.footCenterStart = self.footStart.get_rect().center
+        self.bodyCenterStart = self.bodyStart.get_rect().center
         
-    def getFootSize(self):
-        '''This function returns the size of the feet.'''
-        self.footWidth = self.lFoot.get_rect().width
-        self.footHeight = self.lFoot.get_rect().height
-        return self.footWidth, self.footHeight
-    
-    def getBodySize(self):
-        '''This function returns the size of the body.'''
-        self.bodyWidth = self.body.get_rect().width
-        self.bodyHeight = self.body.get_rect().height
-        return self.bodyWidth, self.bodyHeight
+    def getCenter(self):
+        '''This function returns the centers of the feet and the body.'''
+        self.footCenter = self.lFoot.get_rect().center
+        self.bodyCenter = self.body.get_rect().center
+        return self.footCenter, self.bodyCenter
 
     def setStartPos(self):
         '''This function sets the positions where the feet and the body will be
         drawn, assuming that the player will be facing upward at the start of
         the program.'''
-        self.footCenter, self.bodyCenter = self.getCenter()   # center points
-        # holder variables for the centers at the start of the program
-        self.footCenterStart = self.footCenter
-        self.bodyCenterStart = self.bodyCenter
+        self.getCenter()   # center points
         # coordinates of the body center at the start of the program
         self.bodyCenterPos = (self.bodyStartPos[0]+self.bodyCenterStart[0],
                               self.bodyStartPos[1]+self.bodyCenterStart[1])
-        # how many pixels of the feet stick out from the front of the body
-        self.feetOut = 1   
         # position of the feet
-        self.lFootStartPos = (self.bodyCenterPos[0]-self.getFootSize()[0]-1,
-                              self.bodyStartPos[1]-self.feetOut)
+        self.lFootStartPos = (self.bodyCenterPos[0]-self.footCenter[0]*2-1,
+                              self.bodyStartPos[1])
         self.rFootStartPos = self.bodyCenterPos[0]+1, self.lFootStartPos[1]
         # coordinates of the foot centers at the start of the program
         self.lFootCenterPos = (self.lFootStartPos[0]+self.footCenterStart[0],
@@ -133,12 +121,6 @@ class Player(np.Game):
         start of the program.'''
         return [self.lFootStartPos, self.rFootStartPos, self.bodyStartPos]
 
-    def getCenter(self):
-        '''This function returns the centers of the feet and the body.'''
-        self.footCenter = self.lFoot.get_rect().center
-        self.bodyCenter = self.body.get_rect().center
-        return self.footCenter, self.bodyCenter
-
     def setCenterPos(self, bodyPart, X, Y):
         '''This function sets a new position for the center of one of the feet
         or the center of the body.'''
@@ -171,42 +153,6 @@ class Player(np.Game):
         self.currentRot = line.getParams(self.getMidpoint(),
                                          self.getCenterPos()[2])[3]
         return self.currentRot
-
-    def getPlayerBox(self):
-        '''This function returns the coordinates of the four corners of the box
-        which the player's body occupies'''
-        # square of the distance between the body center & one corner of the box
-        diagSqr = self.bodyCenterStart[0]**2+self.bodyCenterStart[1]**2
-        # direction the player is currently facing (angle measured in degrees)
-        currentRot = self.getRotation()
-        if np.getTrig(currentRot)[0] * np.getTrig(currentRot)[1] <= 0:
-            # difference in coordinates between the body center
-            # and the first corner
-            x1Diff = self.getCenter()[1][0]
-            y1Diff = math.sqrt(diagSqr - x1Diff**2)
-            # difference in coordinates between the body center
-            # and the third corner
-            y3Diff = self.getCenter()[1][1]
-            x3Diff = math.sqrt(diagSqr - y3Diff**2)
-        else:
-            # difference in coordinates between the body center
-            # and the first corner
-            y1Diff = self.getCenter()[1][1]
-            x1Diff = math.sqrt(diagSqr - y1Diff**2)
-            # difference in coordinates between the body center
-            # and the first corner
-            x3Diff = self.getCenter()[1][0]
-            y3Diff = math.sqrt(diagSqr - x3Diff**2)
-        # the four corners
-        corner1 = (self.getCenterPos()[2][0]+x1Diff,
-                   self.getCenterPos()[2][1]+y1Diff)
-        corner2 = (self.getCenterPos()[2][0]-x1Diff,
-                   self.getCenterPos()[2][1]-y1Diff)
-        corner3 = (self.getCenterPos()[2][0]+x3Diff,
-                   self.getCenterPos()[2][1]-y3Diff)
-        corner4 = (self.getCenterPos()[2][0]-x3Diff,
-                   self.getCenterPos()[2][1]+y3Diff)
-        return corner1, corner2, corner3, corner4
 
     def getBodyAngle(self, target):
         '''This function returns the angle (measured in degrees) of the body
@@ -338,8 +284,7 @@ class Player(np.Game):
         newCenterPos, rotate = move.moveStraight(
             self.getCenter()[1], self.getCenterPos()[2], direction,
             stepX=self.stepX, stepY=self.stepY,
-            boundaryX=[self.feetOut,self.screenWidth-self.feetOut],
-            boundaryY=[self.feetOut,self.screenHeight-self.feetOut])
+            boundaryX=[0,self.screenWidth], boundaryY=[0,self.screenHeight])
         if newCenterPos != self.getCenterPos()[2]:   # body moving
             self.moved = True
             # distance moved
@@ -363,8 +308,7 @@ class Player(np.Game):
         # point to which the body will move and direction the player will
         # face when he reaches that point
         endPoint, endAngle = self.getEnding(
-            ballCenterPos,
-            self.bodyCenterStart[1]+self.feetOut+ballCenter[1],
+            ballCenterPos, self.bodyCenterStart[1]+ballCenter[1],
             self.getBodyAngle(ballCenterPos))
         # move body
         newCenterPos, rotate = move.moveToPoint(
