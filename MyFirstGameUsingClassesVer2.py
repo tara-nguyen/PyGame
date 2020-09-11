@@ -87,8 +87,7 @@ while playing:
         # The ball will move if the foot touches it.
         if goalkeeper.touchedBall or striker.touchedBall:
             # nearest distance to the player that the ball can get
-            minDist = ball.center[1] + striker.bodyCenterStart[1] + \
-                      striker.feetOut - 5
+            minDist = ball.center[1] + striker.bodyCenterStart[1] - 5
             if goalkeeper.touchedBall:   # goalkeeper kicks the ball
                 goalkeeper.speed = gkStartSpeed   # reset goalkeeper's speed
                 # angle (measured in degrees) of the body with respect to the
