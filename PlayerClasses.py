@@ -2,7 +2,6 @@
 use the following syntax: <module name as imported>.Player.__doc__'''
 
 import pygame, random, math
-import CroppingImages as crop
 import LineParams as line
 import MoveFunctions as move
 import NonplayerClasses as np
@@ -21,7 +20,7 @@ class Player(np.Game):
         <module name as imported>.Player.<method name>.__doc__'''
     def __init__(self, screenSize):
         '''This function initializes the class and sets its core attributes.'''
-        np.Game.__init__(self, screenSize)   # initialize the parent class
+        np.Game.__init__(self, screenSize)   # initializes the parent class
         self.lFoot = None   # contains nothing
         self.rFoot = None
         self.body = None
@@ -502,7 +501,7 @@ class Goalkeeper(Player):
         <module name as imported>.Goalkeeper.<method name>.__doc__'''
     def __init__(self, screenSize):
         '''This function initializes the class and sets its core attributes.'''
-        Player.__init__(self, screenSize)   # initialize the parent class
+        Player.__init__(self, screenSize)   # initializes the parent class
         # body position at the start of the program
         self.bodyStartPosX = (self.screenWidth - 76) / 2
         self.bodyStartPosY = 80
@@ -559,7 +558,7 @@ class Outfielder(Player):
         <module name as imported>.Outfielder.<method name>.__doc__'''
     def __init__(self, screenSize):
         '''This function initializes the class and sets its core attributes.'''
-        Player.__init__(self, screenSize)   # initialize the parent class
+        Player.__init__(self, screenSize)   # initializes the parent class
         # body position at the start of the program
         self.bodyStartPosX = random.uniform(20, self.screenWidth-96)
         self.bodyStartPosY = random.uniform(self.screenHeight-150,

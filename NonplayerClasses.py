@@ -27,12 +27,12 @@ class Game:
         self.screen = pygame.display.set_mode(screenSize)
         self.screenCenter = self.screenWidth/2, self.screenHeight/2
         self.fps = 30   # maxmium number of frames per second
-        self.frame = pygame.time.Clock()   # initialize clock
+        self.frame = pygame.time.Clock()   # initializes clock
         
     def updateDisplay(self):
         '''This function updates the display and sets the maximum number of
         frames per second.'''
-        pygame.display.flip()   # update/clear display
+        pygame.display.flip()   # updates/clears display
         self.frame.tick(self.fps)   # maximum number of frames per second
         
     def getFile(self, imageName):
@@ -145,7 +145,7 @@ class Background(Game):
         <module name as imported>.Background.<method name>.__doc__'''
     def __init__(self, screenSize):
         '''This function initializes the class and sets its core attributes.'''
-        Game.__init__(self, screenSize)   # initialize the parent class
+        Game.__init__(self, screenSize)   # initializes the parent class
         self.grass = None   # contains nothing
         
     def load(self, imageName):
@@ -166,7 +166,7 @@ class Goal(Game):
         <module name as imported>.Goal.<method name>.__doc__'''
     def __init__(self, screenSize):
         '''This function initializes the class and sets its core attributes.'''
-        Game.__init__(self, screenSize)   # initialize the parent class
+        Game.__init__(self, screenSize)   # initializes the parent class
         self.left = None
         self.middle = None
         self.right = None
@@ -277,7 +277,7 @@ class Ball(Game):
         <module name as imported>.Ball.<method name>.__doc__'''
     def __init__(self, screenSize):
         '''This function initializes the class and sets its core attributes.'''
-        Game.__init__(self, screenSize)   # initialize the parent class
+        Game.__init__(self, screenSize)   # initializes the parent class
         self.ball = None   # contains nothing
         self.diameter = 36
         self.gkCaught = False
@@ -564,7 +564,7 @@ class Ball(Game):
                               self.getCenterPos()[1]-self.stepY)
             # update ball position and update display to show movement
             self.updateBall()
-        self.decrementStep()   # decrement step size
+        self.decrementStep()   # decrements step size
 
     def resetBall(self):
         '''This function puts the ball at its original position after the 
