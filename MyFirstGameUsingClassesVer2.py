@@ -68,7 +68,7 @@ while playing:
         if event.type == pygame.QUIT:
             playing = False
             pygame.quit()
-            sys.exit()   # prevents getting an error message when quitting the game
+            sys.exit()   # prevents getting an error message when quitting
 
     striker.moved = False
     ball.inGoal = False
@@ -89,7 +89,7 @@ while playing:
             # nearest distance to the player that the ball can get
             minDist = ball.center[1] + striker.bodyCenterStart[1] - 5
             if goalkeeper.touchedBall:   # goalkeeper kicks the ball
-                goalkeeper.speed = gkStartSpeed   # reset goalkeeper's speed
+                goalkeeper.speed = gkStartSpeed   # resets goalkeeper's speed
                 # angle (measured in degrees) of the body with respect to the
                 # y-axis pointing down from the ball
                 bodyAngle = goalkeeper.getBodyAngle(ball.getCenterPos())
@@ -150,13 +150,13 @@ while playing:
     # stopped moving.
     if ball.inGoal:
         ball.resetBall()
-        goalkeeper.speed = gkStartSpeed   # reset goalkeeper's speed
+        goalkeeper.speed = gkStartSpeed   # resets goalkeeper's speed
 
-    goalkeeper.move(goalPosts)   # move goalkeeper between goal posts
-    goalkeeper.updatePlayer(gkLFootIndex, gkBodyIndex)   # update player
+    goalkeeper.move(goalPosts)   # moves goalkeeper between goal posts
+    goalkeeper.updatePlayer(gkLFootIndex, gkBodyIndex)   # updates player
                 
     if striker.moved:
         # update player
         striker.updatePlayer(strikerLFootIndex, strikerBodyIndex)
 
-    bg.updateDisplay()   # update display to show changes
+    bg.updateDisplay()   # updates display to show changes

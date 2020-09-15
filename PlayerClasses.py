@@ -20,7 +20,7 @@ class Player(np.Game):
         <module name as imported>.Player.<method name>.__doc__'''
     def __init__(self, screenSize):
         '''This function initializes the class and sets its core attributes.'''
-        np.Game.__init__(self, screenSize)   # initialize the parent class
+        np.Game.__init__(self, screenSize)   # initializes the parent class
         self.lFoot = None   # contains nothing
         self.rFoot = None
         self.body = None
@@ -86,7 +86,7 @@ class Player(np.Game):
         self.setCenterPos('rFoot', self.getCenterPos()[1][0]+moveX,
                           self.getCenterPos()[1][1]+moveY)
         self.setMovingRotation(rotate)   # rotation (angled measured in degrees)
-        self.feetToFront(self.getCenterPos()[2])   # move feet to front of body
+        self.feetToFront(self.getCenterPos()[2])   # moves feet to front of body
         # new positions at which the feet will be drawn
         self.lFootStartPos = (self.getCenterPos()[0][0]-self.getCenter()[0][0],
                               self.getCenterPos()[0][1]-self.getCenter()[0][1])
@@ -103,7 +103,7 @@ class Player(np.Game):
         self.lFoot = pygame.transform.rotate(self.lFoot, rotate)
         self.rFoot = pygame.transform.rotate(self.rFoot, rotate)
         self.body = pygame.transform.rotate(self.body, rotate)
-        self.adjustStartPos(rotate)   # adjust drawing positions
+        self.adjustStartPos(rotate)   # adjusts drawing positions
         # draw the feet
         self.screen.blit(self.lFoot, self.lFootStartPos)
         self.screen.blit(self.rFoot, self.rFootStartPos)
@@ -247,7 +247,7 @@ class Player(np.Game):
         '''This function rotates both the feet and the body around the ball.
         ballCenterPos is the coordinates of the ball's center.
         direction denotes which way the body/foot will move.'''
-        self.setStep(10, 10)   # set step size
+        self.setStep(10, 10)   # sets step size
         # current angle (measured in degrees) of the body with respect to the 
         # y-axis pointing down from the target
         bodyAngle = self.getBodyAngle(ballCenterPos)
@@ -274,12 +274,12 @@ class Player(np.Game):
                 ballCenterPos, self.getCenterPos()[0], direction, step=step)[0]
             self.rFootCenterPos = move.moveCircle(
                 ballCenterPos, self.getCenterPos()[1], direction, step=step)[0]
-            self.feetToFront(ballCenterPos)   # move feet to front of body
+            self.feetToFront(ballCenterPos)   # moves feet to front of body
 
     def moveStraight(self, direction):
         '''This function moves both the feet and the body in a straight line.
         direction denotes which way the body/foot will move.'''
-        self.setStep(10, 10)   # set step size
+        self.setStep(10, 10)   # sets step size
         # move body
         newCenterPos, rotate = move.moveStraight(
             self.getCenter()[1], self.getCenterPos()[2], direction,
@@ -300,7 +300,7 @@ class Player(np.Game):
                               self.getCenterPos()[1][1]+moveY)
             if self.getRotation() != self.getMovingRotation():
                 # player facing the wrong direction
-                self.feetToFront(newCenterPos)   # move feet to front of body
+                self.feetToFront(newCenterPos)   # moves feet to front of body
 
     def moveToBall(self, ballCenter, ballCenterPos):
         '''This function moves both the feet and the body toward the ball.
@@ -326,7 +326,7 @@ class Player(np.Game):
                               self.getCenterPos()[0][1]+moveY)
             self.setCenterPos('rFoot', self.getCenterPos()[1][0]+moveX,
                               self.getCenterPos()[1][1]+moveY)
-            self.feetToFront(endPoint)   # move feet to front of body
+            self.feetToFront(endPoint)   # moves feet to front of body
 
     def updatePlayer(self, lFootIndex, bodyIndex):
         '''This function updates the positions and rotations of both the body
@@ -439,7 +439,7 @@ class Player(np.Game):
         # update foot position and update display to show movement
         self.updateFeet(kickingFoot, newCenterPos, rotate, lFootIndex)
         self.updateDisplay()
-        pygame.time.wait(100)   # pause program for 100 ms
+        pygame.time.wait(100)   # pauses program for 100 ms
         # bring foot back to its position and rotation before the kick
         if kickingFoot == 'lFoot':   # left foot is the kicking foot
             newCenterPos = self.kFootCenterPos, self.getCenterPos()[1]
@@ -465,7 +465,7 @@ class Goalkeeper(Player):
         <module name as imported>.Goalkeeper.<method name>.__doc__'''
     def __init__(self, screenSize):
         '''This function initializes the class and sets its core attributes.'''
-        Player.__init__(self, screenSize)   # initialize the parent class
+        Player.__init__(self, screenSize)   # initializes the parent class
         # body position at the start of the program
         self.bodyStartPosX = (self.screenWidth - 76) / 2
         self.bodyStartPosY = 80
@@ -485,10 +485,10 @@ class Goalkeeper(Player):
         rEndPoint = goalPosts[1]-goalPosts[2]-self.getCenter()[1][0]
         if self.movingDirection == 1:   # playing is moving to the right
             if self.getCenterPos()[2][0] >= rEndPoint:   # reached right post
-                self.movingDirection = -1   # change direction
+                self.movingDirection = -1   # changes direction
         else:   # player is moving left
             if self.getCenterPos()[2][0] <= lEndPoint:   # reached left post
-                self.movingDirection = 1   # change direction
+                self.movingDirection = 1   # changes direction
         # move player
         self.setCenterPos(
             'body', self.getCenterPos()[2][0]+self.speed*self.movingDirection,
@@ -522,7 +522,7 @@ class Outfielder(Player):
         <module name as imported>.Outfielder.<method name>.__doc__'''
     def __init__(self, screenSize):
         '''This function initializes the class and sets its core attributes.'''
-        Player.__init__(self, screenSize)   # initialize the parent class
+        Player.__init__(self, screenSize)   # initializes the parent class
         # body position at the start of the program
         self.bodyStartPosX = random.uniform(20, self.screenWidth-96)
         self.bodyStartPosY = random.uniform(self.screenHeight-150,
