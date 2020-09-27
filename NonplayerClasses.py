@@ -507,7 +507,7 @@ class Ball(Game):
             if dist <= minDist:
                 if angleDiff >= 120 and angleDiff <= 240:
                     # ball reaches the front of the player's body
-                    self.setStep(0, 0)   # stop moving
+                    self.setStep(0, 0)   # stops moving
                     if i == 0:   # goalkeeper has the ball
                         self.gkCaught = True
                     break

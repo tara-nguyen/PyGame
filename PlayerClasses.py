@@ -10,9 +10,9 @@ class Player(np.Game):
     '''This class is a child class of Game, which is defined in the module
     NonplayerClass.py. It's also the parent class of Goalkeeper and Outfielder.
     This class has the following methods: __init__, load, getCenter,
-    setStartPos, adjustStartPos, blitFeet, blitBody, getStartPos, setCenterPos,
-    getCenterPos, getMidpoint, getRotation, getBodyAngle, getFootAngle,
-    setMovingRotation, getMovingRotation, feetToFront, setStep,
+    setFootStartPos, adjustFootStartPos, blitFeet, blitBody, getStartPos,
+    setCenterPos, getCenterPos, getMidpoint, getRotation, getBodyAngle,
+    getFootAngle, setMovingRotation, getMovingRotation, feetToFront, setStep,
     getDistanceMoved, getDistanceToBall, getEnding, moveAroundBall,
     moveStraight, moveToBall, updatePlayer, updateFeet, chooseKickingFoot,
     prepareBallKick, updateKickingFoot, and checkBallTouch.
@@ -49,9 +49,9 @@ class Player(np.Game):
         self.bodyCenter = self.body.get_rect().center
         return self.footCenter, self.bodyCenter
 
-    def setStartPos(self):
-        '''This function sets the positions where the feet and the body will be
-        drawn, assuming that the player will be facing upward at the start of
+    def setFootStartPos(self):
+        '''This function sets the positions where the feet will be drawn,
+        assuming that the player will be facing upward at the start of
         the program.'''
         self.getCenter()   # center points
         # coordinates of the body center at the start of the program
@@ -67,7 +67,7 @@ class Player(np.Game):
         self.rFootCenterPos = (self.rFootStartPos[0]+self.footCenterStart[0],
                                self.rFootStartPos[1]+self.footCenterStart[1])
 
-    def adjustStartPos(self, rotate):
+    def adjustFootStartPos(self, rotate):
         '''This function adjusts the positions where the feet will be drawn at
         the start of the program, by first adjusting both the coordinates of the
         body center and those of the centers of the feet.
@@ -86,7 +86,7 @@ class Player(np.Game):
         self.setCenterPos('rFoot', self.getCenterPos()[1][0]+moveX,
                           self.getCenterPos()[1][1]+moveY)
         self.setMovingRotation(rotate)   # rotation (angled measured in degrees)
-        self.feetToFront(self.getCenterPos()[2])   # move feet to front of body
+        self.feetToFront(self.getCenterPos()[2])   # moves feet to front of body
         # new positions at which the feet will be drawn
         self.lFootStartPos = (self.getCenterPos()[0][0]-self.getCenter()[0][0],
                               self.getCenterPos()[0][1]-self.getCenter()[0][1])
@@ -98,12 +98,12 @@ class Player(np.Game):
         the feet onto the screen.
         rotate is the angle (measured in degrees) by which the feet will be
         rotated from the original upward rotation.'''
-        self.setStartPos()   # where the feet and the body will be drawn
+        self.setFootStartPos()   # where the feet will be drawn
         # rotate both the feet and the body
         self.lFoot = pygame.transform.rotate(self.lFoot, rotate)
         self.rFoot = pygame.transform.rotate(self.rFoot, rotate)
         self.body = pygame.transform.rotate(self.body, rotate)
-        self.adjustStartPos(rotate)   # adjust drawing positions
+        self.adjustFootStartPos(rotate)   # adjusts drawing positions
         # draw the feet
         self.screen.blit(self.lFoot, self.lFootStartPos)
         self.screen.blit(self.rFoot, self.rFootStartPos)
@@ -283,7 +283,7 @@ class Player(np.Game):
         '''This function rotates both the feet and the body around the ball.
         ballCenterPos is the coordinates of the ball's center.
         direction denotes which way the body/foot will move.'''
-        self.setStep(10, 10)   # set step size
+        self.setStep(10, 10)   # sets step size
         # current angle (measured in degrees) of the body with respect to the
         # y-axis pointing down from the target
         bodyAngle = self.getBodyAngle(ballCenterPos)
@@ -310,12 +310,12 @@ class Player(np.Game):
                 ballCenterPos, self.getCenterPos()[0], direction, step=step)[0]
             self.rFootCenterPos = move.moveCircle(
                 ballCenterPos, self.getCenterPos()[1], direction, step=step)[0]
-            self.feetToFront(ballCenterPos)   # move feet to front of body
+            self.feetToFront(ballCenterPos)   # moves feet to front of body
 
     def moveStraight(self, direction):
         '''This function moves both the feet and the body in a straight line.
         direction denotes which way the body/foot will move.'''
-        self.setStep(10, 10)   # set step size
+        self.setStep(10, 10)   # sets step size
         # move body
         newCenterPos, rotate = move.moveStraight(
             self.getCenter()[1], self.getCenterPos()[2], direction,
@@ -336,7 +336,7 @@ class Player(np.Game):
                               self.getCenterPos()[1][1]+moveY)
             if self.getRotation() != self.getMovingRotation():
                 # player facing the wrong direction
-                self.feetToFront(newCenterPos)   # move feet to front of body
+                self.feetToFront(newCenterPos)   # moves feet to front of body
 
     def moveToBall(self, ballCenter, ballCenterPos):
         '''This function moves both the feet and the body toward the ball.
@@ -362,7 +362,7 @@ class Player(np.Game):
                               self.getCenterPos()[0][1]+moveY)
             self.setCenterPos('rFoot', self.getCenterPos()[1][0]+moveX,
                               self.getCenterPos()[1][1]+moveY)
-            self.feetToFront(endPoint)   # move feet to front of body
+            self.feetToFront(endPoint)   # moves feet to front of body
 
     def updatePlayer(self, lFootIndex, bodyIndex):
         '''This function updates the positions and rotations of both the body
@@ -475,7 +475,7 @@ class Player(np.Game):
         # update foot position and update display to show movement
         self.updateFeet(kickingFoot, newCenterPos, rotate, lFootIndex)
         self.updateDisplay()
-        pygame.time.wait(100)   # pause program for 100 ms
+        pygame.time.wait(100)   # pauses program for 100 ms
         # bring foot back to its position and rotation before the kick
         if kickingFoot == 'lFoot':   # left foot is the kicking foot
             newCenterPos = self.kFootCenterPos, self.getCenterPos()[1]
@@ -521,10 +521,10 @@ class Goalkeeper(Player):
         rEndPoint = goalPosts[1]-goalPosts[2]-self.getCenter()[1][0]
         if self.movingDirection == 1:   # playing is moving to the right
             if self.getCenterPos()[2][0] >= rEndPoint:   # reached right post
-                self.movingDirection = -1   # change direction
+                self.movingDirection = -1   # changes direction
         else:   # player is moving left
             if self.getCenterPos()[2][0] <= lEndPoint:   # reached left post
-                self.movingDirection = 1   # change direction
+                self.movingDirection = 1   # changes direction
         # move player
         self.setCenterPos(
             'body', self.getCenterPos()[2][0]+self.speed*self.movingDirection,
