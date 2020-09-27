@@ -5,6 +5,34 @@ import pygame, sys, random, math
 import NonplayerClasses as nonplayer
 import PlayerClasses as player
 
+def processMovements():
+    '''This function processes the movements of the ball and of the goalkeeper
+    while the ball is moving.'''
+    global goalkeeper, ball
+    # angle (measured in degrees) at which the ball will move, with
+    # respect to the y-axis pointing up from the current ball center
+    ball.setMovingAngle(random.uniform(bodyAngle-1, bodyAngle+1))
+    # initial step size of the ball
+    stepSize = random.uniform(18, 22)
+    ball.setFirstStep(stepSize)
+    ball.moving = True
+    while ball.moving and round(stepSize) > 0:
+        # move goalkeeper between goal posts
+        goalkeeper.move(goalPosts)   
+        goalkeeper.updatePlayer(gkLFootIndex, gkBodyIndex)
+        # all players' current rotations
+        playerRots = goalkeeper.getRotation(), striker.getRotation()
+        # point right between each player's feet
+        feetMidpoints = (goalkeeper.getMidpoint(),
+                         striker.getMidpoint())
+        if ball.checkGoal(goalPosts):   # ball in goal
+            ball.inGoal = True
+        # move ball
+        ball.move(stepSize, goalPosts, numPlayers, playerRots,
+                  feetMidpoints, minDist)
+        # new step size
+        stepSize = math.sqrt(ball.stepX**2+ball.stepY**2)   
+    
 pygame.init()   # start pygame
 
 pygame.display.set_caption('My First Game')   # game title
@@ -74,10 +102,10 @@ while playing:
     ball.inGoal = False
 
     pressedKeys = pygame.key.get_pressed()
-    # process keys used for player movements
+    # process keys used for the striker's movements
     pressed, direction, moveType = bg.processMoveKeys(pressedKeys)
     if pressed in bg.moveKeys:
-        # one of the keys used for player movements has been pressed
+        # one of the movement keys has been pressed
         striker.move(moveType, direction, ball.center, ball.getCenterPos())
     if pressedKeys[pygame.K_s] == 1:
         # 's' key has been pressed --> player will kick the ball
@@ -87,65 +115,34 @@ while playing:
         # The ball will move if the foot touches it.
         if goalkeeper.touchedBall or striker.touchedBall:
             # nearest distance to the player that the ball can get
-            minDist = ball.center[1] + striker.bodyCenterStart[1] - 5
+            minDist = ball.center[1] + striker.bodyCenterStart[1] - 3
             if goalkeeper.touchedBall:   # goalkeeper kicks the ball
                 goalkeeper.speed = gkStartSpeed   # resets goalkeeper's speed
                 # angle (measured in degrees) of the body with respect to the
                 # y-axis pointing down from the ball
                 bodyAngle = goalkeeper.getBodyAngle(ball.getCenterPos())
-                # angle (measured in degrees) at which the ball will move, with
-                # respect to the y-axis pointing up from the current ball center
-                ball.setMovingAngle(random.uniform(bodyAngle-1, bodyAngle+1))
-                # initial step size of the ball
-                stepSize = random.uniform(18, 22)
-                ball.setFirstStep(stepSize)
-                ball.moving = True
-                while ball.moving and round(stepSize) > 0:
-                    # move goalkeeper between goal posts
-                    goalkeeper.move(goalPosts)   
-                    goalkeeper.updatePlayer(gkLFootIndex, gkBodyIndex)
-                    # all players' current rotations
-                    playerRots = goalkeeper.getRotation(), striker.getRotation()
-                    # point right between each player's feet
-                    feetMidpoints = (goalkeeper.getMidpoint(),
-                                     striker.getMidpoint())
-                    if ball.checkGoal(goalPosts):   # ball in goal
-                        ball.inGoal = True
-                    # move ball
-                    ball.move(stepSize, goalPosts, numPlayers, playerRots,
-                              feetMidpoints, minDist)
-                    # new step size
-                    stepSize = math.sqrt(ball.stepX**2+ball.stepY**2)
+                # process movements of the ball and of the goalkeeper
+                processMovements()
             else:   # striker kicks the ball
                 # angle (measured in degrees) of the body with respect to the
                 # y-axis pointing down from the ball
                 bodyAngle = striker.getBodyAngle(ball.getCenterPos())
-                # angle (measured in degrees) at which the ball will move, with
-                # respect to the y-axis pointing up from the current ball center
-                ball.setMovingAngle(random.uniform(bodyAngle-1, bodyAngle+1))
-                # initial step size of the ball
-                stepSize = random.uniform(18, 22)
-                ball.setFirstStep(stepSize)
-                ball.moving = True
-                while ball.moving and round(stepSize) > 0:
-                    # move goalkeeper between goal posts
-                    goalkeeper.move(goalPosts)   
-                    goalkeeper.updatePlayer(gkLFootIndex, gkBodyIndex)
-                    # all players' current rotations
-                    playerRots = goalkeeper.getRotation(), striker.getRotation()
-                    # point right between each player's feet
-                    feetMidpoints = (goalkeeper.getMidpoint(),
-                                     striker.getMidpoint())
-                    if ball.checkGoal(goalPosts):   # ball in goal
-                        ball.inGoal = True
-                    # move ball
-                    ball.move(stepSize, goalPosts, numPlayers, playerRots,
-                              feetMidpoints, minDist)
-                    if ball.gkCaught:   # goalkeeper has the ball
-                        goalkeeper.speed = 0
-                    # current step size
-                    stepSize = math.sqrt(ball.stepX**2+ball.stepY**2)   
-
+                # process movements of the ball and of the goalkeeper
+                processMovements()
+                if ball.gkCaught:   # goalkeeper has the ball
+                    goalkeeper.speed = 0
+                    # goalkeeper kicks the ball back
+                    goalkeeper.kickBall(ball.getCenterPos(), ball.center,
+                                        gkLFootIndex)
+                    if goalkeeper.touchedBall:
+                        # reset goalkeeper's speed
+                        goalkeeper.speed = gkStartSpeed   
+                        # angle (measured in degrees) of the body with respect
+                        # to the y-axis pointing down from the ball
+                        bodyAngle = goalkeeper.getBodyAngle(ball.getCenterPos())
+                        # process movements of the ball and of the goalkeeper
+                        processMovements()
+                        
     # If in goal, the ball will be return to its original position after it has
     # stopped moving.
     if ball.inGoal:
