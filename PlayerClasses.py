@@ -11,9 +11,10 @@ class Player(np.Game):
     '''This class is a child class of Game, which is defined in the module
     NonplayerClass.py. It's also the parent class of Goalkeeper and Outfielder.
     This class has the following methods: __init__, load, getCenter,
-    setStartPos, adjustStartPos, blitFeet, blitBody, getStartPos, setCenterPos,
-    getCenterPos, getMidpoint, getRotation, getBodyAngle, getFootAngle,
-    setMovingRotation, getMovingRotation, feetToFront, setStep, getDistanceMoved, getDistanceToBall, getEnding, moveAroundBall,
+    setFootStartPos, adjustFootStartPos, blitFeet, blitBody, getStartPos,
+    setCenterPos, getCenterPos, getMidpoint, getRotation, getBodyAngle,
+    getFootAngle, setMovingRotation, getMovingRotation, feetToFront, setStep,
+    getDistanceMoved, getDistanceToBall, getEnding, moveAroundBall,
     moveStraight, moveToBall, updatePlayer, updateFeet, chooseKickingFoot,
     prepareBallKick, updateKickingFoot, and checkBallTouch.
     To get a brief description of each method, use the following syntax:
@@ -49,9 +50,9 @@ class Player(np.Game):
         self.bodyCenter = self.body.get_rect().center
         return self.footCenter, self.bodyCenter
 
-    def setStartPos(self):
-        '''This function sets the positions where the feet and the body will be
-        drawn, assuming that the player will be facing upward at the start of
+    def setFootStartPos(self):
+        '''This function sets the positions where the feet will be drawn,
+        assuming that the player will be facing upward at the start of
         the program.'''
         self.getCenter()   # center points
         # coordinates of the body center at the start of the program
@@ -67,7 +68,7 @@ class Player(np.Game):
         self.rFootCenterPos = (self.rFootStartPos[0]+self.footCenterStart[0],
                                self.rFootStartPos[1]+self.footCenterStart[1])
 
-    def adjustStartPos(self, rotate):
+    def adjustFootStartPos(self, rotate):
         '''This function adjusts the positions where the feet will be drawn at
         the start of the program, by first adjusting both the coordinates of the
         body center and those of the centers of the feet.
@@ -98,12 +99,12 @@ class Player(np.Game):
         the feet onto the screen.
         rotate is the angle (measured in degrees) by which the feet will be
         rotated from the original upward rotation.'''
-        self.setStartPos()   # where the feet and the body will be drawn
+        self.setFootStartPos()   # where the feet will be drawn
         # rotate both the feet and the body
         self.lFoot = pygame.transform.rotate(self.lFoot, rotate)
         self.rFoot = pygame.transform.rotate(self.rFoot, rotate)
         self.body = pygame.transform.rotate(self.body, rotate)
-        self.adjustStartPos(rotate)   # adjusts drawing positions
+        self.adjustFootStartPos(rotate)   # adjusts drawing positions
         # draw the feet
         self.screen.blit(self.lFoot, self.lFootStartPos)
         self.screen.blit(self.rFoot, self.rFootStartPos)
