@@ -17,6 +17,10 @@ List of files in the repos:
 
 #### Changes from `master` branch
 
+Changes to the main program:
+- Add goalkeeper.
+- Add `processMovements()` function.
+
 Changes to the `NonplayerClasses` module:
 - Add `addToLists()` and `getLists()` methods to the `Game` class.
 - Add `load()` method to the `Background` class.
@@ -29,7 +33,14 @@ Changes to the screen:
 Changes to the goal:
 - Reduce the height.
 
-Changes to the player:
+Changes to the ball:
+- Add `load()` method.
+- Put the ball at a fixed position at the start of the program. After the player scores, the ball will be returned to this position.
+- Reduce the speed.
+- Rename `moveBall()` into `move()`. Modify that method to allow goalkeeper movements.
+- Modify the `hitPlayer()` method to accommodate the presence of multiple players.
+
+Changes to the `PlayerClasses` module:
 - Add two classes, `Goalkeeper` and `Outfielder`, which are children of the `Player` class.
 - Rename `setStartPos()` to `setFootStartPos()`.
 - Add `adjustFootStartPos()` method to the `Player` class.
@@ -39,10 +50,3 @@ Changes to the player:
 - Modify the `updatePlayer()` and `updateFoot()` methods to accommodate multiple players' movements.
 - Split the `kickBall()` method in the `Player` class into: `prepareBallKick()`, `updateKickingFoot()`, and `checkBallTouch()` in that class, as well as the `kickBall()` method in each of the child classes.
 - Draw two players, a goalkeeper and an outfielder/striker, onto the screen.
-
-Changes to the ball:
-- Add `load()` method.
-- Put the ball at a fixed position at the start of the program. After the player scores, the ball will be returned to this position.
-- Reduce the speed.
-- Rename `moveBall()` into `move()`. Modify that method to allow goalkeeper movements.
-- Modify the `hitPlayer()` method to accommodate the presence of multiple players.
