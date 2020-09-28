@@ -1,6 +1,8 @@
-'''This module defines five functions that allow objects in PyGame to move.
-They are: moveStraight(), reachedBound1(), moveCircle(), reachedBound2(),
-moveToPoint(), and update().
+'''This module defines functions that allow objects in PyGame to move, and other
+functions required to initiate movements. They are:
+    moveStraight, reachedBound1, isFinalStep,
+    moveCircle, reachedBound2,
+    moveToPoint, and update.
 To get a brief description of each function, use the following syntax:
     <module name as imported>.<function name>.__doc__'''
 
@@ -17,50 +19,52 @@ def moveStraight(center, currentCenterPos, direction, step=10,
     boundaryX and boundaryY are lists representing the vertical and lateral
     ranges, respectively, of the area in which the object is allowed to move.
     objCenter is the object's center point.'''
-    # set boundaries
+    # set screen boundaries
     if boundaryX != None:
         boundaryX[0] += center[0]   # smallest possible x (left boundary)
         boundaryX[1] -= center[0]   # largest possible x (right boundary)
     if boundaryY != None:
         boundaryY[0] += center[1]   # smallest possible y (upper boundary)
         boundaryY[1] -= center[1]   # largest possible y (lower boundary)
+    # check direction
+    if direction == 'up' or direction == 'down':
+        stepX = 0   # no lateral movement
+        if direction == 'up':
+            stepY = -step   # negative step size
+            rotate = 0   # new angle (measured in degrees)
+        else:
+            stepY = step
+            rotate = 180   # new angle (measured in degrees)
+    elif direction == 'left' or direction == 'right':
+        stepY = 0   # no vertical movement
+        if direction == 'left':
+            stepX = -step   # negative step size
+            rotate = 90   # new angle (measured in degrees)
+        else:
+            stepX = step
+            rotate = -90   # new angle (measured in degrees)
+    else:   # diagonal movement
+        stepX, stepY = step, step
+        if direction == 'up left':
+            # negative step sizes
+            stepX *= -1 
+            stepY *= -1
+            rotate = 45   # new angle (measured in degrees)
+        elif direction == 'up right':
+            stepY *= -1   # negative step size
+            rotate = -45   # new angle (measured in degrees)
+        elif direction == 'down left':
+            stepX *= -1   # negative step size
+            rotate = 135   # new angle (measured in degrees)
+        else:
+            rotate = -135   # new angle (measured in degrees)
+    # check final step and set step size accordingly
+    if isFinalStep(boundaryX, boundaryY, currentCenterPos, direction, step)[0]:
+        stepX, stepY = isFinalStep(boundaryX, boundaryY, currentCenterPos,
+                                   direction, step)[1:]
     # stop moving if object has reached one of the screen boundaries
-    if reachedBound1(boundaryX,boundaryY, currentCenterPos, direction, step)[0]:
-        stepX, stepY = reachedBound1(boundaryX, boundaryY, currentCenterPos,
-                                     direction, step)[1:]
-    else:
-        # check direction
-        if direction == 'up' or direction == 'down':
-            stepX = 0   # no lateral movement
-            if direction == 'up':
-                stepY = -step   # negative step size
-                rotate = 0   # new angle (measured in degrees)
-            else:
-                stepY = step
-                rotate = 180   # new angle (measured in degrees)
-        elif direction == 'left' or direction == 'right':
-            stepY = 0   # no vertical movement
-            if direction == 'left':
-                stepX = -step   # negative step size
-                rotate = 90   # new angle (measured in degrees)
-            else:
-                stepX = step
-                rotate = -90   # new angle (measured in degrees)
-        else:   # diagonal movement
-            stepX, stepY = step, step
-            if direction == 'up left':
-                # negative step sizes
-                stepX *= -1 
-                stepY *= -1
-                rotate = 45   # new angle (measured in degrees)
-            elif direction == 'up right':
-                stepY *= -1   # negative step size
-                rotate = -45   # new angle (measured in degrees)
-            elif direction == 'down left':
-                stepX *= -1   # negative step size
-                rotate = 135   # new angle (measured in degrees)
-            else:
-                rotate = -135   # new angle (measured in degrees)
+    if reachedBound1(boundaryX, boundaryY, currentCenterPos, direction, step):
+        stepX, stepY = 0, 0
     # new coordinates of object center
     newCenterPos = currentCenterPos[0]+stepX, currentCenterPos[1]+stepY
     return newCenterPos, rotate
@@ -70,22 +74,64 @@ def reachedBound1(boundaryX, boundaryY, centerPos, direction, step):
     will be going over the screen boundaries.
     boundaryX and boundaryY are lists representing the vertical and lateral
     ranges, respectively, of the area in which the object is allowed to move.
-    step is the number of pixels by which the object will move either
-    horizontally or vertically.
     centerPos is the coordinates of the object's center either before or after
-    a movement.'''
+    a movement.
+    step is the number of pixels by which the object will move either
+    horizontally or vertically.'''
+    if boundaryX == None and boundaryY == None:
+        return False
+    elif direction == 'up' or direction == 'down':
+        if boundaryY != None:
+            if direction == 'up':
+                if centerPos[1] <= boundaryY[0]:
+                    return True
+                else:
+                    return False
+            else:
+                if centerPos[1] >= boundaryY[1]:
+                    return True
+                else:
+                    return False
+        else:
+            return False,
+    elif direction == 'left' or direction == 'right':
+        if boundaryX != None:
+            if direction == 'left':
+                if centerPos[0] <= boundaryX[0]:
+                    return True
+                else:
+                    return False
+            else:
+                if centerPos[0] >= boundaryX[1]:
+                    return True
+                else:
+                    return False
+        else:
+            return False
+
+def isFinalStep(boundaryX, boundaryY, centerPos, direction, step):
+    '''This function checks if an object moving on a straight line is about to
+    reach one of the screen boundaries, and sets the final step accordingly.
+    boundaryX and boundaryY are lists representing the vertical and lateral
+    ranges, respectively, of the area in which the object is allowed to move.
+    centerPos is the coordinates of the object's center either before or after
+    a movement.
+    step is the number of pixels by which the object will move either
+    horizontally or vertically.'''
     if boundaryX == None and boundaryY == None:
         return False,
     elif direction == 'up' or direction == 'down':
         if boundaryY != None:
             if direction == 'up':
-                if centerPos[1] <= boundaryY[0]:
-                    return True, step, 0
+                if step <= boundaryY[0] - centerPos[1]:
+                    step = boundaryY[0] - centerPos[1]
+                    return True, 0, step
                 else:
                     return False,
             else:
-                if centerPos[1] >= boundaryY[1]:
-                    return True, step, 0
+                if step >= boundaryY[1] - centerPos[1]:
+                    step = boundaryY[1] - centerPos[1]
+                    return True, 0, step
                 else:
                     return False,
         else:
@@ -93,13 +139,15 @@ def reachedBound1(boundaryX, boundaryY, centerPos, direction, step):
     elif direction == 'left' or direction == 'right':
         if boundaryX != None:
             if direction == 'left':
-                if centerPos[0] <= boundaryX[0]:
-                    return True, 0, step
+                if step <= boundaryX[0] - centerPos[0]:
+                    step = boundaryX[0] - centerPos[0]
+                    return True, step, 0
                 else:
                     return False,
             else:
-                if centerPos[0] >= boundaryX[1]:
-                    return True, 0, step
+                if step >= boundaryX[1] - centerPos[0]:
+                    step = boundaryX[1] - centerPos[0]
+                    return True, step, 0
                 else:
                     return False,
         else:
@@ -120,7 +168,7 @@ def moveCircle(rotCenter, currentCenterPos, direction, step=10,
     objCenter is the object's center point.'''
     # radius, current angle (measured in degrees), and current quarter
     r, currentAngle, quarter = line.getParams(rotCenter, currentCenterPos)[2:]
-    # set boundaries
+    # set screen boundaries
     if boundaryX != None and objCenter != None:
         boundaryX[0] += objCenter[0]   # smallest possible x (left boundary)
         boundaryX[1] -= objCenter[0]   # largest possible x (right boundary)
