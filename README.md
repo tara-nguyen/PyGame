@@ -45,8 +45,17 @@ Changes to the `PlayerClasses` module:
 - Rename `setStartPos()` to `setFootStartPos()`.
 - Add `adjustFootStartPos()` method to the `Player` class.
 - Split the `blit()` method into two: `blitFeet()` and `blitBody()`.
-- Remove the `getSinCos()` method.
+- Remove the `getSinCos()`.
 - Move the `move()` method in the `Player` class to the `Outfielder` class. The `Goalkeeper` class has its own `move()` method.
 - Modify the `updatePlayer()` and `updateFoot()` methods to accommodate multiple players' movements.
 - Split the `kickBall()` method in the `Player` class into: `prepareBallKick()`, `updateKickingFoot()`, and `checkBallTouch()` in that class, as well as the `kickBall()` method in each of the child classes.
 - Draw two players, a goalkeeper and an outfielder/striker, onto the screen.
+
+### Branch `outfielder-movements`
+
+#### Changes from `add-goalkeeper` branch
+
+Changes to the `MoveFunctions` module:
+- Add code for diagonal movements to the `moveStraight()` function.
+- Add `reachedBound1()` function.
+- Rename the old `reachedBoundaries()` function to `reachedBound2()`.
