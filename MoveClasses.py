@@ -123,6 +123,26 @@ class Straight(Movement):
             self.setStep(stepX=0, stepY=self.boundaryTop-centerPos[1])
         if direction == 'down' and self.step >= self.boundaryBottom-centerPos[1]:
             self.setStep(stepX=0, stepY=self.boundaryBottom-centerPos[1])
+        if direction == 'up left':
+            if self.step <= self.boundaryLeft-centerPos[0]:
+                self.setStep(stepX=self.boundaryLeft-centerPos[0])
+            if self.step <= self.boundaryTop-centerPos[1]:
+                self.setStep(stepY=self.boundaryTop-centerPos[1])
+        if direction == 'up right':
+            if self.step >= self.boundaryRight-centerPos[0]:
+                self.setStep(stepX=self.boundaryRight-centerPos[0], stepY=0)
+            if self.step <= self.boundaryTop-centerPos[1]:
+                self.setStep(stepY=self.boundaryTop-centerPos[1])
+        if direction == 'down left':
+            if self.step <= self.boundaryLeft-centerPos[0]:
+                self.setStep(stepX=self.boundaryLeft-centerPos[0])
+            if self.step >= self.boundaryBottom-centerPos[1]:
+                self.setStep(stepX=0, stepY=self.boundaryBottom-centerPos[1])
+        if direction == 'down right':
+            if self.step >= self.boundaryRight-centerPos[0]:
+                self.setStep(stepX=self.boundaryRight-centerPos[0], stepY=0)
+            if self.step >= self.boundaryBottom-centerPos[1]:
+                self.setStep(stepX=0, stepY=self.boundaryBottom-centerPos[1])
 
     def reachedBoundaries(self, direction, centerPos):
         '''This function checks if a moving object has gone or will be going
@@ -148,6 +168,30 @@ class Straight(Movement):
                 return True
             else:
                 return False
+        elif direction == 'up left':
+            if centerPos[0] <= self.boundaryLeft or \
+               centerPos[1] <= self.boundaryTop:
+                return True
+            else:
+                return False
+        elif direction == 'up right':
+            if centerPos[0] >= self.boundaryRight or \
+               centerPos[1] <= self.boundaryTop:
+                return True
+            else:
+                return False
+        elif direction == 'down left':
+            if centerPos[0] <= self.boundaryLeft or \
+               centerPos[1] >= self.boundaryBottom:
+                return True
+            else:
+                return False
+        elif direction == 'down right':
+            if centerPos[0] >= self.boundaryRight or \
+               centerPos[1] >= self.boundaryBottom:
+                return True
+            else:
+                return False
 
     def move(self, direction, centerPos, objCenter, screenSize=None):
         '''This function moves an object on a straight line.
@@ -156,19 +200,30 @@ class Straight(Movement):
         if direction == 'left':
             # negative lateral step size; no vertical movement
             self.setStep(stepX=-self.stepX, stepY=0)
-            rotate = 90
+            rotate = 90   # new angle (measured in degrees)
         elif direction == 'right':
-            # no vertical movement
-            self.setStep(stepY=0)
-            rotate = -90
+            self.setStep(stepY=0)   # no vertical movement
+            rotate = -90   # new angle (measured in degrees)
         elif direction == 'up':
             # no lateral movement; negative vertical step size
             self.setStep(stepX=0, stepY=-self.stepY)
-            rotate = 0
+            rotate = 0   # new angle (measured in degrees)
         elif direction == 'down':
-            # no lateral movement
-            self.setStep(stepX=0)
-            rotate = 180
+            self.setStep(stepX=0)   # no lateral movement
+            rotate = 180   # new angle (measured in degrees)
+        else:   # diagonal movement
+            if direction == 'up left':
+                # negative lateral and vertical step sizes
+                self.setStep(stepX=-self.stepX, stepY=-self.stepY)
+                rotate = 45   # new angle (measured in degrees)
+            elif direction == 'up right':
+                self.setStep(stepY=-self.stepY)   # negative vertical step size
+                rotate = -45   # new angle (measured in degrees)
+            elif direction == 'down left':
+                self.setStep(stepX=-self.stepX)   # negative lateral step size
+                rotate = 135   # new angle (measured in degrees)
+            elif direction == 'down right':
+                rotate = -135   # new angle (measured in degrees)
         if screenSize != None:
             # set boundaries
             Movement.setBoundaries(self, objCenter, screenSize)
