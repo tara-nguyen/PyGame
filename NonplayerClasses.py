@@ -11,12 +11,12 @@ each of these functions, use the following syntax:
 import pygame, random, math
 import CroppingImages as crop
 import LineParams as line
-import MoveFunctions as move
+import MoveFunctionsUpdated as move
 
 class Game:
     '''This class is the parent class of Background, Goal, Player, and Ball.
-    This class has the following methods: __init__, updateDisplay, getFile,
-    loadImage, addToLists, getLists and processMoveKeys.
+    It has the following methods: __init__, updateDisplay, getFile, loadImage,
+    addToLists, getLists and processMoveKeys.
     To get a brief description of each method, use the following syntax:
         <module name as imported>.Game.<method name>.__doc__'''
     def __init__(self, screenSize):
@@ -26,18 +26,17 @@ class Game:
         self.screenHeight = screenSize[1]
         self.screen = pygame.display.set_mode(screenSize)
         self.screenCenter = self.screenWidth/2, self.screenHeight/2
-        self.fps = 30   # maxmium number of frames per second
         self.frame = pygame.time.Clock()   # initializes clock
         
     def updateDisplay(self):
         '''This function updates the display and sets the maximum number of
         frames per second.'''
         pygame.display.flip()   # updates/clears display
-        self.frame.tick(self.fps)   # maximum number of frames per second
+        self.frame.tick(30)   # maximum number of frames per second
         
     def getFile(self, imageName):
         '''This function returns the link to the images stored in the computer.'''
-        file = './ImagesInPyGame/' + imageName + '.png'
+        file = 'ImagesInPyGame/' + imageName + '.png'
         return file
 
     def loadImage(self, imageName, newWidth=None, newHeight=None):
@@ -95,48 +94,44 @@ class Game:
     def processMoveKeys(self, pressedKeys):
         '''This function processes pressed keys that will initiate
         player movements.'''
-        # keys used for player movements
-        self.moveKeys = ('left', 'left-rshift', 'right', 'right-rshift',
-                         'up', 'down','space')
-        pressed, direction, moveType = [None] * 3
-        if pressedKeys[pygame.K_LEFT] == 1:
-            # left arrow key has been pressed
-            direction = 'left'   # movement direction
+        moveType, direction = None, None
+        if pressedKeys[pygame.K_LEFT] == 1:   # left arrow key has been pressed
             if pressedKeys[pygame.K_RSHIFT] == 1:
-                # right shift key has also been pressed at the same time
-                pressed = 'left-rshift'
-                moveType = 'circle'   # type of movement
+                # right shift key pressed at the same time
+                moveType = 'circle'
             else:
-                # right shift key not pressed
-                pressed = 'left'
-                moveType = 'straight'   # type of movement
-        if pressedKeys[pygame.K_RIGHT] == 1:
-            # right arrow key has been pressed
-            direction = 'right'   # movement direction
+                moveType = 'straight'
+            direction = 'left'
+        if pressedKeys[pygame.K_RIGHT] == 1:  # right arrow key has been pressed
             if pressedKeys[pygame.K_RSHIFT] == 1:
-                # right shift key has also been pressed  at the same time
-                pressed = 'right-rshift'
-                moveType = 'circle'   # type of movement
+                # right shift key pressedat the same time
+                moveType = 'circle'
             else:
-                # right shift key not pressed 
-                pressed = 'right'
-                moveType = 'straight'   # type of movement
-        if pressedKeys[pygame.K_UP] == 1:
-            # up arrow key has been pressed
-            pressed = 'up'
-            direction = 'up'   # movement direction
-            moveType = 'straight'   # type of movement
-        if pressedKeys[pygame.K_DOWN] == 1:
-            # down arrow key has been pressed
-            pressed = 'down'
-            direction = 'down'   # movement direction
-            moveType = 'straight'   # type of movement
-        if pressedKeys[pygame.K_SPACE] == 1:
-            # spacebar has been pressed
-            pressed = 'space'
-            direction = None
+                moveType = 'straight'
+            direction = 'right'
+        if pressedKeys[pygame.K_UP] == 1:   # up arrow key has been pressed
+            moveType = 'straight'
+            if pressedKeys[pygame.K_LEFT] == 1:
+                # left arrow key pressed at the same time
+                direction = 'up left'
+            elif pressedKeys[pygame.K_RIGHT] == 1:
+                # right arrow key pressed at the same time
+                direction = 'up right'
+            else:
+                direction = 'up'
+        if pressedKeys[pygame.K_DOWN] == 1:   # down arrow key has been pressed
+            moveType = 'straight'
+            if pressedKeys[pygame.K_LEFT] == 1:
+                # left arrow key pressed at the same time
+                direction = 'down left'
+            elif pressedKeys[pygame.K_RIGHT] == 1:
+                # right arrow key pressed at the same time
+                direction = 'down right'
+            else:
+                direction = 'down'
+        if pressedKeys[pygame.K_SPACE] == 1:   # spacebar has been pressed
             moveType = 'to ball'
-        return pressed, direction, moveType
+        return moveType, direction
         
 class Background(Game):
     '''This class is a child class of Game and has three methods: __init__, 
@@ -178,7 +173,7 @@ class Goal(Game):
         '''This function crops an image and returns the new surface on which
         the final image will be pasted.'''
         newSurface = crop.cropImage(image, 'pixels', newWidth, newHeight,
-                                    shiftLeft=shiftLeft, shiftUp=53)
+                                  shiftLeft=shiftLeft, shiftUp=53)
         return newSurface
 
     def load(self, imageName1, imageName2, imageName3):
@@ -577,6 +572,6 @@ class Ball(Game):
     def updateBall(self):
         '''This function updates the position of the ball and updates the
         display to show movements.'''
-        move.update(self.screen, self.allThings, self.allPos, 
+        move.update(self.screen, self.allThings, self.allPos,
                     (self.ball,self.ball), (self.getCenterPos(),))
         self.updateDisplay()
