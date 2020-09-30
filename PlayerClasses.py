@@ -3,17 +3,17 @@ use the following syntax: <module name as imported>.Player.__doc__'''
 
 import pygame, random, math
 import LineParams as line
-import MoveFunctions as move
+import MoveFunctionsUpdated as move
 import NonplayerClasses as np
 
 class Player(np.Game):
     '''This class is a child class of Game, which is defined in the module
     NonplayerClass.py. It's also the parent class of Goalkeeper and Outfielder.
-    This class has the following methods: __init__, load, getCenter,
-    setFootStartPos, adjustFootStartPos, blitFeet, blitBody, getStartPos,
-    setCenterPos, getCenterPos, getMidpoint, getRotation, getBodyAngle,
-    getFootAngle, setMovingRotation, getMovingRotation, feetToFront, setStep,
-    getDistanceMoved, getDistanceToBall, getEnding, moveAroundBall,
+    Player has the following methods:
+    __init__, load, getCenter, setFootStartPos, adjustFootStartPos, blitFeet,
+    blitBody, getStartPos, setCenterPos, getCenterPos, getMidpoint, getRotation,
+    getBodyAngle, getFootAngle, setMovingRotation, getMovingRotation,
+    feetToFront, getDistanceMoved, getDistanceToBall, getEnding, moveAroundBall,
     moveStraight, moveToBall, updatePlayer, updateFeet, chooseKickingFoot,
     prepareBallKick, updateKickingFoot, and checkBallTouch.
     To get a brief description of each method, use the following syntax:
@@ -228,25 +228,20 @@ class Player(np.Game):
         if target != self.getCenterPos()[2]:
             # player not at the target point
             if self.getBodyAngle(target) != currentRot:
-                self.lFootCenterPos = move.moveCircle(
-                    self.getCenterPos()[2], self.getCenterPos()[0], 'right',
+                self.lFootCenterPos = move.rotate(
+                    'right', self.getCenterPos()[0], self.getCenterPos()[2],
                     step=self.getBodyAngle(target)-currentRot)[0]
-                self.rFootCenterPos = move.moveCircle(
-                    self.getCenterPos()[2], self.getCenterPos()[1], 'right',
+                self.rFootCenterPos = move.rotate(
+                    'right', self.getCenterPos()[1], self.getCenterPos()[2],
                     step=self.getBodyAngle(target)-currentRot)[0]
         else:
             # player is already at the target point
-            self.lFootCenterPos = move.moveCircle(
-                self.getCenterPos()[2], self.getCenterPos()[0], 'right',
+            self.lFootCenterPos = move.rotate(
+                'right', self.getCenterPos()[0], self.getCenterPos()[2],
                 step=self.getMovingRotation()-currentRot)[0]
-            self.rFootCenterPos = move.moveCircle(
-                self.getCenterPos()[2], self.getCenterPos()[1], 'right',
+            self.rFootCenterPos = move.rotate(
+                'right', self.getCenterPos()[1], self.getCenterPos()[2],
                 step=self.getMovingRotation()-currentRot)[0]
-
-    def setStep(self, stepX, stepY):
-        '''This function sets the step size for the body's movements.'''
-        self.stepX = stepX
-        self.stepY = stepY
 
     def getDistanceMoved(self, newCenterPos):
         '''This function returns the change in the position of the body
@@ -283,14 +278,13 @@ class Player(np.Game):
         '''This function rotates both the feet and the body around the ball.
         ballCenterPos is the coordinates of the ball's center.
         direction denotes which way the body/foot will move.'''
-        self.setStep(10, 10)   # sets step size
         # current angle (measured in degrees) of the body with respect to the
         # y-axis pointing down from the target
         bodyAngle = self.getBodyAngle(ballCenterPos)
         # rotate body
-        newCenterPos, rotate = move.moveCircle(
-            ballCenterPos, self.getCenterPos()[2], direction, step=self.stepX,
-            boundaryX=[0,self.screenWidth], boundaryY=[0,self.screenHeight],
+        newCenterPos, rotate = move.rotate(
+            direction, self.getCenterPos()[2], ballCenterPos,
+            screenSize=(self.screenWidth,self.screenHeight),
             objCenter=self.getCenter()[1])
         if newCenterPos != self.getCenterPos()[2]:   # body moving
             self.moved = True
@@ -306,21 +300,19 @@ class Player(np.Game):
             else:
                 step = abs(rotate - bodyAngle)
             # rotate feet
-            self.lFootCenterPos = move.moveCircle(
-                ballCenterPos, self.getCenterPos()[0], direction, step=step)[0]
-            self.rFootCenterPos = move.moveCircle(
-                ballCenterPos, self.getCenterPos()[1], direction, step=step)[0]
+            self.lFootCenterPos = move.rotate(
+                direction, self.getCenterPos()[0], ballCenterPos, step=step)[0]
+            self.rFootCenterPos = move.rotate(
+                direction, self.getCenterPos()[1], ballCenterPos, step=step)[0]
             self.feetToFront(ballCenterPos)   # moves feet to front of body
 
     def moveStraight(self, direction):
         '''This function moves both the feet and the body in a straight line.
         direction denotes which way the body/foot will move.'''
-        self.setStep(10, 10)   # sets step size
         # move body
-        newCenterPos, rotate = move.moveStraight(
-            self.getCenter()[1], self.getCenterPos()[2], direction,
-            stepX=self.stepX, stepY=self.stepY,
-            boundaryX=[0,self.screenWidth], boundaryY=[0,self.screenHeight])
+        newCenterPos, rotate = move.straight(
+            direction, self.getCenterPos()[2], objCenter=self.getCenter()[1],
+            screenSize=(self.screenWidth,self.screenHeight))
         if newCenterPos != self.getCenterPos()[2]:   # body moving
             self.moved = True
             # distance moved
@@ -347,8 +339,8 @@ class Player(np.Game):
             ballCenterPos, self.bodyCenterStart[1]+ballCenter[1],
             self.getBodyAngle(ballCenterPos))
         # move body
-        newCenterPos, rotate = move.moveToPoint(
-            endPoint, self.getCenterPos()[2], endAngle=endAngle, speedBoost=3)
+        newCenterPos, rotate = move.toPoint(self.getCenterPos()[2], endPoint,
+                                            endAngle, speedBoost=3)
         if newCenterPos != self.getCenterPos()[0]:   # body moving
             self.moved = True
             # distance moved
@@ -450,8 +442,8 @@ class Player(np.Game):
             if rFootToBall <= self.footCenterStart[1] + ballCenter[1]:
                 endPoint = self.kFootCenterPos
         # move foot
-        newCenterPos, rotate = move.moveToPoint(endPoint, self.kFootCenterPos,
-                                                endAngle=currentRot)
+        newCenterPos, rotate = move.toPoint(self.kFootCenterPos, endPoint,
+                                            currentRot)
         return currentRot, endPoint, newCenterPos, rotate
 
     def updateKickingFoot(self, kickingFoot, newCenterPos, rotate, currentRot,
@@ -495,8 +487,8 @@ class Player(np.Game):
             self.touchedBall = False
 
 class Goalkeeper(Player):
-    '''This class is a child class of Player and has two methods: __init__,
-    move, and kickBall.
+    '''This class is a child class of Player and has the following methods:
+    __init__, move, and kickBall.
     To get a brief description of each method, use the following syntax:
         <module name as imported>.Goalkeeper.<method name>.__doc__'''
     def __init__(self, screenSize):
@@ -552,8 +544,8 @@ class Goalkeeper(Player):
                                    currentRot, lFootIndex)
 
 class Outfielder(Player):
-    '''This class is a child class of Player and has two methods: __init__, move,
-    and kickBall.
+    '''This class is a child class of Player and has the following methods:
+    __init__, move, and kickBall.
     To get a brief description of each method, use the following syntax:
         <module name as imported>.Outfielder.<method name>.__doc__'''
     def __init__(self, screenSize):
