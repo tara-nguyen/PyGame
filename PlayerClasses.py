@@ -154,42 +154,6 @@ class Player(np.Game):
                                          self.getCenterPos()[2])[3]
         return self.currentRot
 
-    def getPlayerBox(self):
-        '''This function returns the coordinates of the four corners of the box
-        which the player's body occupies'''
-        # square of the distance between the body center & one corner of the box
-        diagSqr = self.bodyCenterStart[0]**2+self.bodyCenterStart[1]**2
-        # direction the player is currently facing (angle measured in degrees)
-        currentRot = self.getRotation()
-        if np.getTrig(currentRot)[0] * np.getTrig(currentRot)[1] <= 0:
-            # difference in coordinates between the body center
-            # and the first corner
-            x1Diff = self.getCenter()[1][0]
-            y1Diff = math.sqrt(diagSqr - x1Diff**2)
-            # difference in coordinates between the body center
-            # and the third corner
-            y3Diff = self.getCenter()[1][1]
-            x3Diff = math.sqrt(diagSqr - y3Diff**2)
-        else:
-            # difference in coordinates between the body center
-            # and the first corner
-            y1Diff = self.getCenter()[1][1]
-            x1Diff = math.sqrt(diagSqr - y1Diff**2)
-            # difference in coordinates between the body center
-            # and the first corner
-            x3Diff = self.getCenter()[1][0]
-            y3Diff = math.sqrt(diagSqr - x3Diff**2)
-        # the four corners
-        corner1 = (self.getCenterPos()[2][0]+x1Diff,
-                   self.getCenterPos()[2][1]+y1Diff)
-        corner2 = (self.getCenterPos()[2][0]-x1Diff,
-                   self.getCenterPos()[2][1]-y1Diff)
-        corner3 = (self.getCenterPos()[2][0]+x3Diff,
-                   self.getCenterPos()[2][1]-y3Diff)
-        corner4 = (self.getCenterPos()[2][0]-x3Diff,
-                   self.getCenterPos()[2][1]+y3Diff)
-        return corner1, corner2, corner3, corner4
-
     def getBodyAngle(self, target):
         '''This function returns the angle (measured in degrees) of the body
         with respect to the y-axis pointing down from a point.
