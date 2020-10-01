@@ -384,16 +384,16 @@ class Ball(Game):
             self.setFinalStep1('y', bottom - self.screenHeight)
         # set the size of the final step before the ball reaches the goal posts
         if top < goalPosts[-1]:
-            if right < goalPosts[0] and self.stepX < right-goalPosts[0]:
-                self.setFinalStep1('x', right-goalPosts[0])
-            if left > goalPosts[1] and self.stepX > left-goalPosts[1]:
-                self.setFinalStep1('x', left-goalPosts[1])
-            if left > goalPosts[0]+goalPosts[2] and \
-               self.stepX > left-(goalPosts[0]+goalPosts[2]):
-                self.setFinalStep1('x', left-(goalPosts[0]+goalPosts[2]))
-            if right < goalPosts[1]-goalPosts[2] and \
-               self.stepX < right-(goalPosts[1]-goalPosts[2]):
-                self.setFinalStep1('x', right-(goalPosts[1]-goalPosts[2]))
+            if right < goalPosts[0] and self.stepX < right - goalPosts[0]:
+                self.setFinalStep1('x', right - goalPosts[0])
+            if left > goalPosts[1] and self.stepX > left - goalPosts[1]:
+                self.setFinalStep1('x', left - goalPosts[1])
+            if left > goalPosts[0] + goalPosts[2] and \
+               self.stepX > left - (goalPosts[0] + goalPosts[2]):
+                self.setFinalStep1('x', left - (goalPosts[0] + goalPosts[2]))
+            if right < goalPosts[1] - goalPosts[2] and \
+               self.stepX < right - (goalPosts[1] - goalPosts[2]):
+                self.setFinalStep1('x', right - (goalPosts[1] - goalPosts[2]))
 
     def hitGoalPosts(self, goalPosts):
         '''This function checks if the ball has hit the goal posts.
@@ -403,20 +403,20 @@ class Ball(Game):
         left, right, top, bottom = self.getExtremes()
         # conditions for hitting the outside of the posts
         hitLPFromOut = top < goalPosts[-1] and \
-                       isBetween(self.getMovingAngle(),-180,0) and \
+                       isBetween(self.getMovingAngle(), -180, 0) and \
                        left < goalPosts[0] and right >= goalPosts[0]
         hitRPFromOut = top < goalPosts[-1] and \
-                       isBetween(self.getMovingAngle(),180,0) and \
+                       isBetween(self.getMovingAngle(), 180, 0) and \
                        right > goalPosts[1] and left <= goalPosts[1]
         # conditions for hitting the inside of the posts
         hitLPFromIn = top < goalPosts[-1] and \
-                      isBetween(self.getMovingAngle(),180,0) and \
-                      right > goalPosts[0]+goalPosts[2] and \
-                      left <= goalPosts[0]+goalPosts[2]
+                      isBetween(self.getMovingAngle(), 180, 0) and \
+                      right > goalPosts[0] + goalPosts[2] and \
+                      left <= goalPosts[0] + goalPosts[2]
         hitRPFromIn = top < goalPosts[-1] and \
-                      isBetween(self.getMovingAngle(),-180,0) and \
-                      left < goalPosts[1]-goalPosts[2] and \
-                      right >= goalPosts[1]-goalPosts[2]
+                      isBetween(self.getMovingAngle(), -180, 0) and \
+                      left < goalPosts[1] - goalPosts[2] and \
+                      right >= goalPosts[1] - goalPosts[2]
         if hitLPFromOut or hitRPFromOut:
             hitOut = True
         elif hitLPFromIn or hitRPFromIn:

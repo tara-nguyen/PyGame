@@ -103,33 +103,33 @@ def setFinalStep1(boundaries, direction, stepX, stepY, centerPos):
     before making the final step.
     centerPos is the coordinates of the object's center.'''
     if direction == 'left' and stepX <= boundaries[0] - centerPos[0]:
-        stepX = boundaries[0]-centerPos[0]
+        stepX = boundaries[0] - centerPos[0]
     if direction == 'right' and stepX >= boundaries[1] - centerPos[0]:
-        stepX = boundaries[1]-centerPos[0]
+        stepX = boundaries[1] - centerPos[0]
     if direction == 'up' and stepY <= boundaries[2] - centerPos[1]:
-        stepY = boundaries[2]-centerPos[1]
+        stepY = boundaries[2] - centerPos[1]
     if direction == 'down' and stepY >= boundaries[3] - centerPos[1]:
-        stepY = boundaries[3]-centerPos[1]
+        stepY = boundaries[3] - centerPos[1]
     if direction == 'up left':
         if stepX <= boundaries[0] - centerPos[0]:
-            stepX = boundaries[0]-centerPos[0]
+            stepX = boundaries[0] - centerPos[0]
         if stepY <= boundaries[2] - centerPos[1]:
-            stepY = boundaries[2]-centerPos[1]
+            stepY = boundaries[2] - centerPos[1]
     if direction == 'up right':
         if stepX >= boundaries[1] - centerPos[0]:
-            stepX = boundaries[1]-centerPos[0]
+            stepX = boundaries[1] - centerPos[0]
         if stepY <= boundaries[2] - centerPos[1]:
-            stepY = boundaries[2]-centerPos[1]
+            stepY = boundaries[2] - centerPos[1]
     if direction == 'down left':
         if stepX <= boundaries[0] - centerPos[0]:
-            stepX = boundaries[0]-centerPos[0]
+            stepX = boundaries[0] - centerPos[0]
         if stepY >= boundaries[3] - centerPos[1]:
-            stepY = boundaries[3]-centerPos[1]
+            stepY = boundaries[3] - centerPos[1]
     if direction == 'down right':
         if stepX >= boundaries[1] - centerPos[0]:
-            stepX = boundaries[1]-centerPos[0]
+            stepX = boundaries[1] - centerPos[0]
         if stepY >= boundaries[3] - centerPos[1]:
-            stepY = boundaries[3]-centerPos[1]
+            stepY = boundaries[3] - centerPos[1]
     return stepX, stepY
 
 def reachedBoundaries1(boundaries, direction, centerPos):
@@ -157,26 +157,22 @@ def reachedBoundaries1(boundaries, direction, centerPos):
         else:
             return False
     elif direction == 'up left':
-        if centerPos[0] <= boundaries[0] or \
-           centerPos[1] <= boundaries[2]:
+        if centerPos[0] <= boundaries[0] or centerPos[1] <= boundaries[2]:
             return True
         else:
             return False
     elif direction == 'up right':
-        if centerPos[0] >= boundaries[1] or \
-           centerPos[1] <= boundaries[2]:
+        if centerPos[0] >= boundaries[1] or centerPos[1] <= boundaries[2]:
             return True
         else:
             return False
     elif direction == 'down left':
-        if centerPos[0] <= boundaries[0] or \
-           centerPos[1] >= boundaries[3]:
+        if centerPos[0] <= boundaries[0] or centerPos[1] >= boundaries[3]:
             return True
         else:
             return False
     elif direction == 'down right':
-        if centerPos[0] >= boundaries[1] or \
-           centerPos[1] >= boundaries[3]:
+        if centerPos[0] >= boundaries[1] or centerPos[1] >= boundaries[3]:
             return True
         else:
             return False
