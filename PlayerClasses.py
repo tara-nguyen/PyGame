@@ -557,7 +557,7 @@ class Outfielder(Player):
         # prepare the foot for the kicking motion
         currentRot, endPoint, newCenterPos, rotate = \
                     self.prepareBallKick(kickingFoot, ballCenterPos, ballCenter)
-        if gkHasBall == False:
+        if not gkHasBall:   # goalkeeper doesn't have the ball
             # update foot
             self.updateKickingFoot(kickingFoot, newCenterPos, rotate,
                                    currentRot, lFootIndex)

@@ -26,7 +26,6 @@ Changes to the `NonplayerClasses` module:
 - Add `addToLists()` and `getLists()` methods to the `Game` class.
 - Add `load()` method to the `Background` class.
 - Add two functions, `isBetween()` and `getTrig()`, which do not belong to any class.
-- Remove the `getSinCos()` method from the `Ball` class.
 
 Changes to the screen:
 - Reduce the screen size.
@@ -38,15 +37,16 @@ Changes to the ball:
 - Add `load()` method.
 - Put the ball at a fixed position at the start of the program. After the player scores, the ball will be returned to this position.
 - Reduce the speed.
-- Rename `moveBall()` into `move()`. Modify that method to allow goalkeeper movements.
+- Remove the `getSinCos()` method.
+- Rename `moveBall()` into `move()`. Modify that method to accommodate goalkeeper movements.
 - Modify the `hitPlayer()` method to accommodate the presence of multiple players.
 
 Changes to the `PlayerClasses` module:
 - Add two classes, `Goalkeeper` and `Outfielder`, which are children of the `Player` class.
 - Rename `setStartPos()` to `setFootStartPos()`.
 - Add `adjustFootStartPos()` method to the `Player` class.
-- Split the `blit()` method into two: `blitFeet()` and `blitBody()`.
-- Remove the `getSinCos()`.
+- Split the `blit()` method into `blitFeet()` and `blitBody()`.
+- Remove the `getSinCos()` method.
 - Move the `move()` method in the `Player` class to the `Outfielder` class. The `Goalkeeper` class has its own `move()` method.
 - Modify the `updatePlayer()` and `updateFoot()` methods to accommodate multiple players' movements.
 - Split the `kickBall()` method in the `Player` class into: `prepareBallKick()`, `updateKickingFoot()`, and `checkBallTouch()` in that class, as well as the `kickBall()` method in each of the child classes.
@@ -59,3 +59,17 @@ Changes to the `PlayerClasses` module:
 Changes to the module used for handling object movements:
 - Add code for diagonal movements.
 - Split big chunks of a function into several other functions for neatness.
+
+Changes to the `NonplayerClasses` module:
+- Remove `isBetween()` function.
+
+Changes to the ball:
+- Remove the `setVelocity()` and `getVelocity()` methods because they are redundant.
+- Add `setFinalStepSB()` and `setFinalStepGP()` methods, based on the original `setFinalStep2()` method.
+- The new `setFinalStep2()` method is a combination of `setFinalStepSB()` and `setFinalStepGP2()`.
+- Modify code for setting the final step, as well as the `hitGoalPosts()` and `checkBouncing()` methods, to accommodate the ball hitting the goal posts from below the goal line.
+- Add code (to the `hitPlayer()` method) for setting the final step before the ball hits a player.
+
+Changes to the `PlayerClasses` module:
+- Add `getBox()` method to the `Player` class.
+- Combine the `getMidpoint()` method and the `getRotation()` method into one and remove the former.
