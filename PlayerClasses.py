@@ -24,7 +24,7 @@ class Player(np.Game):
         self.lFoot = None   # contains nothing
         self.rFoot = None
         self.body = None
-        
+
     def load(self, imageName1, imageName2):
         '''This function loads images of the player's foot and body into PyGame
         and rotates them 90 degrees counterclockwise.'''
@@ -42,7 +42,7 @@ class Player(np.Game):
         # holder variables for the centers at the start of the program
         self.footCenterStart = self.footStart.get_rect().center
         self.bodyCenterStart = self.bodyStart.get_rect().center
-        
+
     def getCenter(self):
         '''This function returns the centers of the feet and the body.'''
         self.footCenter = self.lFoot.get_rect().center
@@ -107,15 +107,15 @@ class Player(np.Game):
         # draw the feet
         self.screen.blit(self.lFoot, self.lFootStartPos)
         self.screen.blit(self.rFoot, self.rFootStartPos)
-        self.things = [self.lFoot, self.rFoot] 
-        
+        self.things = [self.lFoot, self.rFoot]
+
     def blitBody(self, rotate=0):
         '''This function draws the body onto the screen.
         rotate is the angle (measured in degrees) by which the image will be
         rotated from the original upward rotation.'''
         self.screen.blit(self.body, self.bodyStartPos)
         self.things += [self.body]
-        
+
     def getStartPos(self):
         '''This function returns the positions of the feet and the body at the
         start of the program.'''
@@ -130,26 +130,26 @@ class Player(np.Game):
             self.rFootCenterPos = X, Y
         else:
             self.bodyCenterPos = X, Y
-        
+
     def getCenterPos(self):
         '''This function returns the coordinates of the centers of the body
         and of the feet.'''
         return [self.lFootCenterPos, self.rFootCenterPos, self.bodyCenterPos]
 
     def getBox(self):
-        '''This function returns the coordinates of the leftmost, rightmost, top, 
+        '''This function returns the coordinates of the leftmost, rightmost, top,
         and bottom points of the box occupied by the player.'''
         left = self.getCenterPos()[2][0] - self.getCenter()[1][0]
         right = left + self.getCenter()[1][0] * 2
         top = self.getCenterPos()[2][1] - self.getCenter()[1][1]
         bottom = top + self.getCenter()[1][1] * 2
         return left, right, top, bottom
-        
+
     def getRotation(self):
         '''This function returns the player's current rotation, i.e., the
         direction the player is currently facing. It is an angle, measured in
         degrees, formed by two lines: (1) the line connecting the body center
-        and the midpoint (the point at the middle of the line connecting the 
+        and the midpoint (the point at the middle of the line connecting the
         two feet at their centers), and (2) the y-axis pointing down from
         the midpoint.'''
         # coordinates of the midpoint of the line connecting the two feet
@@ -175,22 +175,22 @@ class Player(np.Game):
         lFootAngle = line.getParams(target, self.getCenterPos()[0])[3]
         rFootAngle = line.getParams(target, self.getCenterPos()[1])[3]
         return lFootAngle, rFootAngle
-    
+
     def setMovingRotation(self, rotate):
-        '''This function sets the angle (measured in degrees) by which the 
+        '''This function sets the angle (measured in degrees) by which the
         rotation of the player has changed, after a movement, from that at the
         start of the program.'''
         self.rotate = rotate
-        
+
     def getMovingRotation(self):
-        '''This function returns the angle (measured in degrees) by which the 
+        '''This function returns the angle (measured in degrees) by which the
         rotation of the player has changed, after a movement, from that at the
         start of the program.'''
         return self.rotate
 
     def feetToFront(self, target):
         '''This function moves the feet to the front of the body.
-        target is either the coordinates of the point around which the player 
+        target is either the coordinates of the point around which the player
         rotates or the coordinates of the point to which the player moves.'''
         # direction the player is currently facing (angle measured in degrees)
         currentRot = self.getRotation()
@@ -211,7 +211,7 @@ class Player(np.Game):
             self.rFootCenterPos = move.rotate(
                 'right', self.getCenterPos()[1], self.getCenterPos()[2],
                 step=self.getMovingRotation()-currentRot)[0]
-            
+
     def getDistanceMoved(self, newCenterPos):
         '''This function returns the change in the position of the body
         after a movement.
@@ -224,10 +224,10 @@ class Player(np.Game):
         lFootToBall = line.getParams(ballCenterPos, self.getCenterPos()[0])[2]
         rFootToBall = line.getParams(ballCenterPos, self.getCenterPos()[1])[2]
         return lFootToBall, rFootToBall
-        
+
     def getEnding(self, ballCenterPos, finalDist, angle):
         '''This function returns the point to which the body/foot will move when
-        it's headed for the ball, along with the direction the body/foot will 
+        it's headed for the ball, along with the direction the body/foot will
         face  when it reaches the endpoint (angle measured in degrees).
         ballCenterPos is the coordinates of the ball center.
         finalDist is the distance from the body to the ball when the body is at
@@ -247,7 +247,7 @@ class Player(np.Game):
         '''This function rotates both the feet and the body around the ball.
         ballCenterPos is the coordinates of the ball's center.
         direction denotes which way the body/foot will move.'''
-        # current angle (measured in degrees) of the body with respect to the 
+        # current angle (measured in degrees) of the body with respect to the
         # y-axis pointing down from the target
         bodyAngle = self.getBodyAngle(ballCenterPos)
         # rotate body
@@ -289,7 +289,7 @@ class Player(np.Game):
             # new coordinates of the body center
             self.setCenterPos('body', newCenterPos[0], newCenterPos[1])
             # rotation (angled measured in degrees)
-            self.setMovingRotation(rotate)   
+            self.setMovingRotation(rotate)
             # move feet at the same distance as body
             self.setCenterPos('lFoot', self.getCenterPos()[0][0]+moveX,
                               self.getCenterPos()[0][1]+moveY)
@@ -317,7 +317,7 @@ class Player(np.Game):
             # new coordinates of the body center
             self.setCenterPos('body', newCenterPos[0], newCenterPos[1])
             # rotation (angled measured in degrees)
-            self.setMovingRotation(rotate)   
+            self.setMovingRotation(rotate)
             # move feet at the same distance as body
             self.setCenterPos('lFoot', self.getCenterPos()[0][0]+moveX,
                               self.getCenterPos()[0][1]+moveY)
@@ -343,9 +343,9 @@ class Player(np.Game):
 
     def updateFeet(self, foot, newCenterPos, rotate, lFootIndex):
         '''This function updates the positions and rotations of only the feet.
-        newCenterPos is a tuple/list of the new coordinates of the center of 
+        newCenterPos is a tuple/list of the new coordinates of the center of
         each foot.
-        rotate is a tuple/list of the angles (measured in degrees) by which 
+        rotate is a tuple/list of the angles (measured in degrees) by which
         the rotations of the feet have changed from those at the start of
         the program.
         lFootIndex is the index of the left foot in the list of everything on
@@ -364,7 +364,7 @@ class Player(np.Game):
         # distance between the ball and each of the player's feet
         lFootToBall, rFootToBall = self.getDistanceToBall(ballCenterPos)
         # the foot closer to the ball will be the one that kicks the ball
-        # get the coordinates of the foot center and the angle (measured in 
+        # get the coordinates of the foot center and the angle (measured in
         # degrees) with respect to the y-axis pointing down from the ball
         if lFootToBall < rFootToBall:
             self.kFootCenterPos = self.getCenterPos()[0]
@@ -384,7 +384,7 @@ class Player(np.Game):
             else:
                 self.kFootAngle = self.getFootAngle(ballCenterPos)[1]
                 return 'rFoot'   # right foot is the kicking foot
-        
+
     def prepareBallKick(self, kickingFoot, ballCenterPos, ballCenter):
         '''This function prepares the foot for the kicking motion and returns
         four values:
@@ -496,7 +496,7 @@ class Goalkeeper(Player):
         self.setCenterPos('rFoot',
                           self.getCenterPos()[1][0]+self.speed*self.direction,
                           self.getCenterPos()[1][1])
-            
+
     def kickBall(self, ballCenterPos, ballCenter, lFootIndex):
         '''This function moves the foot to kick the ball.
         ballCenter is the ball center and ballCenterPos is its coordinates.
@@ -511,7 +511,7 @@ class Goalkeeper(Player):
         if self.touchedBall:   # foot has touched ball --> update foot
             self.updateKickingFoot(kickingFoot, newCenterPos, rotate,
                                    currentRot, lFootIndex)
-        
+
 class Outfielder(Player):
     '''This class is a child class of Player and has the following methods:
     __init__, move, and kickBall.
@@ -532,7 +532,7 @@ class Outfielder(Player):
         # the leftmost, rightmost, top, and bottom points of the box
         # occupied by the player
         left, right, top, bottom = self.getBox()
-        
+
 
     def move(self, moveType, direction, ballCenter, ballCenterPos):
         '''This function moves the striker according to the specified type
@@ -544,7 +544,7 @@ class Outfielder(Player):
             self.moveStraight(direction)
         else:
             self.moveToBall(ballCenter, ballCenterPos)
-        
+
     def kickBall(self, ballCenterPos, ballCenter, gkHasBall, lFootIndex):
         '''This function moves the foot to kick the ball.
         ballCenter is the ball center and ballCenterPos is its coordinates.
