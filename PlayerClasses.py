@@ -11,7 +11,7 @@ class Player(np.Game):
     NonplayerClass.py. It's also the parent class of Goalkeeper and Outfielder.
     Player has the following methods:
     __init__, load, getCenter, setFootStartPos, adjustFootStartPos, blitFeet,
-    blitBody, getStartPos, setCenterPos, getCenterPos, getMidpoint, getRotation,
+    blitBody, getStartPos, setCenterPos, getCenterPos, getBox, getRotation,
     getBodyAngle, getFootAngle, setMovingRotation, getMovingRotation,
     feetToFront, getDistanceMoved, getDistanceToBall, getEnding, moveAroundBall,
     moveStraight, moveToBall, updatePlayer, updateFeet, chooseKickingFoot,
@@ -136,12 +136,14 @@ class Player(np.Game):
         and of the feet.'''
         return [self.lFootCenterPos, self.rFootCenterPos, self.bodyCenterPos]
 
-    def getMidpoint(self):
-        '''This function returns the coordinates of the midpoint of the line
-        connecting the two feet at their centers.'''
-        self.midPoint = ((self.getCenterPos()[0][0]+self.getCenterPos()[1][0])/2,
-                         (self.getCenterPos()[0][1]+self.getCenterPos()[1][1])/2)
-        return self.midPoint
+    def getBox(self):
+        '''This function returns the coordinates of the leftmost, rightmost, top,
+        and bottom points of the box occupied by the player.'''
+        left = self.getCenterPos()[2][0] - self.getCenter()[1][0]
+        right = left + self.getCenter()[1][0] * 2
+        top = self.getCenterPos()[2][1] - self.getCenter()[1][1]
+        bottom = top + self.getCenter()[1][1] * 2
+        return left, right, top, bottom
 
     def getRotation(self):
         '''This function returns the player's current rotation, i.e., the
@@ -150,9 +152,12 @@ class Player(np.Game):
         and the midpoint (the point at the middle of the line connecting the
         two feet at their centers), and (2) the y-axis pointing down from
         the midpoint.'''
-        self.currentRot = line.getParams(self.getMidpoint(),
-                                         self.getCenterPos()[2])[3]
-        return self.currentRot
+        # coordinates of the midpoint of the line connecting the two feet
+        # at their centers
+        midpoint = ((self.getCenterPos()[0][0]+self.getCenterPos()[1][0])/2,
+                    (self.getCenterPos()[0][1]+self.getCenterPos()[1][1])/2)
+        currentRot = line.getParams(midpoint, self.getCenterPos()[2])[3]
+        return currentRot
 
     def getBodyAngle(self, target):
         '''This function returns the angle (measured in degrees) of the body
@@ -462,7 +467,7 @@ class Goalkeeper(Player):
         self.bodyStartPosX = (self.screenWidth - 76) / 2
         self.bodyStartPosY = 80
         self.bodyStartPos = self.bodyStartPosX, self.bodyStartPosY
-        self.movingDirection = random.choice([1, -1])   # left or right
+        self.direction = random.choice([1, -1])   # left or right
         self.speed = 5   # number of pixels the goalkeeper moves per movement
 
     def move(self, goalPosts):
@@ -475,22 +480,22 @@ class Goalkeeper(Player):
         # points to which the player will move
         lEndPoint = goalPosts[0]+goalPosts[2]+self.getCenter()[1][0]
         rEndPoint = goalPosts[1]-goalPosts[2]-self.getCenter()[1][0]
-        if self.movingDirection == 1:   # playing is moving to the right
+        if self.direction == 1:   # playing is moving to the right
             if self.getCenterPos()[2][0] >= rEndPoint:   # reached right post
-                self.movingDirection = -1   # changes direction
+                self.direction = -1   # changes direction
         else:   # player is moving left
             if self.getCenterPos()[2][0] <= lEndPoint:   # reached left post
-                self.movingDirection = 1   # changes direction
+                self.direction = 1   # changes direction
         # move player
-        self.setCenterPos(
-            'body', self.getCenterPos()[2][0]+self.speed*self.movingDirection,
-            self.getCenterPos()[2][1])
-        self.setCenterPos(
-            'lFoot', self.getCenterPos()[0][0]+self.speed*self.movingDirection,
-            self.getCenterPos()[0][1])
-        self.setCenterPos(
-            'rFoot', self.getCenterPos()[1][0]+self.speed*self.movingDirection,
-            self.getCenterPos()[1][1])
+        self.setCenterPos('body',
+                          self.getCenterPos()[2][0]+self.speed*self.direction,
+                          self.getCenterPos()[2][1])
+        self.setCenterPos('lFoot',
+                          self.getCenterPos()[0][0]+self.speed*self.direction,
+                          self.getCenterPos()[0][1])
+        self.setCenterPos('rFoot',
+                          self.getCenterPos()[1][0]+self.speed*self.direction,
+                          self.getCenterPos()[1][1])
 
     def kickBall(self, ballCenterPos, ballCenter, lFootIndex):
         '''This function moves the foot to kick the ball.
@@ -521,6 +526,14 @@ class Outfielder(Player):
                                             self.screenHeight-100)
         self.bodyStartPos = self.bodyStartPosX, self.bodyStartPosY
 
+    def metGoalPosts(self, goalPosts):
+        '''This function checks if the player has run into the goal posts.
+        goalPosts denotes the x-coordinates and size of the goal posts.'''
+        # the leftmost, rightmost, top, and bottom points of the box
+        # occupied by the player
+        left, right, top, bottom = self.getBox()
+
+
     def move(self, moveType, direction, ballCenter, ballCenterPos):
         '''This function moves the striker according to the specified type
         of movement.
@@ -544,7 +557,7 @@ class Outfielder(Player):
         # prepare the foot for the kicking motion
         currentRot, endPoint, newCenterPos, rotate = \
                     self.prepareBallKick(kickingFoot, ballCenterPos, ballCenter)
-        if gkHasBall == False:
+        if not gkHasBall:   # goalkeeper doesn't have the ball
             # update foot
             self.updateKickingFoot(kickingFoot, newCenterPos, rotate,
                                    currentRot, lFootIndex)

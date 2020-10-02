@@ -12,7 +12,7 @@ def processMovements():
     global goalkeeper, ball
     # angle (measured in degrees) at which the ball will move, with
     # respect to the y-axis pointing up from the current ball center
-    ball.setMovingAngle(random.uniform(bodyAngle-1, bodyAngle+1))
+    ball.setMovingAngle(random.uniform(bodyAngle-.5, bodyAngle+.5))
     # initial step size of the ball
     stepSize = random.uniform(18, 22)
     ball.setFirstStep(stepSize)
@@ -23,16 +23,16 @@ def processMovements():
         goalkeeper.updatePlayer(gkLFootIndex, gkBodyIndex)
         # all players' current rotations
         playerRots = goalkeeper.getRotation(), striker.getRotation()
-        # point right between each player's feet
-        feetMidpoints = (goalkeeper.getMidpoint(),
-                         striker.getMidpoint())
+        # coordinates of the centers of the players' bodies
+        playerCenterPos = (goalkeeper.getCenterPos()[2],
+                           striker.getCenterPos()[2])
         if ball.checkGoal(goalPosts):   # ball in goal
             ball.inGoal = True
         # move ball
-        ball.move(stepSize, goalPosts, numPlayers, playerRots,
-                  feetMidpoints, minDist)
+        ball.move(stepSize, goalPosts, numPlayers, playerRots, playerCenterPos,
+                  minDist)
         # new step size
-        stepSize = math.sqrt(ball.stepX**2+ball.stepY**2)   
+        stepSize = math.sqrt(ball.stepX**2 + ball.stepY**2)   
     
 pygame.init()   # start pygame
 
@@ -115,7 +115,7 @@ while playing:
         # The ball will move if the foot touches it.
         if goalkeeper.touchedBall or striker.touchedBall:
             # nearest distance to the player that the ball can get
-            minDist = ball.center[1] + striker.bodyCenterStart[1] - 3
+            minDist = ball.center[1] + striker.bodyCenterStart[1]
             if goalkeeper.touchedBall:   # goalkeeper kicks the ball
                 goalkeeper.speed = gkStartSpeed   # resets goalkeeper's speed
                 # angle (measured in degrees) of the body with respect to the
