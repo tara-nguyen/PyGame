@@ -3,13 +3,18 @@ soccer in PyGame. Compared to the previous versions, this version enables the
 outfielder to move in any direction using only the arrow keys.'''
 
 import pygame, sys, random, math
-import NonplayerClasses as nonplayer
-import PlayerClasses as player
+import NonplayerClasses as np
+import PlayerClasses as pl
 
 def processMovements():
     '''This function processes the movements of the ball and of the goalkeeper
     while the ball is moving.'''
-    global goalkeeper, ball
+    # angle (measured in degrees) of the body with respect to the
+    # y-axis pointing downward
+    if goalkeeper.touchedBall:
+        bodyAngle = goalkeeper.getBodyAngle(ball)
+    elif striker.touchedBall:
+        bodyAngle = striker.getBodyAngle(ball)
     # angle (measured in degrees) at which the ball will move, with
     # respect to the y-axis pointing up from the current ball center
     ball.setMovingAngle(random.uniform(bodyAngle-.5, bodyAngle+.5))
@@ -19,18 +24,12 @@ def processMovements():
     ball.moving = True
     while ball.moving and round(stepSize) > 0:
         # move goalkeeper between goal posts
-        goalkeeper.move(goalPosts)   
+        goalkeeper.move(goal.getPosts())   
         goalkeeper.updatePlayer(gkLFootIndex, gkBodyIndex)
-        # all players' current rotations
-        playerRots = goalkeeper.getRotation(), striker.getRotation()
-        # coordinates of the centers of the players' bodies
-        playerCenterPos = (goalkeeper.getCenterPos()[2],
-                           striker.getCenterPos()[2])
-        if ball.checkGoal(goalPosts):   # ball in goal
+        if ball.checkGoal(goal.getPosts()):   # ball in goal
             ball.inGoal = True
         # move ball
-        ball.move(stepSize, goalPosts, numPlayers, playerRots, playerCenterPos,
-                  minDist)
+        ball.move(stepSize, goal.getPosts(), (goalkeeper,striker), minDist)
         # new step size
         stepSize = math.sqrt(ball.stepX**2 + ball.stepY**2)   
     
@@ -40,11 +39,11 @@ pygame.display.set_caption('My First Game')   # game title
 screenSize = 500, 500   # screen size
 
 # create objects that will appear on the screen
-bg = nonplayer.Background(screenSize)
-goal = nonplayer.Goal(screenSize)
-goalkeeper = player.Goalkeeper(screenSize)
-striker = player.Outfielder(screenSize)
-ball = nonplayer.Ball(screenSize)
+bg = np.Background(screenSize)
+goal = np.Goal(screenSize)
+goalkeeper = pl.Goalkeeper(screenSize)
+striker = pl.Outfielder(screenSize)
+ball = np.Ball(screenSize)
 
 # load objects into pygame
 bg.load('grass')
@@ -62,24 +61,28 @@ ball.blit()
 goalkeeper.blitBody(rotate=-180)
 striker.blitBody()
 
-goalPosts = goal.getPosts()   # x-coordinates and size of the goal posts
-
 numPlayers = 2   # number of players
 gkStartSpeed = goalkeeper.speed   # goalkeeper's initial speed
-    
-allThings = []   # list of everything on the screen
-allPos = []   # list of those things' positions
-# add to the lists
-bg.addToLists(allThings, allPos, 'pos', numPlayers)
-goal.addToLists(allThings, allPos, 'getPos', numPlayers)
-ball.addToLists(allThings, allPos, 'getStartPos', numPlayers)
-goalkeeper.addToLists(allThings, allPos, 'getStartPos', numPlayers)
-allThings, allPos = striker.addToLists(allThings, allPos, 'getStartPos',
-                                       numPlayers)
+
+# list of everything on the screen
+allThings = bg.things + goal.things
+for player in (goalkeeper, striker):
+    allThings += player.things[:2]   # player's feet
+allThings += ball.things
+for player in (goalkeeper, striker):
+    allThings.append(player.things[2])   # player's body
+
+# list of those things' positions
+allPos = [bg.pos] + goal.getPos()
+for player in (goalkeeper, striker):
+    allPos += player.getStartPos()[:2]   # player's feet
+allPos += ball.getStartPos()
+for player in (goalkeeper, striker):
+    allPos.append(player.getStartPos()[2])   # player's body
+
 # turn the lists into class attributes
-ball.getLists(allThings, allPos)
-goalkeeper.getLists(allThings, allPos)
-striker.getLists(allThings, allPos)
+for thing in (ball, goalkeeper, striker):
+    thing.allThings, thing.allPos = allThings, allPos
 
 # indexes of the striker's left foot and of his body in the lists
 strikerLFootIndex = allThings.index(striker.lFoot)
@@ -88,7 +91,7 @@ strikerBodyIndex = allThings.index(striker.body)
 gkLFootIndex = allThings.index(goalkeeper.lFoot)
 gkBodyIndex = allThings.index(goalkeeper.body)
 
-bg.frame   # initialize clock
+bg.frame   # initializes clock
 
 playing = True
 while playing:
@@ -103,45 +106,29 @@ while playing:
     ball.inGoal = False
 
     pressedKeys = pygame.key.get_pressed()
-    # process keys used for the striker's movements
     moveType, direction = bg.processMoveKeys(pressedKeys)
-    if moveType != None:   # one of the movement keys has been pressed
-        striker.move(moveType, direction, ball.center, ball.getCenterPos())
+    if moveType != None:
+        striker.move(moveType, direction, ball)
     if pressedKeys[pygame.K_s] == 1:
-        # 's' key has been pressed --> player will kick the ball
-        goalkeeper.kickBall(ball.getCenterPos(), ball.center, gkLFootIndex)
-        striker.kickBall(ball.getCenterPos(), ball.center, ball.gkCaught,
-                         strikerLFootIndex)
+        goalkeeper.kickBall(ball, gkLFootIndex, gk=True)
+        striker.kickBall(ball, strikerLFootIndex)
         # The ball will move if the foot touches it.
         if goalkeeper.touchedBall or striker.touchedBall:
             # nearest distance to the player that the ball can get
-            minDist = ball.center[1] + striker.bodyCenterStart[1]
-            if goalkeeper.touchedBall:   # goalkeeper kicks the ball
+            minDist = ball.center[1] + striker.bodyStartCenter[1]
+            if goalkeeper.touchedBall:
                 goalkeeper.speed = gkStartSpeed   # resets goalkeeper's speed
-                # angle (measured in degrees) of the body with respect to the
-                # y-axis pointing down from the ball
-                bodyAngle = goalkeeper.getBodyAngle(ball.getCenterPos())
-                # process movements of the ball and of the goalkeeper
-                processMovements()
-            else:   # striker kicks the ball
-                # angle (measured in degrees) of the body with respect to the
-                # y-axis pointing down from the ball
-                bodyAngle = striker.getBodyAngle(ball.getCenterPos())
-                # process movements of the ball and of the goalkeeper
-                processMovements()
+                processMovements()   # ball movement and goalkeeper movement
+            else:
+                processMovements()   # ball movement and goalkeeper movement
                 if ball.gkCaught:   # goalkeeper has the ball
                     goalkeeper.speed = 0
                     # goalkeeper kicks the ball back
-                    goalkeeper.kickBall(ball.getCenterPos(), ball.center,
-                                        gkLFootIndex)
+                    goalkeeper.kickBall(ball, gkLFootIndex, gk=True)
                     if goalkeeper.touchedBall:
                         # reset goalkeeper's speed
-                        goalkeeper.speed = gkStartSpeed   
-                        # angle (measured in degrees) of the body with respect
-                        # to the y-axis pointing down from the ball
-                        bodyAngle = goalkeeper.getBodyAngle(ball.getCenterPos())
-                        # process movements of the ball and of the goalkeeper
-                        processMovements()
+                        goalkeeper.speed = gkStartSpeed 
+                        processMovements() # ball movement & goalkeeper movement
                         
     # If in goal, the ball will be return to its original position after it has
     # stopped moving.
@@ -149,7 +136,7 @@ while playing:
         ball.resetBall()
         goalkeeper.speed = gkStartSpeed   # resets goalkeeper's speed
 
-    goalkeeper.move(goalPosts)   # moves goalkeeper between goal posts
+    goalkeeper.move(goal.getPosts())   # moves goalkeeper between goal posts
     goalkeeper.updatePlayer(gkLFootIndex, gkBodyIndex)   # updates player
                 
     if striker.moved:

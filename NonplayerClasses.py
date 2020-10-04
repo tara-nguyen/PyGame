@@ -16,7 +16,7 @@ import MoveFunctionsUpdated as move
 class Game:
     '''This class is the parent class of Background, Goal, Player, and Ball.
     It has the following methods: __init__, updateDisplay, getFile, loadImage,
-    addToLists, getLists and processMoveKeys.
+    and processMoveKeys.
     To get a brief description of each method, use the following syntax:
         <module name as imported>.Game.<method name>.__doc__'''
     def __init__(self, screenSize):
@@ -52,44 +52,6 @@ class Game:
             # resize image
             image = pygame.transform.scale(image, (newWidth, newHeight))
         return image
-
-    def addToLists(self, allThings, allPos, methodName, numPlayers):
-        '''This function adds items to a list of everything on the screen
-        (allThings), and to a list of those things' positions (allPos). NOTE!!! 
-        For this function to work properly, the items must be added in the 
-        following order: things in the Background class first, followed by those 
-        in the Goal and the Ball classes, and finally things in the Player class.
-        methodName is the name of the method used to get the drawing positions.
-        numPlayers is the number of players in the game.'''
-        # add items to the list of everything on the screen
-        allThings += self.things
-        # add items to the list of those things' positions
-        if methodName == 'pos':   # Background class
-            allPos += [self.pos]
-        elif methodName == 'getPos':   # Goal class
-            allPos += self.getPos()
-        else:   # Ball class and Player class
-            allPos += self.getStartPos()
-        # rearrange lists so that the items representing the players' bodies are
-        # at the end of each list
-        if len(allThings) == 5 + numPlayers*3:   # end of list
-            allThingsTemp, allPosTemp = allThings[:4], allPos[:4]
-            for num in range(numPlayers):
-                allThingsTemp += allThings[(5+num*3):(5+num*3+2)]
-                allPosTemp += allPos[(5+num*3):(5+num*3+2)]
-            allThingsTemp += [allThings[4]] 
-            allPosTemp += [allPos[4]]
-            for num in range(numPlayers):
-                allThingsTemp += [allThings[5+num*3+2]]
-                allPosTemp += [allPos[5+num*3+2]]
-            allThings, allPos = allThingsTemp, allPosTemp
-            return allThings, allPos
-
-    def getLists(self, allThings, allPos):
-        '''This function turns the list of everything on the screen (allThings)
-        and the list of those things' positions (allPos) into class attributes.'''
-        self.allThings = allThings
-        self.allPos = allPos
 
     def processMoveKeys(self, pressedKeys):
         '''This function processes pressed keys that will initiate
