@@ -12,10 +12,11 @@ class Player(np.Game):
     Player has the following methods:
     __init__, load, setFootStartPos, adjustFootStartPos, blitFeet, blitBody,
     getStartPos, getCenter, setCenterPos, getCenterPos, getCorners, getRotation,
-    getBodyAngle, getFootAngle, setMovingRotation, getMovingRotation,
-    getDistanceMoved, getDistanceToBall, getEnding, feetToFront, moveStraight,
-    moveToBall, moveAroundBall, updatePlayer, updateFeet, chooseKickingFoot,
-    prepareBallKick, updateKickingFoot, and checkBallTouch.
+    getShoulderAngle, getBodyAngle, getFootAngle, setMovingRotation,
+    getMovingRotation, getDistanceMoved, getDistanceToBall, getEnding,
+    feetToFront, moveStraight, moveToBall, moveAroundBall, updatePlayer,
+    updateFeet, chooseKickingFoot, prepareBallKick, updateKickingFoot, and
+    checkBallTouch.
     To get a brief description of each method, use the following syntax:
         <module name as imported>.Player.<method name>.__doc__'''
     def __init__(self, screenSize):
@@ -165,18 +166,30 @@ class Player(np.Game):
         direction the player is currently facing. It is an angle, measured in
         degrees, formed by two lines: (1) the line connecting the body center
         and the midpoint (the point at the middle of the line connecting the
-        two feet at their centers), and (2) the y-axis pointing down from
-        the midpoint.'''
-        # coordinates of the midpoint of the line connecting the two feet
-        # at their centers
-        midpoint = ((self.getCenterPos()[0][0]+self.getCenterPos()[1][0])/2,
-                    (self.getCenterPos()[0][1]+self.getCenterPos()[1][1])/2)
-        currentRot = line.getParams(midpoint, self.getCenterPos()[2])[3]
+        two feet at their centers), and (2) the y-axis pointing downward.'''
+        # coordinates of the top corners of the body
+        topleft, topright = self.getCorners()[:2]
+        # coordinates of the midpoint between the top corners
+        midtop = (topleft[0]+topright[0])/2, (topleft[1]+topright[1])/2
+        # current rotation
+        currentRot = line.getParams(midtop, self.getCenterPos()[2])[3]
         return currentRot
 
+    def getShoulderAngle(self):
+        '''This function returns the angle (measured in degrees) between the
+        line perpendicular to the player's current rotation and the y-axis
+        pointing downward. This angle is between -90 and 90 degrees.'''
+        shoulderAngle = line.getParams(self.getCorners()[0],
+                                       self.getCorners()[1])[3]
+        if shoulderAngle > 90:
+            shoulderAngle -= 180
+        elif shoulderAngle < -90:
+            shoulderAngle += 180
+        return shoulderAngle
+        
     def getBodyAngle(self, target):
         '''This function returns the angle (measured in degrees) of the body
-        with respect to the y-axis pointing down from a point.
+        with respect to the y-axis pointing downward.
         target is either the coordinates of the target point or the coordinates
         of the center of an object (e.g., the ball).'''
         bodyAngle = line.getParams(target, self.getCenterPos()[2])[3]
@@ -184,7 +197,7 @@ class Player(np.Game):
 
     def getFootAngle(self, target):
         '''This function returns the angles (measured in degrees) of the feet
-        with respect to the y-axis pointing down from a point.
+        with respect to the y-axis pointing downward.
         target is either the coordinates of the target point or the coordinates
         of the center of an object (e.g., the ball).'''
         lFootAngle = line.getParams(target, self.getCenterPos()[0])[3]
@@ -224,7 +237,7 @@ class Player(np.Game):
         finalDist is the distance from the body to the ball when the body is at
         the target end point.
         angle is the current angle (measured in degrees) of the body/foot with
-        respect to the y-axis pointing down from the ball.'''
+        respect to the y-axis pointing downward.'''
         # point to which the body will move
         endPointX = ballCenterPos[0] + finalDist * np.getTrig(angle)[0]
         endPointY = ballCenterPos[1] + finalDist * np.getTrig(angle)[1]
@@ -305,7 +318,7 @@ class Player(np.Game):
         ballCenterPos is the coordinates of the ball's center.
         direction denotes which way the body/foot will move.'''
         # current angle (measured in degrees) of the body with respect to the
-        # y-axis pointing down from the target
+        # y-axis pointing downward
         bodyAngle = self.getBodyAngle(ballCenterPos)
         # rotate body
         newCenterPos, rotate = move.rotate(
@@ -368,13 +381,13 @@ class Player(np.Game):
     def chooseKickingFoot(self, ballCenterPos):
         '''This function chooses the foot that will kick the ball, gets the
         angle (measured in degrees) of the foot with respect to the y-axis
-        pointing down from the ball, and returns a string indicating which foot.
+        pointing downward, and returns a string indicating which foot.
         ballCenterPos is the coordinates of the ball center.'''
         # distance between the ball and each of the player's feet
         lFootToBall, rFootToBall = self.getDistanceToBall(ballCenterPos)
         # the foot closer to the ball will be the one that kicks the ball
         # get the coordinates of the foot center and the angle (measured in
-        # degrees) with respect to the y-axis pointing down from the ball
+        # degrees) with respect to the y-axis pointing downward
         if lFootToBall < rFootToBall:
             self.kFootCenterPos = self.getCenterPos()[0]
             self.kFootAngle = self.getFootAngle(ballCenterPos)[0]
@@ -432,7 +445,7 @@ class Player(np.Game):
         newCenterPos is the new coordinates of the foot's center during the
         kicking motion.
         rotate is the foot's new angle (measured in degrees) when it kicks the
-        ball, with respect to the y-axis pointing down from the ball.
+        ball, with respect to the y-axis pointing downward.
         currentRot is player's current rotation (angle measured in degrees).
         lFootIndex is the indexes of the left foot in the list of everything on
         the screen.'''
@@ -535,13 +548,9 @@ class Outfielder(Player):
                                             self.screenHeight-100)
         self.bodyStartPos = self.bodyStartPosX, self.bodyStartPosY
 
-    def metGoalPosts(self, goalPosts):
-        '''This function checks if the player has run into the goal posts.
-        goalPosts denotes the x-coordinates and size of the goal posts.'''
-        # the leftmost, rightmost, top, and bottom points of the box
-        # occupied by the player
-        left, right, top, bottom = self.getBox()
-
+##    def metGoalPosts(self, goalPosts):
+##        '''This function checks if the player has run into the goal posts.
+##        goalPosts denotes the x-coordinates and size of the goal posts.'''
 
     def move(self, moveType, direction, ballCenter, ballCenterPos):
         '''This function moves the striker according to the specified type
