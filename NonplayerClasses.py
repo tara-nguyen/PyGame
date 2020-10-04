@@ -261,6 +261,7 @@ class Ball(Game):
         self.ball = None   # contains nothing
         self.diameter = 36
         self.moving = False
+        self.hittingPlayer = False
         self.gkCaught = False
 
     def load(self, imageName):
@@ -463,22 +464,22 @@ class Ball(Game):
             return True
         else:
             return False
-    
-    def hitPlayer(self, numPlayers, playerRots, playerCenterPos, minDist):
+
+    def hitPlayer(self, players, minDist):
         '''This function handles ball movements when the ball is about to hit or
         has hit a player, and sets the step size accordingly.
-        numPlayers is the number of players in the game.
-        playerRots is a tuple of the players' current rotations (angles measured
-        in degrees). The goalkeeper's comes first.
-        playerCenterPos is a tuple of the coordinates of the centers of the
-        players' bodies. Again, the goalkeeper's comes first.
-        minDist is the nearest distance to each player that the ball can get.'''
+        players is an array listing the players in the game. The goalkeeper
+        must be listed first.
+        minDist is the nearest distance to the player that the ball can get.'''
         self.gkCaught = False   # ball hasn't been caught by the goalkeeper
-        for i in range(numPlayers):
+        for player in players:
+            # player's parameters: coordinates of body center & current rotation
+            pCenterPos = player.getCenterPos()[2]
+            pRot = player.getRotation()
             # distance from ball to the player's body center, and angle 
             # (measured in degrees) of the ball with respect to the y-axis 
-            # pointing down from the body center
-            dist, angle = line.getParams(playerCenterPos[i],
+            # pointing downward
+            dist, angle = line.getParams(pCenterPos,
                                          self.getCenterPos())[2:4]
             # current step size and rate of moving
             stepX, stepY = self.getStep()
@@ -488,22 +489,22 @@ class Ball(Game):
             newCenterPos = (self.getCenterPos()[0]-stepX,
                             self.getCenterPos()[1]-stepY)
             # new distance from ball to the player's body center 
-            newDist = line.getParams(playerCenterPos[i], newCenterPos)[2]
-            if i == 1:
+            newDist = line.getParams(pCenterPos, newCenterPos)[2]
             if newDist < dist and dist > minDist and rate > dist - minDist:
-                # ball is about to hit the player --> set final step size
+                # ball about to hit player --> set final step size
                 stepX, stepY = move.setDiagStep(stepX, stepY,
                                                 maxDist=dist-minDist+.2)
                 self.setStep(stepX, stepY)
             # difference between the current rotation of the player and the 
             # angle just computed
-            angleDiff = abs(playerRots[i] - angle)
-            if dist <= minDist:
+            angleDiff = abs(pRot - angle)
+            if self.hittingPlayer:   # ball has hit player
+                self.hittingPlayer = False
                 print('\nhit')
                 if angleDiff >= 120 and angleDiff <= 240:
                     # ball hits the front of the player's body
                     self.setStep(0, 0)   # stops moving
-                    if i == 0:   # goalkeeper has the ball
+                    if player == players[0]:   # goalkeeper has the ball
                         self.gkCaught = True
                     break
                 else:
@@ -521,21 +522,16 @@ class Ball(Game):
         else:
             return False
 
-    def move(self, stepSize, goalPosts, numPlayers, playerRots, playerCenterPos,
-             minDist):
+    def move(self, stepSize, goalPosts, players, minDist):
         '''This function handles ball movements when the ball is kicked.
         goalPosts denotes the x-coordinates and size of the goal posts.
-        numPlayers is the number of players in the game.
-        playerRots is a tuple of the current rotations of the players (angles 
-        measured in degrees).
-        playerCenterPos is a tuple of the coordinates of the centers of the
-        players' bodies.
-        minDist is the nearest distance to each player that the ball can get.'''
+        players is an array listing the players in the game. The goalkeeper
+        must be listed first.'''
         stepX, stepY = self.getStep()   # current step size
         # movement when ball hits or is about to hit a player
-        self.hitPlayer(numPlayers, playerRots, playerCenterPos, minDist)
+        self.hitPlayer(players, minDist)
         if self.stepX == 0 and self.stepY == 0:   # ball has stopped moving
-            self.moving, hittingPlayer = False, True
+            self.moving = False
         elif self.stepX != stepX or self.stepY != stepY:
             # step size has been adjusted --> move ball again
             # new coordinates of the ball center
@@ -544,11 +540,9 @@ class Ball(Game):
             # update ball position and update display to show movement
             self.updateBall()
             if self.stepX * stepX > 0 and self.stepY * stepY > 0:
-                hittingPlayer = True
+                self.hittingPlayer = True   # ball about to hit player
                 self.setStep(stepX, stepY)   # resets step size
-        else:
-            hittingPlayer = False
-        if self.moving and not hittingPlayer:
+        if self.moving and not self.hittingPlayer:
             print('moving')
             stepX, stepY = self.getStep()   # current step size
             # set the size of the final step before the ball hits either the
