@@ -23,8 +23,7 @@ def processMovements():
     ball.setFirstStep(stepSize)
     ball.moving = True
     while ball.moving and round(stepSize) > 0:
-        # move goalkeeper between goal posts
-        goalkeeper.move(goal.getPosts())   
+        goalkeeper.move(goal.getPosts())   # moves goalkeeper between goal posts
         goalkeeper.updatePlayer(gkLFootIndex, gkBodyIndex)
         if ball.checkGoal(goal.getPosts()):   # ball in goal
             ball.inGoal = True
@@ -33,7 +32,7 @@ def processMovements():
         # new step size
         stepSize = math.sqrt(ball.stepX**2 + ball.stepY**2)   
     
-pygame.init()   # start pygame
+pygame.init()   # starts pygame
 
 pygame.display.set_caption('My First Game')   # game title
 screenSize = 500, 500   # screen size
@@ -55,13 +54,22 @@ ball.load('ball')
 # draw the objects onto the screen
 bg.blit()
 goal.blit()
-goalkeeper.blitFeet(rotate=-180)
+goalkeeper.blitFeet()
 striker.blitFeet()
 ball.blit()
-goalkeeper.blitBody(rotate=-180)
+goalkeeper.blitBody()
 striker.blitBody()
 
-numPlayers = 2   # number of players
+test = pygame.image.load('./ImagesInPyGame/ball.png').convert_alpha()
+test = pygame.transform.scale(test, (6,6))
+corners = striker.getCorners()
+print('final')
+for corner in corners:
+    print(corner)
+    bg.screen.blit(test,corner)
+print()
+print('body start pos:',striker.getStartPos()[2])
+
 gkStartSpeed = goalkeeper.speed   # goalkeeper's initial speed
 
 # list of everything on the screen

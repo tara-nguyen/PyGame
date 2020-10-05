@@ -10,14 +10,14 @@ def update(screen, things, thingsPos, moved, newCenterPos, rotate=False):
     '''This function redraws things on the screen to show movements.
     things is a list of objects on the screen.
     thingsPos is a list of the positions of the objects.
-    moved is a tuple/list of objects that will be moved after the redrawing, 
+    moved is an array of objects that will be moved after the redrawing, 
     along with the original surfaces containing the moved objects at the 
-    beginning of the program.
+    start of the program.
     newCenterPos is a tuple/list of the new coordinates of the moved
     objects' center points after being redrawn.
-    rotate, if specified, is a tuple/list of the angles (measured in
-    degrees) by which the moved objects will rotate. The default is that
-    there is no change from the original rotation.'''
+    rotate, if specified, is an array of the angles (measured in degrees)
+    by which the moved objects will rotate. The default is that there is
+    no change from the original rotation.'''
     # create 2 separate lists, one for the moved objects and the other for
     # their original surfaces
     objMoved = []
