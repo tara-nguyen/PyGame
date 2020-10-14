@@ -94,6 +94,30 @@ def setDiagStep(stepX, stepY, maxDist=10):
         stepDiag = math.sqrt(stepX**2 + stepY**2)
     return stepX, stepY
 
+def toPoint(centerPos, endPoint, endAngle, speedBoost=1):
+    '''This function moves an object to a specified end point.
+    centerPos is the coordinates of the object's center point.
+    endAngle is the direction the front of the object will face after the
+    object has reached the end point. The default has the object facing upward.
+    speedBoost adjusts the step size and must not be negative.'''
+    if endPoint == centerPos:   # object has reached end point --> stop moving
+        stepX = 0
+        stepY = 0
+    else:
+        # distance from end point
+        Xdiff, Ydiff = line.getParams(endPoint, centerPos)[:2]
+        # step size
+        stepX = setDiagStep(Xdiff, Ydiff)[0] * abs(speedBoost)
+        stepY = setDiagStep(Xdiff, Ydiff)[1] * abs(speedBoost)
+        if abs(Xdiff) <= abs(stepX) or abs(Ydiff) <= abs(stepY):
+            # final step before reaching the end point
+            stepX = Xdiff
+            stepY = Ydiff
+    rotate = endAngle   # measured in degrees
+    # new coordinates of object center
+    newCenterPos = centerPos[0]+stepX, centerPos[1]+stepY
+    return newCenterPos, rotate
+
 ### The next three functions (up to straight()) handle straight movements. ###
 
 def setFinalStep1(boundaries, direction, stepX, stepY, centerPos):
@@ -224,30 +248,6 @@ def straight(direction, centerPos, stepX=10, stepY=10, screenSize=None,
         if reachedBoundaries1(boundaries, direction, centerPos):
             stepX, stepY = 0, 0
     # new coordinates of the object's center
-    newCenterPos = centerPos[0]+stepX, centerPos[1]+stepY
-    return newCenterPos, rotate
-
-def toPoint(centerPos, endPoint, endAngle, speedBoost=1):
-    '''This function moves an object to a specified end point.
-    centerPos is the coordinates of the object's center point.
-    endAngle is the direction the front of the object will face after the object
-    has reached the end point. The default has the object facing upward.
-    speedBoost adjusts the step size and must not be negative.'''
-    if endPoint == centerPos:   # object has reached end point --> stop moving
-        stepX = 0
-        stepY = 0
-    else:
-        # distance from end point
-        Xdiff, Ydiff = line.getParams(endPoint, centerPos)[:2]
-        # step size
-        stepX = setDiagStep(Xdiff, Ydiff)[0] * abs(speedBoost)
-        stepY = setDiagStep(Xdiff, Ydiff)[1] * abs(speedBoost)
-        if abs(Xdiff) <= abs(stepX) or abs(Ydiff) <= abs(stepY):
-            # final step before reaching the end point
-            stepX = Xdiff
-            stepY = Ydiff
-    rotate = endAngle   # measured in degrees
-    # new coordinates of object center
     newCenterPos = centerPos[0]+stepX, centerPos[1]+stepY
     return newCenterPos, rotate
 
