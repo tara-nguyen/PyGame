@@ -63,7 +63,11 @@ Changes to the module used for handling object movements:
 - Add code for diagonal movements.
 - Split big chunks of a function into several other functions for neatness.
 
+Changes to the main program:
+- Move the `processMovements()` function to the `Game` class in the `NonplayerClasses` module.
+
 Changes to the `NonplayerClasses` module:
+- Add `processMovements()` method to the `Game` class (moved from the main program).
 - Remove the `addToLists()` method, the `getLists()` method, and the `isBetween()` function because they are unnecessary.
 
 Changes to the ball:
