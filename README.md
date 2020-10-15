@@ -38,7 +38,7 @@ Changes to the ball:
 - Put the ball at a fixed position at the start of the program. After the player scores, the ball will be returned to this position.
 - Reduce the speed.
 - Remove the `getSinCos()` method (repaced by the `getTrig()` function in the `NonplayerClasses` module).
-- Rename `moveBall()` into `move()`. Modify that method to accommodate goalkeeper movements.
+- Rename `moveBall()` to `move()`. Modify that method to accommodate goalkeeper movements.
 - Modify the `hitPlayer()` method to accommodate the presence of multiple players.
 
 Changes to the `PlayerClasses` module:
@@ -78,6 +78,10 @@ Changes to the ball:
 - The new `setFinalStep2()` method is a combination of `setFinalStepSB()` and `setFinalStepGP2()`.
 - Modify code for setting the final step, as well as the `hitGoalPosts()` and `checkBouncing()` methods, to accommodate the ball hitting the goal posts from below the goal line.
 - Add code (to the `hitPlayer()` method) for setting the final step before the ball hits a player.
+
+Changes to the ball:
+- Remove the `setFinalStep1()` method because it is unnecessary.
+- Rename `setFinalStep2()` to `setFinalStep()`.
 
 Changes to the `PlayerClasses` module:
 - Add `getCorners()` and `getShoulderAngle()` methods to the `Player` class.
