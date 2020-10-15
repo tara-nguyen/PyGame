@@ -133,7 +133,7 @@ class Player(np.Game):
     def getCenterPos(self):
         '''This function returns the coordinates of the centers of the body
         and of the feet.'''
-        return [self.lFootCenterPos, self.rFootCenterPos, self.bodyCenterPos]
+        return self.lFootCenterPos, self.rFootCenterPos, self.bodyCenterPos
 
     def getCorners(self):
         '''This function returns the coordinates of the four corners of
@@ -154,8 +154,8 @@ class Player(np.Game):
 
     def getRotation(self):
         '''This function returns the player's current rotation, i.e., the
-        direction the player is currently facing. It is an angle, measured in
-        degrees, formed by two lines: (1) the line connecting the body center
+        direction the player is currently facing. It is an angle (measured in
+        degrees) formed by two lines: (1) the line connecting the body center
         and the midpoint between the two foot centers, and (2) the y-axis
         pointing downward.'''
         # coordinates of the midpoint between the two foot centers
@@ -426,7 +426,7 @@ class Player(np.Game):
                 rotate = currentRot, kFootRotate
             self.updateFeet(kickingFoot, newCenterPos, rotate)
             self.updateDisplay()
-            pygame.time.wait(100)   # pause program for 100 ms
+            pygame.time.wait(200)   # pause program for 100 ms
             # bring foot back to its position and rotation before the kick
             if kickingFoot == 'lFoot':   # left foot is the kicking foot
                 newCenterPos = kFootCenterPos, self.getCenterPos()[1]
@@ -451,15 +451,15 @@ class Goalkeeper(Player):
         self.direction = random.choice([1, -1])   # left or right
         self.speed = 5   # number of pixels per movement
 
-    def move(self, goalPosts):
+    def move(self, goal):
         '''This function makes the goalkeeper move between the goal posts, only
         stopping when he catches the ball (i.e., when the ball hits the front of
-        his body).
-        goalPosts denotes the x-coordinates and size of the goal posts.'''
+        his body).'''
         currentRot = self.getRotation()   # measured in degrees
+        goalPosts = goal.getPosts()
         # points to which the player will move
-        lEndPoint = goalPosts[0]+goalPosts[2]+self.getCenter()[1][0]
-        rEndPoint = goalPosts[1]-goalPosts[2]-self.getCenter()[1][0]
+        lEndPoint = goalPosts[0]+self.getCenter()[1][0]
+        rEndPoint = goalPosts[1]-self.getCenter()[1][0]
         if self.direction == 1:   # playing is moving to the right
             if self.getCenterPos()[2][0] >= rEndPoint:   # reached right post
                 self.direction = -1   # change direction
@@ -490,7 +490,8 @@ class Outfielder(Player):
         self.bodyStartPosY = random.uniform(self.screenHeight-150,
                                             self.screenHeight-100)
         self.bodyStartPos = self.bodyStartPosX, self.bodyStartPosY
-        self.startRot = random.uniform(-60, 60)   # measured in degrees
+        self.startRot = 0
+        self.moved = False
 
     def move(self, moveType, direction, ball):
         '''This function moves the striker according to the specified type

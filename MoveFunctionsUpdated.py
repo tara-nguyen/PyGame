@@ -296,24 +296,24 @@ def reachedBoundaries2(boundaries, direction, centerPos, quarter):
     quarter is the quarter in the xy-plane (with the y-axis pointing
     downward) in which the object is currently staying.'''
     if direction == 'clockwise' or direction == 'left':
-        if quarter == 4 and centerPos[0] <= boundaries[0]:
+        if quarter == -1 and centerPos[0] <= boundaries[0]:
             return True
         elif quarter == 2 and centerPos[0] >= boundaries[1]:
             return True
-        elif quarter == 3 and centerPos[1] <= boundaries[2]:
+        elif quarter == -2 and centerPos[1] <= boundaries[2]:
             return True
         elif quarter == 1 and centerPos[1] >= boundaries[3]:
             return True
         else:
             return False
     elif direction == 'counterclockwise' or direction == 'right':
-        if quarter == 3 and centerPos[0] <= boundaries[0]:
+        if quarter == -2 and centerPos[0] <= boundaries[0]:
             return True
         elif quarter == 1 and centerPos[0] >= boundaries[1]:
             return True
         elif quarter == 2 and centerPos[1] <= boundaries[2]:
             return True
-        elif quarter == 4 and centerPos[1] >= boundaries[3]:
+        elif quarter == -1 and centerPos[1] >= boundaries[3]:
             return True
         else:
             return False

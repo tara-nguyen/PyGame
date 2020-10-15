@@ -70,6 +70,8 @@ Changes to the `NonplayerClasses` module:
 - Add `processMovements()` method to the `Game` class (moved from the main program).
 - Remove the `addToLists()` method, the `getLists()` method, and the `isBetween()` function because they are unnecessary.
 
+Changes to the goal:
+- Remove the `getCenter()` and `getCenterPos()` methods because they are unnecessary.
 Changes to the ball:
 - Remove the `setVelocity()` and `getVelocity()` methods because they are not used.
 - Add `setFinalStepSB()` and `setFinalStepGP()` methods, based on the original `setFinalStep2()` method.

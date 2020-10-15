@@ -26,13 +26,12 @@ class Game:
         self.screenHeight = screenSize[1]
         self.screen = pygame.display.set_mode(screenSize)
         self.screenCenter = self.screenWidth/2, self.screenHeight/2
-        self.frame = pygame.time.Clock()   # initialize clock
+        self.clock = pygame.time.Clock()   # Clock object
         
     def updateDisplay(self):
-        '''This function updates the display and sets the maximum number of
-        frames per second.'''
-        pygame.display.flip()   # update/clear display
-        self.frame.tick(30)   # maximum number of frames per second
+        '''This function updates the display and update the clock.'''
+        pygame.display.flip()
+        self.clock.tick(30)
         
     def getFile(self, imageName):
         '''This function returns the link to the images stored in the computer.'''
@@ -57,41 +56,41 @@ class Game:
         '''This function processes pressed keys that will initiate
         player movements.'''
         moveType, direction = None, None
-        if pressedKeys[pygame.K_LEFT] == 1:   # left arrow key has been pressed
-            if pressedKeys[pygame.K_RSHIFT] == 1:
+        if pressedKeys[pygame.K_LEFT]:   # left arrow key has been pressed
+            if pressedKeys[pygame.K_RSHIFT]:
                 # right shift key pressed at the same time
                 moveType = 'circle'
             else:
                 moveType = 'straight'
             direction = 'left'
-        if pressedKeys[pygame.K_RIGHT] == 1:  # right arrow key has been pressed
-            if pressedKeys[pygame.K_RSHIFT] == 1:
-                # right shift key pressedat the same time
+        if pressedKeys[pygame.K_RIGHT]:  # right arrow key has been pressed
+            if pressedKeys[pygame.K_RSHIFT]:
+                # right shift key pressed at the same time
                 moveType = 'circle'
             else:
                 moveType = 'straight'
             direction = 'right'
-        if pressedKeys[pygame.K_UP] == 1:   # up arrow key has been pressed
+        if pressedKeys[pygame.K_UP]:   # up arrow key has been pressed
             moveType = 'straight'
-            if pressedKeys[pygame.K_LEFT] == 1:
+            if pressedKeys[pygame.K_LEFT]:
                 # left arrow key pressed at the same time
                 direction = 'up left'
-            elif pressedKeys[pygame.K_RIGHT] == 1:
+            elif pressedKeys[pygame.K_RIGHT]:
                 # right arrow key pressed at the same time
                 direction = 'up right'
             else:
                 direction = 'up'
-        if pressedKeys[pygame.K_DOWN] == 1:   # down arrow key has been pressed
+        if pressedKeys[pygame.K_DOWN]:   # down arrow key has been pressed
             moveType = 'straight'
-            if pressedKeys[pygame.K_LEFT] == 1:
+            if pressedKeys[pygame.K_LEFT]:
                 # left arrow key pressed at the same time
                 direction = 'down left'
-            elif pressedKeys[pygame.K_RIGHT] == 1:
+            elif pressedKeys[pygame.K_RIGHT]:
                 # right arrow key pressed at the same time
                 direction = 'down right'
             else:
                 direction = 'down'
-        if pressedKeys[pygame.K_SPACE] == 1:   # spacebar has been pressed
+        if pressedKeys[pygame.K_SPACE]:   # spacebar has been pressed
             moveType = 'to ball'
         return moveType, direction
         
@@ -112,7 +111,7 @@ class Game:
         ball.setFirstStep(stepSize)   # initial step size
         ball.moving = True
         while ball.moving and round(stepSize) > 0:
-            goalkeeper.move(goal.getPosts())   # move goalkeeper between goal posts
+            goalkeeper.move(goal)   # move goalkeeper between goal posts
             goalkeeper.updatePlayer()
             if ball.checkGoal(goal.getPosts()):   # ball in goal
                 ball.inGoal = True
@@ -130,6 +129,7 @@ class Background(Game):
         '''This function initializes the class and sets its core attributes.'''
         Game.__init__(self, screenSize)   # initialize the parent class
         self.grass = None   # contain nothing
+        self.pos = 0, 0   # where the image will be drawn
         
     def load(self, imageName):
         '''This function loads the background image into PyGame.'''
@@ -138,13 +138,12 @@ class Background(Game):
         
     def blit(self):
         '''This function draws the background image onto the screen.'''
-        self.pos = 0, 0   # where the image will be drawn
         self.screen.blit(self.grass, self.pos)
         self.things = [self.grass]
 
 class Goal(Game):
     '''This class is a child class of Game and has the following methods:
-    __init__, crop, load, setPos, blit, getPos, getCenter, and getCenterPos.
+    __init__, crop, load, setPos, blit, and getPos.
     To get a brief description of each method, use the following syntax:
         <module name as imported>.Goal.<method name>.__doc__'''
     def __init__(self, screenSize):
@@ -153,15 +152,16 @@ class Goal(Game):
         self.left = None
         self.middle = None
         self.right = None
-        self.sideWidth = 60   # final width of the left and right goal parts
-        self.middleWidth = 120   # final width of the middle goal part
-        self.height = 80   # final goal height
+        # widths and height
+        self.sideWidth = 60   # left and right parts
+        self.middleWidth = 120   # middle part
+        self.height = 80
 
     def crop(self, image, newWidth, newHeight, shiftLeft=0):
         '''This function crops an image and returns the new surface on which
         the final image will be pasted.'''
         newSurface = crop.cropImage(image, 'pixels', newWidth, newHeight,
-                                  shiftLeft=shiftLeft, shiftUp=53)
+                                    shiftLeft=shiftLeft, shiftUp=53)
         return newSurface
 
     def load(self, imageName1, imageName2, imageName3):
@@ -181,8 +181,7 @@ class Goal(Game):
         
     def setPos(self):
         '''This function sets the positions where the goal parts will be drawn.'''
-        self.lCenter, self.mCenter, self.rCenter = self.getCenter()
-        self.mPos = self.screenCenter[0]-self.mCenter[0], 0
+        self.mPos = self.screenCenter[0]-self.middle.get_rect().center, 0
         self.lPos = self.mPos[0]-self.sideWidth, 0
         self.rPos = self.mPos[0]+self.middleWidth, 0
 
@@ -198,31 +197,13 @@ class Goal(Game):
         '''This function returns the positions of the all three goal parts.'''
         return [self.lPos, self.mPos, self.rPos]
 
-    def getCenter(self):
-        '''This function returns the centers of the goal parts.'''
-        lCenter = self.left.get_rect().center
-        mCenter = self.middle.get_rect().center
-        rCenter = self.right.get_rect().center
-        return lCenter, mCenter, rCenter
-
-    def getCenterPos(self):
-        '''This function returns the coordinates of the center of each
-        goal part.'''
-        # positions of the goal parts (i.e., where they were drawn)
-        self.lPos, self.mPos, self.rPos = self.getPos()
-        # centers of the goal parts
-        lCenter, mCenter, rCenter = self.getCenter()
-        # coordinates of the centers
-        lCenterPos = self.lPos[0]+lCenter[0], self.lPos[1]+lCenter[1]
-        mCenterPos = self.mPos[0]+mCenter[0], self.mPos[1]+mCenter[1]
-        rCenterPos = self.rPos[0]+rCenter[0], self.rPos[1]+rCenter[1]
-        return [lCenterPos, mCenterPos, rCenterPos]
-
     def getPosts(self):
-        '''This function returns the x-coordinates & the size of the goal posts.'''
-        leftPost, rightPost = self.lPos[0], self.rPos[0]+self.sideWidth
-        postWidth, postHeight = 11, self.height
-        return leftPost, rightPost, postWidth, postHeight
+        '''This function returns the x-coordinates & the height of
+        the goal posts.'''
+        postWidthHalf = 11/2
+        leftPost = self.lPos[0] + postWidthHalf
+        rightPost = self.rPos[0] + self.sideWidth - postWidthHalf
+        return leftPost, rightPost, self.height
 
 def getTrig(angle):
     '''This function returns the sine, cosine, and tangent of an angle.'''
@@ -248,9 +229,10 @@ class Ball(Game):
         Game.__init__(self, screenSize)   # initialize the parent class
         self.ball = None   # contain nothing
         self.diameter = 36
-        self.moving = False
-        self.hittingPlayer = False
-        self.gkCaught = False
+        # where the image will be drawn
+        self.startPos = ((self.screenWidth-self.diameter)/2,
+                         self.screenHeight-200)
+        self.moving, self.hittingPlayer, self.gkCaught, self.inGoal = [False]*4
 
     def load(self, imageName):
         '''This function loads the ball image into PyGame.'''
@@ -258,13 +240,12 @@ class Ball(Game):
         
     def blit(self):
         '''This function draws the ball onto the screen.'''
-        X = (self.screenWidth - self.diameter) / 2
-        Y = self.screenHeight - 200
-        self.startPos = X, Y   # where the ball will be drawn
         self.screen.blit(self.ball, self.startPos)
         self.center = self.ball.get_rect().center   # center of the ball
-        # coordinates of the center at the start of the program
-        self.centerPos = X+self.center[0], Y+self.center[1]
+        # coordinates of the center at the start of the program (i.e.,
+        # before any change/movement has been made)
+        self.centerPos = (self.startPos[0]+self.center[0],
+                          self.startPos[1]+self.center[1])
         self.things = [self.ball]
         
     def getStartPos(self):
@@ -323,7 +304,9 @@ class Ball(Game):
     def setFinalStep1(self, direction, distance):
         '''This function sets the size of the final step before the ball hits
         either the screen boundaries or the goal posts.
-        distance is the distance from the ball to the boundary/goal post.'''
+        distance is the distance from the ball to the boundary/goal post.
+        direction denotes whether the x- or the y-step size will be
+        set to distance.'''
         if direction == 'x':
             self.setStep(distance, distance/getTrig(self.getMovingAngle())[2])
         elif direction == 'y':
@@ -560,7 +543,8 @@ class Ball(Game):
         self.setCenterPos(self.getStartPos()[0][0]+self.center[0],
                           self.getStartPos()[0][1]+self.center[1])
         # update ball position and the display to show change
-        self.updateBall()   
+        self.updateBall()
+        self.inGoal = False
 
     def updateBall(self):
         '''This function updates the position of the ball and updates the

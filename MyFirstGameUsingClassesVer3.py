@@ -56,25 +56,23 @@ for player in (goalkeeper, striker):
 for thing in (ball, goalkeeper, striker):
     thing.allThings, thing.allPos = allThings, allPos
 
-bg.frame   # initialize clock
-
-playing = True
-while playing:
-    # process events in the game one by one
+while True:
+    # process events in the game
     for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            playing = False
+        pressedKeys = pygame.key.get_pressed()
+        if event.type == pygame.QUIT or pressedKeys[pygame.K_ESCAPE] or \
+           (pressedKeys[pygame.K_LCTRL] and pressedKeys[pygame.K_w]):
             pygame.quit()
             sys.exit()   # prevent getting an error message when quitting
 
-    striker.moved = False
-    ball.inGoal = False
-
+    goalkeeper.move(goal)   # move goalkeeper between goal posts
+    goalkeeper.updatePlayer()   # update player
+                
     pressedKeys = pygame.key.get_pressed()
-    moveType, direction = bg.processMoveKeys(pressedKeys)
+    moveType, direction = bg.processMoveKeys(pressedKeys)    
     if moveType != None:
         striker.move(moveType, direction, ball)
-    if pressedKeys[pygame.K_s] == 1:
+    if pressedKeys[pygame.K_s]:
         goalkeeper.kickBall(ball, gk=True)
         striker.kickBall(ball)
         # The ball will move if the foot touches it.
@@ -98,17 +96,11 @@ while playing:
                         bg.processMovements(random.uniform(18,22), minDist,
                                             ball, goal, goalkeeper, striker)
                         
-    # If in goal, the ball will be return to its original position after it has
-    # stopped moving.
     if ball.inGoal:
-        ball.resetBall()
+        ball.resetBall()   # return to its original position
         goalkeeper.speed = gkStartSpeed   # reset goalkeeper's speed
 
-    goalkeeper.move(goal.getPosts())   # move goalkeeper between goal posts
-    goalkeeper.updatePlayer()   # update player
-                
     if striker.moved:
-        # update player
-        striker.updatePlayer()
+        striker.updatePlayer()   # update player
 
     bg.updateDisplay()   # update display to show changes
