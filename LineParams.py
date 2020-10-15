@@ -19,34 +19,19 @@ def getParams(point1, point2):
     Xdiff = point1[0] - point2[0]
     Ydiff = point1[1] - point2[1]
     dist = math.sqrt(Xdiff**2 + Ydiff**2)
-    if dist == 0:
-        # the two points are the same --> can't compute angle
+    if dist == 0:   # the two points are the same --> can't compute angle
         angle, quarter = None, None
     else:
-        # two different points --> can compute angle
-        # angle measured in radians
-        if point2[1] >= point1[1]:
-            # bottom-right quarter of xy-plane
+        if point2[1] >= point1[1]:   # bottom-right quarter of xy-plane
+            quarter = 1
             angle = math.asin(abs(Xdiff)/dist)
-        else:
-            # top-right quarter of xy-plane
+        else:   # top-right quarter of xy-plane
+            quarter = 2
             angle = math.pi/2 + math.asin(abs(Ydiff)/dist)
-        if point2[0] < point1[0]:
-            # left of the y-axis
+        if point2[0] < point1[0]:   # left of the y-axis
+            quarter *= -1
             angle *= -1
-        # angle measured in degrees
-        angle *= 180/math.pi
-        # quarter in which second point belongs
-        if angle >= 0:
-            if angle <= 90:
-                quarter = 1
-            elif angle <= 180:
-                quarter = 2
-        else:
-            if angle >= -90:
-                quarter = 4
-            elif angle >= -180:
-                quarter = 3
+        angle *= 180/math.pi   # angle measured in degrees
     return Xdiff, Ydiff, dist, angle, quarter
 
 def getLine(point1, point2):

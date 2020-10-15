@@ -94,6 +94,30 @@ def setDiagStep(stepX, stepY, maxDist=10):
         stepDiag = math.sqrt(stepX**2 + stepY**2)
     return stepX, stepY
 
+def toPoint(centerPos, endPoint, endAngle, speedBoost=1):
+    '''This function moves an object to a specified end point.
+    centerPos is the coordinates of the object's center point.
+    endAngle is the direction the front of the object will face after the
+    object has reached the end point. The default has the object facing upward.
+    speedBoost adjusts the step size and must not be negative.'''
+    if endPoint == centerPos:   # object has reached end point --> stop moving
+        stepX = 0
+        stepY = 0
+    else:
+        # distance from end point
+        Xdiff, Ydiff = line.getParams(endPoint, centerPos)[:2]
+        # step size
+        stepX = setDiagStep(Xdiff, Ydiff)[0] * abs(speedBoost)
+        stepY = setDiagStep(Xdiff, Ydiff)[1] * abs(speedBoost)
+        if abs(Xdiff) <= abs(stepX) or abs(Ydiff) <= abs(stepY):
+            # final step before reaching the end point
+            stepX = Xdiff
+            stepY = Ydiff
+    rotate = endAngle   # measured in degrees
+    # new coordinates of object center
+    newCenterPos = centerPos[0]+stepX, centerPos[1]+stepY
+    return newCenterPos, rotate
+
 ### The next three functions (up to straight()) handle straight movements. ###
 
 def setFinalStep1(boundaries, direction, stepX, stepY, centerPos):
@@ -227,30 +251,6 @@ def straight(direction, centerPos, stepX=10, stepY=10, screenSize=None,
     newCenterPos = centerPos[0]+stepX, centerPos[1]+stepY
     return newCenterPos, rotate
 
-def toPoint(centerPos, endPoint, endAngle, speedBoost=1):
-    '''This function moves an object to a specified end point.
-    centerPos is the coordinates of the object's center point.
-    endAngle is the direction the front of the object will face after the object
-    has reached the end point. The default has the object facing upward.
-    speedBoost adjusts the step size and must not be negative.'''
-    if endPoint == centerPos:   # object has reached end point --> stop moving
-        stepX = 0
-        stepY = 0
-    else:
-        # distance from end point
-        Xdiff, Ydiff = line.getParams(endPoint, centerPos)[:2]
-        # step size
-        stepX = setDiagStep(Xdiff, Ydiff)[0] * abs(speedBoost)
-        stepY = setDiagStep(Xdiff, Ydiff)[1] * abs(speedBoost)
-        if abs(Xdiff) <= abs(stepX) or abs(Ydiff) <= abs(stepY):
-            # final step before reaching the end point
-            stepX = Xdiff
-            stepY = Ydiff
-    rotate = endAngle   # measured in degrees
-    # new coordinates of object center
-    newCenterPos = centerPos[0]+stepX, centerPos[1]+stepY
-    return newCenterPos, rotate
-
 ### The final six functions handle circular movements. ###
 
 def setMaxRotStep(direction, maxRot, angle, step):
@@ -296,24 +296,24 @@ def reachedBoundaries2(boundaries, direction, centerPos, quarter):
     quarter is the quarter in the xy-plane (with the y-axis pointing
     downward) in which the object is currently staying.'''
     if direction == 'clockwise' or direction == 'left':
-        if quarter == 4 and centerPos[0] <= boundaries[0]:
+        if quarter == -1 and centerPos[0] <= boundaries[0]:
             return True
         elif quarter == 2 and centerPos[0] >= boundaries[1]:
             return True
-        elif quarter == 3 and centerPos[1] <= boundaries[2]:
+        elif quarter == -2 and centerPos[1] <= boundaries[2]:
             return True
         elif quarter == 1 and centerPos[1] >= boundaries[3]:
             return True
         else:
             return False
     elif direction == 'counterclockwise' or direction == 'right':
-        if quarter == 3 and centerPos[0] <= boundaries[0]:
+        if quarter == -2 and centerPos[0] <= boundaries[0]:
             return True
         elif quarter == 1 and centerPos[0] >= boundaries[1]:
             return True
         elif quarter == 2 and centerPos[1] <= boundaries[2]:
             return True
-        elif quarter == 4 and centerPos[1] >= boundaries[3]:
+        elif quarter == -1 and centerPos[1] >= boundaries[3]:
             return True
         else:
             return False

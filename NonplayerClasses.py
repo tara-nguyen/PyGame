@@ -16,7 +16,7 @@ import MoveFunctionsUpdated as move
 class Game:
     '''This class is the parent class of Background, Goal, Player, and Ball.
     It has the following methods: __init__, updateDisplay, getFile, loadImage,
-    and processMoveKeys.
+    processMoveKeys, and processMovements.
     To get a brief description of each method, use the following syntax:
         <module name as imported>.Game.<method name>.__doc__'''
     def __init__(self, screenSize):
@@ -26,13 +26,12 @@ class Game:
         self.screenHeight = screenSize[1]
         self.screen = pygame.display.set_mode(screenSize)
         self.screenCenter = self.screenWidth/2, self.screenHeight/2
-        self.frame = pygame.time.Clock()   # initializes clock
+        self.clock = pygame.time.Clock()   # Clock object
         
     def updateDisplay(self):
-        '''This function updates the display and sets the maximum number of
-        frames per second.'''
-        pygame.display.flip()   # updates/clears display
-        self.frame.tick(30)   # maximum number of frames per second
+        '''This function updates the display and update the clock.'''
+        pygame.display.flip()
+        self.clock.tick(30)
         
     def getFile(self, imageName):
         '''This function returns the link to the images stored in the computer.'''
@@ -57,44 +56,70 @@ class Game:
         '''This function processes pressed keys that will initiate
         player movements.'''
         moveType, direction = None, None
-        if pressedKeys[pygame.K_LEFT] == 1:   # left arrow key has been pressed
-            if pressedKeys[pygame.K_RSHIFT] == 1:
+        if pressedKeys[pygame.K_LEFT]:   # left arrow key has been pressed
+            if pressedKeys[pygame.K_RSHIFT]:
                 # right shift key pressed at the same time
                 moveType = 'circle'
             else:
                 moveType = 'straight'
             direction = 'left'
-        if pressedKeys[pygame.K_RIGHT] == 1:  # right arrow key has been pressed
-            if pressedKeys[pygame.K_RSHIFT] == 1:
-                # right shift key pressedat the same time
+        if pressedKeys[pygame.K_RIGHT]:  # right arrow key has been pressed
+            if pressedKeys[pygame.K_RSHIFT]:
+                # right shift key pressed at the same time
                 moveType = 'circle'
             else:
                 moveType = 'straight'
             direction = 'right'
-        if pressedKeys[pygame.K_UP] == 1:   # up arrow key has been pressed
+        if pressedKeys[pygame.K_UP]:   # up arrow key has been pressed
             moveType = 'straight'
-            if pressedKeys[pygame.K_LEFT] == 1:
+            if pressedKeys[pygame.K_LEFT]:
                 # left arrow key pressed at the same time
                 direction = 'up left'
-            elif pressedKeys[pygame.K_RIGHT] == 1:
+            elif pressedKeys[pygame.K_RIGHT]:
                 # right arrow key pressed at the same time
                 direction = 'up right'
             else:
                 direction = 'up'
-        if pressedKeys[pygame.K_DOWN] == 1:   # down arrow key has been pressed
+        if pressedKeys[pygame.K_DOWN]:   # down arrow key has been pressed
             moveType = 'straight'
-            if pressedKeys[pygame.K_LEFT] == 1:
+            if pressedKeys[pygame.K_LEFT]:
                 # left arrow key pressed at the same time
                 direction = 'down left'
-            elif pressedKeys[pygame.K_RIGHT] == 1:
+            elif pressedKeys[pygame.K_RIGHT]:
                 # right arrow key pressed at the same time
                 direction = 'down right'
             else:
                 direction = 'down'
-        if pressedKeys[pygame.K_SPACE] == 1:   # spacebar has been pressed
+        if pressedKeys[pygame.K_SPACE]:   # spacebar has been pressed
             moveType = 'to ball'
         return moveType, direction
         
+    def processMovements(self, stepSize, minDist, ball, goal, goalkeeper,
+                         striker):
+        '''This function processes the movements of the ball and of the 
+        goalkeeper while the ball is moving.
+        minDist is the nearest distance to the player that the ball can get.'''
+        # angle (measured in degrees) of the body with respect to the
+        # y-axis pointing downward
+        if goalkeeper.touchedBall:
+            bodyAngle = goalkeeper.getBodyAngle(ball)
+        elif striker.touchedBall:
+            bodyAngle = striker.getBodyAngle(ball)
+        # angle (measured in degrees) at which the ball will move, with
+        # respect to the y-axis pointing up from the current ball center
+        ball.setMovingAngle(random.uniform(bodyAngle-.5, bodyAngle+.5))
+        ball.setFirstStep(stepSize)   # initial step size
+        ball.moving = True
+        while ball.moving and round(stepSize) > 0:
+            goalkeeper.move(goal)   # move goalkeeper between goal posts
+            goalkeeper.updatePlayer()
+            if ball.checkGoal(goal.getPosts()):   # ball in goal
+                ball.inGoal = True
+            # move ball
+            ball.move(stepSize, goal.getPosts(), (goalkeeper,striker), minDist)
+            # new step size
+            stepSize = math.sqrt(ball.stepX**2 + ball.stepY**2)   
+    
 class Background(Game):
     '''This class is a child class of Game and has three methods: __init__, 
     load, and blit.
@@ -102,8 +127,9 @@ class Background(Game):
         <module name as imported>.Background.<method name>.__doc__'''
     def __init__(self, screenSize):
         '''This function initializes the class and sets its core attributes.'''
-        Game.__init__(self, screenSize)   # initializes the parent class
-        self.grass = None   # contains nothing
+        Game.__init__(self, screenSize)   # initialize the parent class
+        self.grass = None   # contain nothing
+        self.pos = 0, 0   # where the image will be drawn
         
     def load(self, imageName):
         '''This function loads the background image into PyGame.'''
@@ -112,30 +138,30 @@ class Background(Game):
         
     def blit(self):
         '''This function draws the background image onto the screen.'''
-        self.pos = 0, 0   # where the image will be drawn
         self.screen.blit(self.grass, self.pos)
         self.things = [self.grass]
 
 class Goal(Game):
     '''This class is a child class of Game and has the following methods:
-    __init__, crop, load, setPos, blit, getPos, getCenter, and getCenterPos.
+    __init__, crop, load, setPos, blit, and getPos.
     To get a brief description of each method, use the following syntax:
         <module name as imported>.Goal.<method name>.__doc__'''
     def __init__(self, screenSize):
         '''This function initializes the class and sets its core attributes.'''
-        Game.__init__(self, screenSize)   # initializes the parent class
+        Game.__init__(self, screenSize)   # initialize the parent class
         self.left = None
         self.middle = None
         self.right = None
-        self.sideWidth = 60   # final width of the left and right goal parts
-        self.middleWidth = 120   # final width of the middle goal part
-        self.height = 80   # final goal height
+        # widths and height
+        self.sideWidth = 60   # left and right parts
+        self.middleWidth = 120   # middle part
+        self.height = 80
 
     def crop(self, image, newWidth, newHeight, shiftLeft=0):
         '''This function crops an image and returns the new surface on which
         the final image will be pasted.'''
         newSurface = crop.cropImage(image, 'pixels', newWidth, newHeight,
-                                  shiftLeft=shiftLeft, shiftUp=53)
+                                    shiftLeft=shiftLeft, shiftUp=53)
         return newSurface
 
     def load(self, imageName1, imageName2, imageName3):
@@ -155,8 +181,7 @@ class Goal(Game):
         
     def setPos(self):
         '''This function sets the positions where the goal parts will be drawn.'''
-        self.lCenter, self.mCenter, self.rCenter = self.getCenter()
-        self.mPos = self.screenCenter[0]-self.mCenter[0], 0
+        self.mPos = self.screenCenter[0]-self.middle.get_rect().centerx, 0
         self.lPos = self.mPos[0]-self.sideWidth, 0
         self.rPos = self.mPos[0]+self.middleWidth, 0
 
@@ -172,31 +197,13 @@ class Goal(Game):
         '''This function returns the positions of the all three goal parts.'''
         return [self.lPos, self.mPos, self.rPos]
 
-    def getCenter(self):
-        '''This function returns the centers of the goal parts.'''
-        lCenter = self.left.get_rect().center
-        mCenter = self.middle.get_rect().center
-        rCenter = self.right.get_rect().center
-        return lCenter, mCenter, rCenter
-
-    def getCenterPos(self):
-        '''This function returns the coordinates of the center of each
-        goal part.'''
-        # positions of the goal parts (i.e., where they were drawn)
-        self.lPos, self.mPos, self.rPos = self.getPos()
-        # centers of the goal parts
-        lCenter, mCenter, rCenter = self.getCenter()
-        # coordinates of the centers
-        lCenterPos = self.lPos[0]+lCenter[0], self.lPos[1]+lCenter[1]
-        mCenterPos = self.mPos[0]+mCenter[0], self.mPos[1]+mCenter[1]
-        rCenterPos = self.rPos[0]+rCenter[0], self.rPos[1]+rCenter[1]
-        return [lCenterPos, mCenterPos, rCenterPos]
-
     def getPosts(self):
-        '''This function returns the x-coordinates & the size of the goal posts.'''
-        leftPost, rightPost = self.lPos[0], self.rPos[0]+self.sideWidth
-        postWidth, postHeight = 11, self.height
-        return leftPost, rightPost, postWidth, postHeight
+        '''This function returns the x-coordinates & the height of
+        the goal posts.'''
+        postWidthHalf = 11 / 2
+        leftPost = self.lPos[0] + postWidthHalf
+        rightPost = self.rPos[0] + self.sideWidth - postWidthHalf
+        return leftPost, rightPost, self.height
 
 def getTrig(angle):
     '''This function returns the sine, cosine, and tangent of an angle.'''
@@ -212,19 +219,20 @@ class Ball(Game):
     '''This class is a child class of Game and has the following methods:
     __init__, load, blit, getStartPos, setCenterPos, getCenterPos, 
     setMovingAngle, getMovingAngle, setFirstStep, setStep, getStep,
-    decrementStep, getExtremes, setFinalStep1, setFinalStepSB, setFinalStepGP,
-    setFinalStep2, hitGoalPosts, bounceBack, checkBouncing, hitPlayer,
-    checkGoal, move, resetBall, and updateBall.
+    decrementStep, getExtremes, setFinalStepSB, setFinalStepGP, setFinalStep,
+    hitGoalPosts, bounceBack, checkBouncing, hitPlayer, checkGoal, move,
+    resetBall, and updateBall.
     To get a brief description of each method, use the following syntax:
         <module name as imported>.Ball.<method name>.__doc__'''
     def __init__(self, screenSize):
         '''This function initializes the class and sets its core attributes.'''
-        Game.__init__(self, screenSize)   # initializes the parent class
-        self.ball = None   # contains nothing
+        Game.__init__(self, screenSize)   # initialize the parent class
+        self.ball = None   # contain nothing
         self.diameter = 36
-        self.moving = False
-        self.hittingPlayer = False
-        self.gkCaught = False
+        # where the image will be drawn
+        self.startPos = ((self.screenWidth-self.diameter)/2,
+                         self.screenHeight-200)
+        self.moving, self.hittingPlayer, self.gkCaught, self.inGoal = [False]*4
 
     def load(self, imageName):
         '''This function loads the ball image into PyGame.'''
@@ -232,13 +240,12 @@ class Ball(Game):
         
     def blit(self):
         '''This function draws the ball onto the screen.'''
-        X = (self.screenWidth - self.diameter) / 2
-        Y = self.screenHeight - 200
-        self.startPos = X, Y   # where the ball will be drawn
         self.screen.blit(self.ball, self.startPos)
         self.center = self.ball.get_rect().center   # center of the ball
-        # coordinates of the center at the start of the program
-        self.centerPos = X+self.center[0], Y+self.center[1]
+        # coordinates of the center at the start of the program (i.e.,
+        # before any change/movement has been made)
+        self.centerPos = (self.startPos[0]+self.center[0],
+                          self.startPos[1]+self.center[1])
         self.things = [self.ball]
         
     def getStartPos(self):
@@ -286,72 +293,77 @@ class Ball(Game):
         self.setStep(self.stepX/factor, self.stepY/factor)
 
     def getExtremes(self):
-        '''This function returns the coordinates of the leftmost, rightmost, top, 
-        and bottom points of the ball'''
+        '''This function returns the coordinates of the leftmost, 
+        rightmost, top, and bottom points of the ball'''
         left = self.getCenterPos()[0] - self.center[0]
         right = left + self.diameter
         top = self.getCenterPos()[1] - self.center[1]
         bottom = top + self.diameter
         return left, right, top, bottom
 
-    def setFinalStep1(self, direction, distance):
-        '''This function sets the size of the final step before the ball hits
-        either the screen boundaries or the goal posts.
-        distance is the distance from the ball to the boundary/goal post.'''
-        if direction == 'x':
-            self.setStep(distance, distance/getTrig(self.getMovingAngle())[2])
-        elif direction == 'y':
-            self.setStep(distance*getTrig(self.getMovingAngle())[2], distance)
-
     def setFinalStepSB(self):
         '''This function checks if the ball is about to hit the screen
         boundaries, and sets the step size accordingly.'''
         # the leftmost, rightmost, top, and bottom points on the ball
         left, right, top, bottom = self.getExtremes()
-        # set final step
+        newStepX, newStepY = self.getStep()
         if self.stepX > left:
-            self.setFinalStep1('x', left)
-        if self.stepX < right - self.screenWidth:
-            self.setFinalStep1('x', right-self.screenWidth)
-        if self.stepY > top:
-            self.setFinalStep1('y', top)
-        if self.stepY < bottom - self.screenHeight:
-            self.setFinalStep1('y', bottom-self.screenHeight)
+            newStepX = left
+        elif self.stepX < right - self.screenWidth:
+            newStepX = right - self.screenWidth
+        elif self.stepY > top:
+            newStepY = top
+        elif self.stepY < bottom - self.screenHeight:
+            newStepY = bottom - self.screenHeight
+        if newStepX != self.stepX:
+            newStepY = newStepX / getTrig(self.getMovingAngle())[2]
+        elif newStepY != self.stepY:
+            newStepX = newStepY * getTrig(self.getMovingAngle())[2]
+        self.setStep(newStepX, newStepY)
 
-    def setFinalStepGP(self, goalPosts):
+     def setFinalStepGP(self, goal):
         '''This function checks if the ball is about to hit the goal posts,
-        and sets the step size accordingly.
-        goalPosts denotes the x-coordinates and size of the goal posts.'''
+        and sets the step size accordingly.'''
+        goalPosts = goal.getPosts()
         # the leftmost, rightmost, and top points on the ball
         left, right, top = self.getExtremes()[:3]
-        oldStepX, oldStepY = self.getStep()   # step size before adjusting
-        if self.stepX != 0:   # there is movement in the x-direction
-            if top < goalPosts[-1] or (top >= goalPosts[-1] and self.stepY > 0):
-                if right < goalPosts[0] and self.stepX < right - goalPosts[0]:
-                    # left of left goal post and moving right
-                    self.setFinalStep1('x', right-goalPosts[0])
-                if left > goalPosts[1] and self.stepX > left - goalPosts[1]:
-                    # right of right goal post and moving left
-                    self.setFinalStep1('x', left-goalPosts[1])
-                if left > goalPosts[0] + goalPosts[2] and \
-                   self.stepX > left - (goalPosts[0] + goalPosts[2]):
-                    # right of left goal post and moving left
-                    self.setFinalStep1('x', left-(goalPosts[0]+goalPosts[2]))
-                if right < goalPosts[1] - goalPosts[2] and \
-                   self.stepX < right - (goalPosts[1] - goalPosts[2]):
-                    # left of right goal post and moving right
-                    self.setFinalStep1('x', right-(goalPosts[1]-goalPosts[2]))
-                # check if, with the new step size, the ball would hit the
-                # goal posts; if not, reset the step size
-                if top > goalPosts[-1] and self.stepY < top - goalPosts[-1]:
-                    self.setStep(oldStepX, oldStepY)
-        
-    def setFinalStep2(self, goalPosts):
+        approachingSide, approachingBottom = False, False
+        if right < goalPosts[0] and self.stepX < right - goalPosts[0]:
+            # left of left goal post and moving right
+            approachingSide = True
+            newStepX = right - goalPosts[0]
+        elif left > goalPosts[1] and self.stepX > left - goalPosts[1]:
+            # right of right goal post and moving left
+            approachingSide = True
+            newStepX = left - goalPosts[1]
+        elif left > goalPosts[0] and self.stepX > left - goalPosts[0]:
+            # right of left goal post and moving left
+            approachingSide = True
+            newStepX = left - goalPosts[0]
+        elif right < goalPosts[1] and self.stepX > right - goalPosts[1]:
+            # left of right goal post and moving right
+            approachingSide = True
+            newStepX = left - goalPosts[0]
+        elif top > goalPosts[2] and self.stepY > top - goalPosts[2]:
+            # below goal line and moving up
+            newStepY = top - goalPosts[2]
+            newStepX = newStepY * getTrig(self.getMovingAngle())[2]
+            if (goalPosts[0]>=left-newStepX and goalPosts[0]<=right-newStepX) or \
+               (goalPosts[1]>=left-newStepX and goalPosts[1]<=right-newStepX):
+                approachingBottom = True
+        if approachingSide:
+            newStepY = newStepX / getTrig(self.getMovingAngle())[2]
+            if top - newStepY < goalPosts[2]:
+                self.setStep(newStepX, newStepY)
+        elif approachingBottom:
+            self.setStep(newStepX, newStepY)
+       
+    def setFinalStep(self, goal):
         '''This function checks if the ball is about to hit either the screen
         boundaries or the goal posts, and sets the step size accordingly.
         goalPosts denotes the x-coordinates and size of the goal posts.'''
         self.setFinalStepSB()
-        self.setFinalStepGP(goalPosts)
+        self.setFinalStepGP(goal)
 
     def hitGoalPosts(self, goalPosts):
         '''This function checks if the ball has hit the goal posts.
@@ -407,18 +419,17 @@ class Ball(Game):
         elif top == 0 or bottom == self.screenHeight:
             self.bounceBack('y')   # ball bouncing back in the y direction
         # Ball will also bounce back if it hits the goal posts.
-        if self.hitGoalPosts(goalPosts) == 'side':   # hit the side of the post
+        if self.hitGoalPosts(goalPosts) == 'side':
             self.bounceBack('x')   # ball bouncing back in the x direction
         elif self.hitGoalPosts(goalPosts) == 'from below':
-            # hit the post from below the goal line
             if right == goalPosts[0] or right == goalPosts[1] - goalPosts[2]:
                 # ball hit the goal post right at the corner
                 if self.stepX < 0:   # ball moving to the right
-                    self.bounceBack('x')   # bounces back in the x direction
+                    self.bounceBack('x')   # bounce back in the x direction
             elif left == goalPosts[1] or left == goalPosts[1] - goalPosts[2]:
                 # ball hit the goal post right at the corner
                 if self.stepX > 0:   # ball moving to the left
-                    self.bounceBack('x')   # bounces back in the x direction
+                    self.bounceBack('x')   # bounce back in the x direction
             else:
                 self.bounceBack('y')   # ball bouncing back in the y direction
         # return True if the step size has been modified
@@ -443,16 +454,16 @@ class Ball(Game):
             # pointing downward
             dist, angle = line.getParams(pCenterPos,
                                          self.getCenterPos())[2:4]
-            # current step size and rate of moving
+            # current step size
             stepX, stepY = self.getStep()
-            rate = math.sqrt(stepX**2 + stepY**2)
+            stepDiag = math.sqrt(stepX**2 + stepY**2)   # travel distance
             # new coordinates of the ball center if the ball moves with the
             # current step size
             newCenterPos = (self.getCenterPos()[0]-stepX,
                             self.getCenterPos()[1]-stepY)
             # new distance from ball to the player's body center 
             newDist = line.getParams(pCenterPos, newCenterPos)[2]
-            if newDist < dist and dist > minDist and rate > dist - minDist:
+            if newDist < dist and dist > minDist and stepDiag > dist - minDist:
                 # ball about to hit player --> set final step size
                 stepX, stepY = move.setDiagStep(stepX, stepY,
                                                 maxDist=dist-minDist+.2)
@@ -465,7 +476,7 @@ class Ball(Game):
                 print('\nhit')
                 if angleDiff >= 120 and angleDiff <= 240:
                     # ball hits the front of the player's body
-                    self.setStep(0, 0)   # stops moving
+                    self.setStep(0, 0)   # stop moving
                     if player == players[0]:   # goalkeeper has the ball
                         self.gkCaught = True
                     break
@@ -503,13 +514,13 @@ class Ball(Game):
             self.updateBall()
             if self.stepX * stepX > 0 and self.stepY * stepY > 0:
                 self.hittingPlayer = True   # ball about to hit player
-                self.setStep(stepX, stepY)   # resets step size
+                self.setStep(stepX, stepY)   # reset step size
         if self.moving and not self.hittingPlayer:
             print('moving')
             stepX, stepY = self.getStep()   # current step size
             # set the size of the final step before the ball hits either the
             # screen boundaries or the goal posts
-            self.setFinalStep2(goalPosts)
+            self.setFinalStep(goal)
             # new coordinates of the ball center
             self.setCenterPos(self.getCenterPos()[0]-self.stepX,
                               self.getCenterPos()[1]-self.stepY)
@@ -526,7 +537,7 @@ class Ball(Game):
                                   self.getCenterPos()[1]-self.stepY)
                 # update ball position and update display to show movement
                 self.updateBall()
-            self.decrementStep()   # decrements step size
+            self.decrementStep()   # decrement step size
         
     def resetBall(self):
         '''This function puts the ball at its original position after the 
@@ -534,7 +545,8 @@ class Ball(Game):
         self.setCenterPos(self.getStartPos()[0][0]+self.center[0],
                           self.getStartPos()[0][1]+self.center[1])
         # update ball position and the display to show change
-        self.updateBall()   
+        self.updateBall()
+        self.inGoal = False
 
     def updateBall(self):
         '''This function updates the position of the ball and updates the
