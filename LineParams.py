@@ -1,5 +1,5 @@
-'''This module defines five functions:
-    getParams(), getLine(), getIntersect(), getDistToLine(), and checkSide().
+'''This module defines the following functions: getParams(), getLine(),
+getIntersect(), getDistToLine(), isBetween(), and checkSide().
 To get a brief description of each function, use the following syntax:
     <module name as imported>.<function name>.__doc__'''
 
@@ -106,6 +106,25 @@ def getDistToLine(point0, linePoint1, linePoint2):
         Xdiff, Ydiff, dist = getParams(point0, (intersectX,intersectY))[:3]
     return Xdiff, Ydiff, dist
 
+def isBetween(point0, point1, point2):
+    '''This function takes in three different points on a straight line
+    and checks if one of the points (point0) lies between the other two
+    (point1 and point2).'''
+    # differences in coordinates
+    Xdiff1, Ydiff1 = getParams(point0, point1)[:2]
+    Xdiff2, Ydiff2 = getParams(point0, point2)[:2]
+    if Xdiff1 == 0:
+        # line connecting point1 and point2 is parallel to the y-axis
+        if Ydiff1 * Ydiff2 > 0:
+            return False
+        else:
+            return True
+    else:
+        if Xdiff1 * Xdiff2 > 0:
+            return False
+        else:
+            return True
+
 def checkSide(point1, point2, linePoint1, linePoint2):
     '''This function checks if two given points (point1 and point2) are on
     the same side or different sides of the line connecting the other two
@@ -122,18 +141,7 @@ def checkSide(point1, point2, linePoint1, linePoint2):
     elif (intersectX,intersectY) == point1 or (intersectX,intersectY) == point2:
         return 0
     else:
-        # differences in coordinates between the intersection point and
-        # (1) point1 and (2) point2
-        Xdiff1, Ydiff1 = getParams((intersectX,intersectY), point1)[:2]
-        Xdiff2, Ydiff2 = getParams((intersectX,intersectY), point2)[:2]
-        if Xdiff1 == 0:
-            # line connecting point1 and point2 is parallel to the y-axis
-            if Ydiff1 * Ydiff2 > 0:
-                return 1
-            else:
-                return -1
+        if isBetween((intersectX,intersectY), point1, point2):
+            return -1
         else:
-            if Xdiff1 * Xdiff2 > 0:
-                return 1
-            else:
-                return -1
+            return 1
