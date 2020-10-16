@@ -2,17 +2,17 @@
 
 #### A mini-game of football/soccer in PyGame.
 
-List of files:
-- `ClassesForMyFirstGame.py` – contains classes `Game`, `Background`, `Goal`, `Player`, and `Ball`
-- `CroppingImages.py` – contains two functions for cropping images in PyGame
-- `LineParams.py` – contains two functions for getting parameters related to a line connecting two points on the screen
-- `MoveFunctions.py` – contains functions for moving objects in PyGame
-- `MoveFunctionsUpdated.py` – updated version of `MoveFunctions` module; specific to `outfielder-movements` branch and all branches created afterward
-- `MyFirstGame.py` – main program for the game without using classes; all functions are defined at the top of the program
-- `MyFirstGameUsingClassesVer1.py` – main program for the game using the classes defined in `ClassesForMyFirstGame.py`
-- `MyFirstGameUsingClassesVer2.py` – main program for the game using the classes defined in `NonplayerClasses` and `PlayerClasses` modules.
-- `NonplayerClasses.py` – contains classes `Game`, `Background`, `Goal`, and `Ball`; specific to `add-goalkeeper` branch and all branches created afterward
-- `PlayerClasses.py` – contains class `Player`; specific to `add-goalkeeper` branch and all branches created afterward
+List of modules:
+- `ClassesForMyFirstGame` – contains classes `Game`, `Background`, `Goal`, `Player`, and `Ball`
+- `CroppingImages` – contains two functions for cropping images in PyGame
+- `LineParams` – contains two functions for getting parameters related to a line connecting two points on the screen
+- `MoveFunctions` – contains functions for moving objects in PyGame
+- `MoveFunctionsUpdated` – updated version of `MoveFunctions` module; specific to `outfielder-movements` branch and all branches created afterward
+- `MyFirstGame` – main program for the game without using classes; all functions are defined at the top of the program
+- `MyFirstGameUsingClassesVer1` – main program for the game using the classes defined in `ClassesForMyFirstGame.py`
+- `MyFirstGameUsingClassesVer2` – main program for the game using the classes defined in `NonplayerClasses` and `PlayerClasses` modules.
+- `NonplayerClasses` – contains classes `Game`, `Background`, `Goal`, and `Ball`; specific to `add-goalkeeper` branch and all branches created afterward
+- `PlayerClasses` – contains class `Player`; specific to `add-goalkeeper` branch and all branches created afterward
 
 ### Branch `add-goalkeeper`
 
@@ -57,7 +57,7 @@ Changes to the `PlayerClasses` module:
 #### Changes from `add-goalkeeper` branch
 
 Changes to the `LineParams` module:
-- Add `checkSide()` function.
+- Add three functions: `getIntersect()`, `getDistToLine()`, `isBetween()`, and `checkSide()`.
 
 Changes to the module used for handling object movements:
 - Add code for diagonal movements.
@@ -80,8 +80,11 @@ Changes to the ball:
 - Add code (to the `hitPlayer()` method) for setting the final step before the ball hits a player.
 
 Changes to the ball:
-- Remove the `setFinalStep1()` method because it is unnecessary.
-- Rename `setFinalStep2()` to `setFinalStep()`.
+- Rename `setFinalStepSB()` and `setFinalStepGP()` to `approachScrBounds()` and `approachGoalPosts()`, respectively.
+- Add `approachPlayer()` method.
+- Remove the following methods: `setFinalStep1()`, `setFinalStep2()`, `hitGoalPosts()`, `checkBouncing()`, `hitPlayer()`, and `checkGoal()`.
+- Modify the `move()` method entirely.
+- Rename `resetBall()` and `updateBall()` to `reset()` and `update()`, respectively.
 
 Changes to the `PlayerClasses` module:
 - Add `getCorners()` and `getShoulderAngle()` methods to the `Player` class.

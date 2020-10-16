@@ -3,6 +3,7 @@ soccer in PyGame. Compared to the previous versions, this version enables the
 outfielder to move in any direction using only the arrow keys.'''
 
 import pygame, sys, random, math
+import LineParams as line
 import NonplayerClasses as np
 import PlayerClasses as pl
 
@@ -34,26 +35,27 @@ ball.blit()
 goalkeeper.blitBody()
 striker.blitBody()
 
+players = goalkeeper, striker
 gkStartSpeed = goalkeeper.speed   # goalkeeper's initial speed
 
 # list of everything on the screen
 allThings = bg.things + goal.things
-for player in (goalkeeper, striker):
+for player in players:
     allThings += player.things[:2]   # player's feet
 allThings += ball.things
-for player in (goalkeeper, striker):
+for player in players:
     allThings.append(player.things[2])   # player's body
 
 # list of those things' positions at the start of the program
 allPos = [bg.pos] + goal.getPos()
-for player in (goalkeeper, striker):
+for player in players:
     allPos += player.getStartPos()[:2]   # player's feet
 allPos += ball.getStartPos()
-for player in (goalkeeper, striker):
+for player in players:
     allPos.append(player.getStartPos()[2])   # player's body
 
 # turn the lists into class attributes
-for thing in (ball, goalkeeper, striker):
+for thing in (ball,) + players:
     thing.allThings, thing.allPos = allThings, allPos
 
 while True:
@@ -64,9 +66,6 @@ while True:
            (pressedKeys[pygame.K_LCTRL] and pressedKeys[pygame.K_w]):
             pygame.quit()
             sys.exit()   # prevent getting an error message when quitting
-
-    goalkeeper.move(goal)   # move goalkeeper between goal posts
-    goalkeeper.updatePlayer()   # update player
                 
     pressedKeys = pygame.key.get_pressed()
     moveType, direction = bg.processMoveKeys(pressedKeys)    
@@ -77,30 +76,22 @@ while True:
         striker.kickBall(ball)
         # The ball will move if the foot touches it.
         if goalkeeper.touchedBall or striker.touchedBall:
-            # nearest distance to the player that the ball can get
-            minDist = ball.center[1] + striker.bodyStartCenter[1]
             if goalkeeper.touchedBall:
-                goalkeeper.speed = gkStartSpeed   # reset goalkeeper's speed
-                bg.processMovements(random.uniform(18,22), minDist, ball, goal,
-                                    goalkeeper, striker)
+                goalkeeper.speed = gkStartSpeed   # reset
+                bg.processMovements(random.uniform(18,22), ball, goal, players)
             else:
-                bg.processMovements(random.uniform(18,22), minDist, ball, goal,
-                                    goalkeeper, striker)
-                if ball.gkCaught:   # goalkeeper has the ball
+                bg.processMovements(random.uniform(18,22), ball, goal, players)
+                if ball.gkCaught:   # ball caught by goalkeeper
                     goalkeeper.speed = 0
-                    # goalkeeper kicks the ball back
                     goalkeeper.kickBall(ball, gk=True)
-                    if goalkeeper.touchedBall:
-                        # reset goalkeeper's speed
-                        goalkeeper.speed = gkStartSpeed 
-                        bg.processMovements(random.uniform(18,22), minDist,
-                                            ball, goal, goalkeeper, striker)
+                    ball.gkCaught = False   # reset
+                    goalkeeper.speed = gkStartSpeed   # reset
+                    bg.processMovements(random.uniform(18,22),ball,goal,players)
                         
-    if ball.inGoal:
-        ball.resetBall()   # return to its original position
-        goalkeeper.speed = gkStartSpeed   # reset goalkeeper's speed
-
+    goalkeeper.move(goal)   # move goalkeeper between goal posts
+    goalkeeper.updatePlayer()
     if striker.moved:
-        striker.updatePlayer()   # update player
-
-    bg.updateDisplay()   # update display to show changes
+        striker.updatePlayer()
+    players = goalkeeper, striker
+    
+    bg.updateDisplay()
