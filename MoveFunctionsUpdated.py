@@ -101,8 +101,7 @@ def toPoint(centerPos, endPoint, endAngle, speedBoost=1):
     object has reached the end point. The default has the object facing upward.
     speedBoost adjusts the step size and must not be negative.'''
     if endPoint == centerPos:   # object has reached end point --> stop moving
-        stepX = 0
-        stepY = 0
+        stepX, stepY = 0, 0
     else:
         # distance from end point
         Xdiff, Ydiff = line.getParams(endPoint, centerPos)[:2]
@@ -111,11 +110,10 @@ def toPoint(centerPos, endPoint, endAngle, speedBoost=1):
         stepY = setDiagStep(Xdiff, Ydiff)[1] * abs(speedBoost)
         if abs(Xdiff) <= abs(stepX) or abs(Ydiff) <= abs(stepY):
             # final step before reaching the end point
-            stepX = Xdiff
-            stepY = Ydiff
-    rotate = endAngle   # measured in degrees
+            stepX, stepY = Xdiff, Ydiff
     # new coordinates of object center
     newCenterPos = centerPos[0]+stepX, centerPos[1]+stepY
+    rotate = endAngle   # measured in degrees
     return newCenterPos, rotate
 
 ### The next three functions (up to straight()) handle straight movements. ###
@@ -160,46 +158,28 @@ def reachedBoundaries1(boundaries, direction, centerPos):
     '''This function checks if a moving object has gone or will be going
     beyond the screen boundaries.
     centerPos is the coordinates of the object's center.'''
-    if direction == 'left':
-        if centerPos[0] <= boundaries[0]:
-            return True
-        else:
-            return False
-    elif direction == 'right':
-        if centerPos[0] >= boundaries[1]:
-            return True
-        else:
-            return False
-    elif direction == 'up':
-        if centerPos[1] <= boundaries[2]:
-            return True
-        else:
-            return False
-    elif direction == 'down':
-        if centerPos[1] >= boundaries[3]:
-            return True
-        else:
-            return False
-    elif direction == 'up left':
-        if centerPos[0] <= boundaries[0] or centerPos[1] <= boundaries[2]:
-            return True
-        else:
-            return False
-    elif direction == 'up right':
-        if centerPos[0] >= boundaries[1] or centerPos[1] <= boundaries[2]:
-            return True
-        else:
-            return False
-    elif direction == 'down left':
-        if centerPos[0] <= boundaries[0] or centerPos[1] >= boundaries[3]:
-            return True
-        else:
-            return False
-    elif direction == 'down right':
-        if centerPos[0] >= boundaries[1] or centerPos[1] >= boundaries[3]:
-            return True
-        else:
-            return False
+    if direction == 'left' and centerPos[0] <= boundaries[0]:
+        return True
+    elif direction == 'right' and centerPos[0] >= boundaries[1]:
+        return True
+    elif direction == 'up' and centerPos[1] <= boundaries[2]:
+        return True
+    elif direction == 'down' and centerPos[1] >= boundaries[3]:
+        return True
+    elif direction == 'up left' and \
+         (centerPos[0] <= boundaries[0] or centerPos[1] <= boundaries[2]):
+        return True
+    elif direction == 'up right' and \
+         (centerPos[0] >= boundaries[1] or centerPos[1] <= boundaries[2]):
+        return True
+    elif direction == 'down left' and \
+         (centerPos[0] <= boundaries[0] or centerPos[1] >= boundaries[3]):
+        return True
+    elif direction == 'down right' and \
+         (centerPos[0] >= boundaries[1] or centerPos[1] >= boundaries[3]):
+        return True
+    else:
+        return False
 
 def straight(direction, centerPos, stepX=10, stepY=10, screenSize=None,
              objCenter=None):
@@ -208,31 +188,26 @@ def straight(direction, centerPos, stepX=10, stepY=10, screenSize=None,
     stepX and stepY are the lateral and vertical step sizes, respectively.
     objCenter is the object's center point, only specified if screenSize
     is specified.'''
-    if direction == 'left':
-        # negative lateral step size; no vertical movement
+    if direction == 'left':   # negative lateral step size; no vertical movement
         stepX, stepY = -stepX, 0
         rotate = 90   # measured in degrees
     elif direction == 'right':
         stepY = 0   # no vertical movement
         rotate = -90   # measured in degrees
-    elif direction == 'up':
-        # no lateral movement; negative vertical step size
+    elif direction == 'up':   # no lateral movement; negative vertical step size
         stepX, stepY = 0, -stepY
         rotate = 0   # measured in degrees
     elif direction == 'down':
         stepX = 0   # no lateral movement
         rotate = 180   # measured in degrees
     else:   # diagonal movement
-        if direction == 'up left':
-            # negative lateral and vertical step sizes
+        if direction == 'up left':   # negative lateral and vertical step sizes
             stepX, stepY = setDiagStep(-stepX, -stepY)
             rotate = 45   # measured in degrees
-        elif direction == 'up right':
-            # negative vertical step size
+        elif direction == 'up right':   # negative vertical step size
             stepX, stepY = setDiagStep(stepX, -stepY)
             rotate = -45   # measured in degrees
-        elif direction == 'down left':
-            # negative lateral step size
+        elif direction == 'down left':   # negative lateral step size
             stepX, stepY = setDiagStep(-stepX, stepY)  
             rotate = 135   # measured in degrees
         elif direction == 'down right':
@@ -240,7 +215,7 @@ def straight(direction, centerPos, stepX=10, stepY=10, screenSize=None,
             rotate = -135   # measured in degrees
     # check screen boundaries
     if screenSize != None:
-        boundaries = setBoundaries(objCenter, screenSize)   # set boundaries
+        boundaries = setBoundaries(objCenter, screenSize)
         # set final step size before reaching boundary
         stepX, stepY = setFinalStep1(boundaries, direction, stepX, stepY,
                                      centerPos)
@@ -256,8 +231,8 @@ def straight(direction, centerPos, stepX=10, stepY=10, screenSize=None,
 def setMaxRotStep(direction, maxRot, angle, step):
     '''This function checks if a moving object has gone or will be going
     beyond the maximum rotation allowed, and sets the step size accordingly.
-    maxRot is the maximum angle (measured in degrees) to which the object is
-    allowed to move.
+    maxRot is the maximum angle (measured in degrees) to which the object 
+    is allowed to move.
     angle is the angle (measured in degrees) formed by two lines:
     (1) the line connecting the object's center point and the point around
     which it moves, and
@@ -360,8 +335,8 @@ def rotate(direction, centerPos, rotCenter, step=10, maxRot=None,
     allowed to move.
     objCenter is the object's center point, only specified if screenSize
     is specified.'''
-    # relationship between the object's center point and the point around
-    # which the object moves:
+    # relationship between the object's center point and the point 
+    # around which the object moves:
     # radius, angle (measured in degrees), and quarter in the xy-plane
     r, angle, quarter = line.getParams(rotCenter, centerPos)[2:]
     # check direction
@@ -378,7 +353,7 @@ def rotate(direction, centerPos, rotCenter, step=10, maxRot=None,
     newCenterPos, rotate = setNewPos(rotCenter, r, angle, step)
     # check screen boundaries
     if screenSize != None:
-        boundaries = setBoundaries(objCenter, screenSize)   # set boundaries
+        boundaries = setBoundaries(objCenter, screenSize)
         # set final step size before reaching boundary
         while reachedBoundaries2(boundaries,direction,newCenterPos,quarter):
             step = setFinalStep2(direction, step)
