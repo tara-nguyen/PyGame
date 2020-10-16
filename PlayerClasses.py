@@ -10,12 +10,12 @@ class Player(np.Game):
     '''This class is a child class of Game, which is defined in the module
     NonplayerClass.py. It's also the parent class of Goalkeeper and Outfielder.
     Player has the following methods:
-    __init__, load, setFootStartPos, adjustFootStartPos, blitFeet, blitBody,
-    getStartPos, getCenter, setCenterPos, getCenterPos, getCorners, getRotation,
-    getShoulderAngle, getBodyAngle, getFootAngle, setMovingRotation,
-    getMovingRotation, getDistanceMoved, getDistanceToBall, getEnding,
-    feetToFront, moveStraight, moveToBall, moveAroundBall, updatePlayer,
-    updateFeet, chooseKickingFoot, kickBall, and checkBallTouch.
+    __init__, load, setFootStartPos, adjustFootStartPos, blitFeet,
+    blitBody, getStartPos, getCenter, setCenterPos, getCenterPos,
+    getCorners, getRotation, getShoulderAngle, getBodyAngle, getFootAngle,
+    setMovingRotation, getMovingRotation, getDistanceMoved, getDistanceToBall,
+    getEnding, feetToFront, moveStraight, moveToBall, moveAroundBall,
+    updatePlayer, updateFeet, chooseKickingFoot, kickBall, and checkBallTouch.
     To get a brief description of each method, use the following syntax:
         <module name as imported>.Player.<method name>.__doc__'''
     def __init__(self, screenSize):
@@ -131,8 +131,8 @@ class Player(np.Game):
             self.bodyCenterPos = X, Y
 
     def getCenterPos(self):
-        '''This function returns the coordinates of the centers of the body
-        and of the feet.'''
+        '''This function returns the coordinates of the centers of the feet
+        and of the body.'''
         return self.lFootCenterPos, self.rFootCenterPos, self.bodyCenterPos
 
     def getCorners(self):
@@ -397,9 +397,9 @@ class Player(np.Game):
 
     def kickBall(self, ball, gk=False):
         '''This function moves one of the feet to kick the ball.
-        gk indicates whether or not the player is the goalkeeper.
-        If he is, he only kicks the ball when it's nearby. If not,
-        he only kicks the ball when the goalkeeper doesn't have it.'''
+        gk denotes whether or not the player is the goalkeeper.
+        If he is, he only kicks the ball when it's nearby. If not, he
+        only kicks the ball when it's not in the goalkeeper's possession.'''
         currentRot = self.getRotation()   # measured in degrees
         # the kicking foot and its distance to the ball
         kickingFoot, kFootCenterPos, distToBall = self.chooseKickingFoot(ball)
