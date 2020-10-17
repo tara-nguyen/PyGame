@@ -82,6 +82,7 @@ while True:
             else:
                 bg.processMovements(random.uniform(18,22), ball, goal, players)
                 if ball.gkCaught:   # ball caught by goalkeeper
+                    print('ball caught by goalkeeper')
                     goalkeeper.speed = 0
                     goalkeeper.kickBall(ball, gk=True)
                     ball.gkCaught = False   # reset
