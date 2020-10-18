@@ -1,6 +1,6 @@
 '''The following classes are defined: Game, Background, Goal, and Ball.
-For neatness, the Player class, which is a child class of Game, is defined in a
-different module named PlayerClasses.
+For neatness, the Player class, which is a child class of Game, is defined in
+a different module named PlayerClasses.
 To get a brief description of each class, use the following syntax:
     <module name as imported>.<class name>.__doc__
 One function not belonging to any of the classes, getTrig(), is also defined
@@ -14,7 +14,7 @@ import LineParams as line
 import MoveFunctionsUpdated as move
 
 class Game:
-    '''This class is the parent class of Background, Goal, Player, and Ball.
+    '''This class is the parent class of Background, Goal, Ball, and Player.
     It has the following methods: __init__, updateDisplay, getFile, loadImage,
     processMoveKeys, and processMovements.
     To get a brief description of each method, use the following syntax:
@@ -28,7 +28,7 @@ class Game:
         self.clock = pygame.time.Clock()   # Clock object
         
     def updateDisplay(self):
-        '''This function updates the display and update the clock.'''
+        '''This function updates the display and the clock.'''
         pygame.display.flip()
         self.clock.tick(30)
         
@@ -55,42 +55,27 @@ class Game:
         '''This function processes pressed keys that will initiate
         player movements.'''
         moveType, direction = None, None
-        if pressedKeys[pygame.K_LEFT]:
-            if pressedKeys[pygame.K_RSHIFT]:
-                # right shift key pressed at the same time
-                moveType = 'circle'
-            else:
+        directions = 'left', 'right', 'up', 'down'
+        keys = (pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN,
+                pygame.K_SPACE, pygame.K_RSHIFT)
+        pressed = []
+        for key in keys:
+            pressed.append(pressedKeys[key])
+        if sum(pressed) == 1:   # only one key pressed
+            if pressed.index(1) < 4:   # LEFT, RIGHT, UP, or DOWN key
                 moveType = 'straight'
-            direction = 'left'
-        if pressedKeys[pygame.K_RIGHT]:
-            if pressedKeys[pygame.K_RSHIFT]:
-                # right shift key pressed at the same time
-                moveType = 'circle'
-            else:
-                moveType = 'straight'
-            direction = 'right'
-        if pressedKeys[pygame.K_UP]:
-            moveType = 'straight'
-            if pressedKeys[pygame.K_LEFT]:
-                # left arrow key pressed at the same time
-                direction = 'up left'
-            elif pressedKeys[pygame.K_RIGHT]:
-                # right arrow key pressed at the same time
-                direction = 'up right'
-            else:
-                direction = 'up'
-        if pressedKeys[pygame.K_DOWN]:
-            moveType = 'straight'
-            if pressedKeys[pygame.K_LEFT]:
-                # left arrow key pressed at the same time
-                direction = 'down left'
-            elif pressedKeys[pygame.K_RIGHT]:
-                # right arrow key pressed at the same time
-                direction = 'down right'
-            else:
-                direction = 'down'
-        if pressedKeys[pygame.K_SPACE]:
-            moveType = 'to ball'
+                direction = directions[pressed.index(1)]
+            elif pressed.index(1) == 4:   # SPACE key
+                moveType = 'to ball'
+        elif sum(pressed) == 2:   # two keys pressed at the same time
+            if pressed.index(1) < 2:   # LEFT or RIGHT key
+                if pressed.index(1,2) < 4:   # UP or DOWN key
+                    moveType = 'straight'
+                    direction = directions[pressed.index(1,2)] + \
+                                directions[pressed.index(1)]
+                elif pressed[5]:   # RSFHIT key
+                    moveType = 'circle'
+                    direction = directions[pressed.index(1)]
         return moveType, direction
         
     def processMovements(self, ballStep, ball, goal, players):
@@ -111,8 +96,8 @@ class Game:
         ball.setFirstStep(ballStep)
         ball.moving = True
         while ball.moving and round(ballStep) > 0:
-            players[0].move(goal)   # move goalkeeper between goal posts
-            players[0].updatePlayer()
+            players[0].moveAcross(goal)
+            players[0].updateAll()
             stepX, stepY = ball.getStep()   # step size before adjustment
             ball.move(goal, players)
             ball.update()
@@ -123,6 +108,7 @@ class Game:
             ballStep = math.sqrt(ball.stepX**2 + ball.stepY**2)
         if ball.inGoal:
             ball.reset()   # return to its original position
+        print('END OF processMovements()\n')
     
 class Background(Game):
     '''This class is a child class of Game and has three methods: __init__, 
@@ -202,9 +188,9 @@ class Goal(Game):
     def getPosts(self):
         '''This function returns the x-coordinates & the height of
         the goal posts.'''
-        self.postWidth = 11
-        leftPost = self.lPos[0] + self.postWidth / 2
-        rightPost = self.rPos[0] + self.sideWidth - self.postWidth / 2
+        postWidth = 11
+        leftPost = self.lPos[0] + postWidth / 2
+        rightPost = self.rPos[0] + self.sideWidth - postWidth / 2
         return leftPost, rightPost, self.height
 
 def getTrig(angle):
@@ -222,7 +208,7 @@ class Ball(Game):
     __init__, load, blit, getStartPos, setCenterPos, getCenterPos, 
     setMovingAngle, getMovingAngle, setFirstStep, setStep, getStep,
     decrementStep, getExtremes, approachScrBounds, approachGoalPosts,
-    approachPlayer, bounceBack, move, reset, and update.
+    approachPlayer, bounceOff, move, reset, and update.
     To get a brief description of each method, use the following syntax:
         <module name as imported>.Ball.<method name>.__doc__'''
     def __init__(self, screenSize):
@@ -306,32 +292,32 @@ class Ball(Game):
     def approachScrBounds(self):
         '''This function checks if the ball is about to hit the 
         screen boundaries.'''
+        approaching = False,
         if not self.apprScrBound:
             # the leftmost, rightmost, top, and bottom points on the ball
             left, right, top, bottom = self.getExtremes()
             if self.stepX > left:
                 newStepX = left
                 newStepY = newStepX / getTrig(self.getMovingAngle())[2]
-                return 'vertb', newStepX, newStepY
+                approaching = 'vertb', newStepX, newStepY
             elif self.stepX < right - self.screenWidth:
                 newStepX = right - self.screenWidth
                 newStepY = newStepX / getTrig(self.getMovingAngle())[2]
-                return 'vertb', newStepX, newStepY
+                approaching = 'vertb', newStepX, newStepY
             elif self.stepY > top:
                 newStepY = top
                 newStepX = newStepY * getTrig(self.getMovingAngle())[2]
-                return 'horzb', newStepX, newStepY
+                approaching = 'horzb', newStepX, newStepY
             elif self.stepY < bottom - self.screenHeight:
                 newStepY = bottom - self.screenHeight
                 newStepX = newStepY * getTrig(self.getMovingAngle())[2]
-                return 'horzb', newStepX, newStepY
-            else:
-                return False,
-        else:
-            return False,
+                approaching = 'horzb', newStepX, newStepY
+        return approaching
 
     def approachGoalPosts(self, goal):
         '''This function checks if the ball is about to hit the goal posts.'''
+##        ########## NEED MORE WORK HERE ##########
+        approaching = False,
         if not self.apprGoalPost:
             goalPosts = goal.getPosts()
             # the leftmost, rightmost, and top points on the ball
@@ -360,30 +346,23 @@ class Ball(Game):
             if newStepX != self.stepX:
                 newStepY = newStepX / getTrig(self.getMovingAngle())[2]
                 if top - newStepY < goalPosts[2]:
-                    return 'side', newStepX, newStepY
-                else:
-                    return False,
+                    approaching = 'side', newStepX, newStepY
             elif newStepY != self.stepY:
                 newStepX = newStepY * getTrig(self.getMovingAngle())[2]
-##                NEED MORE WORK HERE
                 if (left - newStepX <= goalPosts[0] and \
                     right - newStepX >= goalPosts[0]) or \
                     (left - newStepX <= goalPosts[1] and \
                      right - newStepX >= goalPosts[1]):
-                    return 'bottom', newStepX, newStepY
-                else:
-                    return False,
-            else:
-                return False,
-        else:
-            return False,
+                    approaching = 'bottom', newStepX, newStepY
+        return approaching
        
     def approachPlayer(self, players):
         '''This function checks if the ball is about to hit a player.
         players is an array listing the players in the game.'''
-##        NEED MORE WORK HERE
-        print('entering approachPlayer()')
+##        ########## NEED MORE WORK HERE ##########
+        approaching = False,
         if self.apprPlayer == []:
+            print('starting approachPlayer()')
             # the leftmost, rightmost, top, and bottom points on the ball
             leftP = self.getExtremes()[0], self.getExtremes()[2]+self.center[1]
             rightP = self.getExtremes()[1], leftP[1]
@@ -412,7 +391,7 @@ class Ball(Game):
                        line.isBetween(ints[0], pCorners[0], pCorners[1]):
                         approachingPlayer[0] = True
                         intsPoint = ints[0]
-                        intsAngle =line.getIntersect(
+                        intsAngle = line.getIntersect(
                             p, newp, pCorners[0], pCorners[1])[2]
                     elif line.isBetween(ints[1], p, newp) and \
                          line.isBetween(ints[1], pCorners[2], pCorners[3]):
@@ -449,16 +428,14 @@ class Ball(Game):
                                 minDist, closestp = dist, p
                     newStepX, newStepY = \
                               line.getParams(closestp, apprPts[closestp][0])[:2]
-                    return (approachingPlayer.index(1)+1, newStepX, newStepY,
-                            apprPts[p][1], player)
-            if 1 not in approachingPlayer:
-                return False,
-        else:
-            return False,        
+                    approaching = (approachingPlayer.index(1)+1,
+                                   newStepX, newStepY, apprPts[p][1], player)
+                    break
+        return approaching
 
-    def bounceBack(self, switch):
+    def bounceOff(self, switch):
         '''This function modifies the step size and angle to make the ball
-        bounce back from either the screen boundaries or the goal posts.
+        bounce off either the screen boundaries or the goal posts.
         switch denotes whether the direction in which the ball is moving will 
         be flipped laterally ('x') or vertically ('y').'''
         factor = random.uniform(1.03, 1.05)   # a random real number
@@ -483,16 +460,16 @@ class Ball(Game):
         checkGoalPosts = self.approachGoalPosts(goal)
         checkPlayer = self.approachPlayer(players)
         if checkScrBounds[0] != False:   # ball approaching screen boundary
-            print('*** SCENARIO 1: approaching screen boundary')
+            print('*** SCENARIO 1: approaching screen boundary ***')
             self.setStep(checkScrBounds[1], checkScrBounds[2])
             self.apprScrBound = checkScrBounds[0]
         elif checkGoalPosts[0] != False:   # ball approaching goal post
-            print('*** SCENARIO 2: approaching goal post')
+            print('*** SCENARIO 2: approaching goal post ***')
             print('checkGoalPosts:',checkGoalPosts)
             self.setStep(checkGoalPosts[1], checkGoalPosts[2])
             self.apprGoalPost = checkGoalPosts[0]
         elif checkPlayer[0] != False:   # ball approaching player
-            print('*** SCENARIO 3: approaching player')
+            print('*** SCENARIO 3: approaching player ***')
             print('checkPlayer:',checkPlayer[:-1])
             self.setStep(checkPlayer[1], checkPlayer[2])
             for i in range(len(players)):
@@ -502,25 +479,29 @@ class Ball(Game):
                     self.apprPlayer.append(0)
             print('self.apprPlayer:',self.apprPlayer)
         elif self.apprScrBound == 'vertb' or self.apprGoalPost == 'side':
-            print('*** SCENARIO 4: hit vertb or hit goal post from side')
-            self.bounceBack('x')
+            print('*** SCENARIO 4: hit vertb or hit goal post from side ***')
+            self.bounceOff('x')
             self.apprScrBound, self.apprGoalPost = False, False   # reset
         elif self.apprScrBound == 'horzb' or self.apprGoalPost == 'bottom':
-            print('*** SCENARIO 5: hit horzb or hit goal post from bottom')
-            self.bounceBack('y')
+            print('*** SCENARIO 5: hit horzb or hit goal post from bottom ***')
+            self.bounceOff('y')
             self.apprScrBound, self.apprGoalPost = False, False   # reset
         elif len(self.apprPlayer) > 0:
-            print('*** SCENARIO 6: hit player')
+            print('*** SCENARIO 6: hit player ***')
+            print('self.apprPlayer:',self.apprPlayer)
             for i in range(len(self.apprPlayer)):
-                if self.apprPlayer[i] == 1:   # ball hits player's front
-                    self.setStep(0, 0)
-                    self.moving = False
+                # check to see which player is holding the ball
+                if self.apprPlayer[i] != 0:
                     if i == 0:   # ball caught by goalkeeper
                         self.gkCaught = True
-                    self.apprPlayer = []   # reset
                     break
-##                else:
-##                    ...
+            if self.apprPlayer[i] == 1:   # ball hits player's front
+                self.setStep(0, 0)
+                self.moving = False
+            else:
+##                ########## NEED MORE WORK HERE ##########
+                self.bounceOff('y')
+            self.apprPlayer = []   # reset
         elif self.getExtremes()[3] <= goalPosts[2] and \
              self.getExtremes()[0] >= goalPosts[0] and \
              self.getExtremes()[1] <= goalPosts[1]:

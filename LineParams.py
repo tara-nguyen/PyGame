@@ -55,11 +55,10 @@ def getLine(point1, point2):
     return slope, yIntercept, xIntercept
 
 def getIntersect(point1, point2, point3, point4):
-    '''This function returns the coordinates and angle (between 0 and 90
-    degrees) of the intersection of two lines, one formed by the first two
-    given points (point1 and point2) and the other formed by the last two
-    given points (point3 and point4). The two lines are assumed to be
-    separate lines.'''
+    '''This function returns the coordinates and angle (between 0 & 90 degrees)
+    of the intersection of two lines, one formed by the first two given points
+    (point1 and point2) and the other formed by the last two given points
+    (point3 and point4). The two lines are assumed to be separate lines.'''
     # the two lines
     slope1, yIntercept1, xIntercept1 = getLine(point1, point2)
     slope2, yIntercept2, xIntercept2 = getLine(point3, point4)

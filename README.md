@@ -80,7 +80,7 @@ Changes to the ball:
 - Add code (to the `hitPlayer()` method) for setting the final step before the ball hits a player.
 
 Changes to the ball:
-- Rename `setFinalStepSB()` and `setFinalStepGP()` to `approachScrBounds()` and `approachGoalPosts()`, respectively.
+- Rename `setFinalStepSB()`, `setFinalStepGP()`, and `bounceBack()` to `approachScrBounds()`, `approachGoalPosts()`, and `bounceOff()` respectively.
 - Add `approachPlayer()` method.
 - Remove the following methods: `setFinalStep1()`, `setFinalStep2()`, `hitGoalPosts()`, `checkBouncing()`, `hitPlayer()`, and `checkGoal()`.
 - Modify the `move()` method entirely.
@@ -89,4 +89,7 @@ Changes to the ball:
 Changes to the `PlayerClasses` module:
 - Add `getCorners()` and `getShoulderAngle()` methods to the `Player` class.
 - Combine the `getMidpoint()` method and the `getRotation()` method into one and remove the former.
+- Combine the three methods for moving players into one method called `move()` in the `Player` class. Remove the `move()` method in the `Outfielder` class.
+- Rename `updatePlayer()` to `updateAll()`.
 - Combine the `prepareBallKick()` and `updateKickingFoot()` methods into one method called `kickBall()` in the `Player` class. Remove the `kickBall()` methods in the `Goalkeeper` and `Outfielder` classes.
+- Rename the `move()` method in the `Goalkeeper` class to `moveAcross()`.

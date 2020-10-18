@@ -98,7 +98,7 @@ def toPoint(centerPos, endPoint, endAngle, speedBoost=1):
     '''This function moves an object to a specified end point.
     centerPos is the coordinates of the object's center point.
     endAngle is the direction the front of the object will face after the
-    object has reached the end point. The default has the object facing upward.
+    object has reached the end point. It's an angle between 
     speedBoost adjusts the step size and must not be negative.'''
     if endPoint == centerPos:   # object has reached end point --> stop moving
         stepX, stepY = 0, 0
@@ -132,22 +132,22 @@ def setFinalStep1(boundaries, direction, stepX, stepY, centerPos):
         stepY = boundaries[2] - centerPos[1]
     if direction == 'down' and stepY >= boundaries[3] - centerPos[1]:
         stepY = boundaries[3] - centerPos[1]
-    if direction == 'up left':
+    if direction == 'upleft':
         if stepX <= boundaries[0] - centerPos[0]:
             stepX = boundaries[0] - centerPos[0]
         if stepY <= boundaries[2] - centerPos[1]:
             stepY = boundaries[2] - centerPos[1]
-    if direction == 'up right':
+    if direction == 'upright':
         if stepX >= boundaries[1] - centerPos[0]:
             stepX = boundaries[1] - centerPos[0]
         if stepY <= boundaries[2] - centerPos[1]:
             stepY = boundaries[2] - centerPos[1]
-    if direction == 'down left':
+    if direction == 'downleft':
         if stepX <= boundaries[0] - centerPos[0]:
             stepX = boundaries[0] - centerPos[0]
         if stepY >= boundaries[3] - centerPos[1]:
             stepY = boundaries[3] - centerPos[1]
-    if direction == 'down right':
+    if direction == 'downright':
         if stepX >= boundaries[1] - centerPos[0]:
             stepX = boundaries[1] - centerPos[0]
         if stepY >= boundaries[3] - centerPos[1]:
@@ -166,16 +166,16 @@ def reachedBoundaries1(boundaries, direction, centerPos):
         return True
     elif direction == 'down' and centerPos[1] >= boundaries[3]:
         return True
-    elif direction == 'up left' and \
+    elif direction == 'upleft' and \
          (centerPos[0] <= boundaries[0] or centerPos[1] <= boundaries[2]):
         return True
-    elif direction == 'up right' and \
+    elif direction == 'upright' and \
          (centerPos[0] >= boundaries[1] or centerPos[1] <= boundaries[2]):
         return True
-    elif direction == 'down left' and \
+    elif direction == 'downleft' and \
          (centerPos[0] <= boundaries[0] or centerPos[1] >= boundaries[3]):
         return True
-    elif direction == 'down right' and \
+    elif direction == 'downright' and \
          (centerPos[0] >= boundaries[1] or centerPos[1] >= boundaries[3]):
         return True
     else:
@@ -201,16 +201,16 @@ def straight(direction, centerPos, stepX=10, stepY=10, screenSize=None,
         stepX = 0   # no lateral movement
         rotate = 180   # measured in degrees
     else:   # diagonal movement
-        if direction == 'up left':   # negative lateral and vertical step sizes
+        if direction == 'upleft':   # negative lateral and vertical step sizes
             stepX, stepY = setDiagStep(-stepX, -stepY)
             rotate = 45   # measured in degrees
-        elif direction == 'up right':   # negative vertical step size
+        elif direction == 'upright':   # negative vertical step size
             stepX, stepY = setDiagStep(stepX, -stepY)
             rotate = -45   # measured in degrees
-        elif direction == 'down left':   # negative lateral step size
+        elif direction == 'downleft':   # negative lateral step size
             stepX, stepY = setDiagStep(-stepX, stepY)  
             rotate = 135   # measured in degrees
-        elif direction == 'down right':
+        elif direction == 'downright':
             stepX, stepY = setDiagStep(stepX, stepY)
             rotate = -135   # measured in degrees
     # check screen boundaries
@@ -331,8 +331,8 @@ def rotate(direction, centerPos, rotCenter, step=10, maxRot=None,
     step is the step size (i.e., the number of degrees in each movement).
     centerPos is the coordinates of the object's center point.
     rotCenter is the point around which the object moves.
-    maxRot is the maximum angle (measured in degrees) to which the object is
-    allowed to move.
+    maxRot is the maximum angle (measured in degrees) to which the object
+    is allowed to move.
     objCenter is the object's center point, only specified if screenSize
     is specified.'''
     # relationship between the object's center point and the point 

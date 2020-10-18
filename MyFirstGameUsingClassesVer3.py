@@ -3,7 +3,6 @@ soccer in PyGame. Compared to the previous versions, this version enables the
 outfielder to move in any direction using only the arrow keys.'''
 
 import pygame, sys, random, math
-import LineParams as line
 import NonplayerClasses as np
 import PlayerClasses as pl
 
@@ -82,17 +81,19 @@ while True:
             else:
                 bg.processMovements(random.uniform(18,22), ball, goal, players)
                 if ball.gkCaught:   # ball caught by goalkeeper
-                    print('ball caught by goalkeeper')
                     goalkeeper.speed = 0
                     goalkeeper.kickBall(ball, gk=True)
-                    ball.gkCaught = False   # reset
-                    goalkeeper.speed = gkStartSpeed   # reset
-                    bg.processMovements(random.uniform(18,22),ball,goal,players)
+                    if goalkeeper.touchedBall:
+                        print('gk kicks ball back')
+                        goalkeeper.speed = gkStartSpeed   # reset
+                        ball.gkCaught = False   # reset
+                        bg.processMovements(random.uniform(18,22), ball, goal,
+                                            players)
                         
-    goalkeeper.move(goal)   # move goalkeeper between goal posts
-    goalkeeper.updatePlayer()
+    goalkeeper.moveAcross(goal)
+    goalkeeper.updateAll()
     if striker.moved:
-        striker.updatePlayer()
+        striker.updateAll()
     players = goalkeeper, striker
     
     bg.updateDisplay()
