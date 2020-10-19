@@ -59,7 +59,6 @@ def getIntersect(point1, point2, point3, point4):
     of the intersection of two lines, one formed by the first two given points
     (point1 and point2) and the other formed by the last two given points
     (point3 and point4). The two lines are assumed to be separate lines.'''
-    # the two lines
     slope1, yIntercept1, xIntercept1 = getLine(point1, point2)
     slope2, yIntercept2, xIntercept2 = getLine(point3, point4)
     if slope1 == slope2:   # the lines are parallel to each other
@@ -87,16 +86,16 @@ def getDistToLine(point0, linePoint1, linePoint2):
     along with the differences in x- and y-coordinates between point0 and
     the intersection point of two lines: (1) the given line, and (2) the
     line perpendicular to that line and passing through point0.'''
-    slope1, yIntercept1, xIntercept1 = getLine(linePoint1, linePoint2)
-    if slope1 == None:   # line is parallel to the y-axis
-        Xdiff, Ydiff = point0[0]-xIntercept1, 0
+    slope, yIntercept, xIntercept = getLine(linePoint1, linePoint2)
+    if slope == None:   # line is parallel to the y-axis
+        Xdiff, Ydiff = point0[0]-xIntercept, 0
         dist = abs(Xdiff)
-    elif slope1 == 0:   # line is parallel to the x-axis
-        Xdiff, Ydiff = 0, point0[1]-yIntercept1
+    elif slope == 0:   # line is parallel to the x-axis
+        Xdiff, Ydiff = 0, point0[1]-yIntercept
         dist = abs(Ydiff)
     else:
-        # y-intercept of the line perpendicular to the given line and
-        # passing through point0
+        # y-intercept of the line perpendicular to the given line 
+        # and passing through point0
         yIntercept2 = point0[1] - (-1/slope) * point0[0]
         # intersection point of the two lines
         intersectX, intersectY = getIntersect(point0, (0,yIntercept2),
@@ -106,23 +105,21 @@ def getDistToLine(point0, linePoint1, linePoint2):
     return Xdiff, Ydiff, dist
 
 def isBetween(point0, point1, point2):
-    '''This function takes in three different points on a straight line
-    and checks if one of the points (point0) lies between the other two
-    (point1 and point2).'''
-    # differences in coordinates
-    Xdiff1, Ydiff1 = getParams(point0, point1)[:2]
-    Xdiff2, Ydiff2 = getParams(point0, point2)[:2]
-    if Xdiff1 == 0:
-        # line connecting point1 and point2 is parallel to the y-axis
-        if Ydiff1 * Ydiff2 > 0:
-            return False
+    '''This function takes in three different points and checks if
+    the points are only the same line, and if one of them (point0)
+    lies between the other two (point1 and point2).'''
+    isBetween = False
+    if getDistToLine(point0, point1, point2)[2] == 0:
+        # differences in coordinates
+        Xdiff1, Ydiff1 = getParams(point0, point1)[:2]
+        Xdiff2, Ydiff2 = getParams(point0, point2)[:2]
+        if Xdiff1 == 0:   # line is parallel to the y-axis
+            if Ydiff1 * Ydiff2 <= 0:
+                isBetween = True
         else:
-            return True
-    else:
-        if Xdiff1 * Xdiff2 > 0:
-            return False
-        else:
-            return True
+            if Xdiff1 * Xdiff2 <= 0:
+                isBetween = True
+    return isBetween
 
 def checkSide(point1, point2, linePoint1, linePoint2):
     '''This function checks if two given points (point1 and point2) are on
@@ -131,8 +128,7 @@ def checkSide(point1, point2, linePoint1, linePoint2):
     • 1 if point1 and point2 are on the same side of the line,
     • -1 if the points are on different sides of the line, or
     • 0 if at least one of the points is on the line.'''
-    # intersection point of the given line and the line connecting
-    # point1 and point2
+    # intersection of the given line and the line connecting point1 and point2
     intersectX, intersectY = getIntersect(point1, point2,
                                           linePoint1, linePoint2)[:2]
     if intersectX == None:   # the lines are parallel to each other
