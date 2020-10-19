@@ -13,10 +13,10 @@
 **Original modules (before any other branch was created):**
 - `ClassesForMyFirstGame` – contains classes `Game`, `Background`, `Goal`, `Player`, and `Ball`
 - `CroppingImages` – contains two functions for cropping images in PyGame
-- `LineParams` – contains two functions for getting parameters related to a line connecting two points on the screen
+- `LineParams` – contains functions for obtaining parameters related to lines and points on the screen
 - `MoveFunctions` – contains functions for moving objects in PyGame
-- `MyFirstGame` – main program for the game, from which the game is initiated; no classes used
-- `MyFirstGameUsingClassesVer1` – main program for the game using classes
+- `MyFirstGame` – original main program, from which the game is initiated; no classes used
+- `MyFirstGameUsingClassesVer1` – main program using classes from `ClassesForMyFirstGame`
 
 **Modules added from other branches**
 - `MyFirstGameUsingClassesVer2` – main program in branch [`add-goalkeeper`](https://github.com/tara-nguyen/pygame-football#branch-add-goalkeeper)
