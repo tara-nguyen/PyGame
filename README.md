@@ -64,10 +64,8 @@ List of modules:
 ## Branch `outfielder-movements`
 
 **Overview**
-- Created from `add-goalkeeper` - [repos at initial commit](https://github.com/tara-nguyen/pygame-football/tree/4a8ffb20957ad7faba00bda1d9cf337846650662)
+- Created from `add-goalkeeper`
 - [Enable outfielder to move in any direction using only the arrow keys.](https://github.com/tara-nguyen/pygame-football/milestone/2)
-
-### Changes from `add-goalkeeper`
 
 **New modules:**
 - `MyFirstGameUsingClassesVer3` – main program, from which the game is initiated
