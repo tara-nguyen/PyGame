@@ -1,6 +1,6 @@
-# My First Game
+# PyGame Mini-Football
 
-### Overview
+**Overview**
 
 - Mini-football game written in Python 3.7.8
 - PyGame version 1.9.6
@@ -9,7 +9,7 @@
   - [`add-goalkeeper`](https://github.com/tara-nguyen/pygame-football#branch-add-goalkeeper)
   - [`outfielder-movements`](https://github.com/tara-nguyen/pygame-football#branch-outfielder-movements)
 
-### Branch `master`
+## Branch `master`
 
 List of modules:
 - `ClassesForMyFirstGame` – contains classes `Game`, `Background`, `Goal`, `Player`, and `Ball`
@@ -19,7 +19,7 @@ List of modules:
 - `MyFirstGame` – main program for the game, from which the game is initiated; no classes used
 - `MyFirstGameUsingClassesVer1` – main program for the game using classes
 
-### Branch `add-goalkeeper`
+## Branch `add-goalkeeper`
 
 **New modules:**
 - `MyFirstGameUsingClassesVer2` – main program, from which the game is initiated
@@ -58,9 +58,9 @@ List of modules:
   - `prepareBallKick()`, `updateKickingFoot()`, and `checkBallTouch()` in `Player`; and
   - `kickBall()` in `Goalkeeper` and in `Outfielder`.
 
-### Branch `outfielder-movements`
+## Branch `outfielder-movements`
 
-#### Changes from `add-goalkeeper`
+### Changes from `add-goalkeeper`
 
 **New modules:**
 - `MyFirstGameUsingClassesVer3` – main program, from which the game is initiated
