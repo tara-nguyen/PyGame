@@ -10,11 +10,11 @@ def update(screen, things, thingsPos, moved, newCenterPos, rotate=False):
     '''This function redraws things on the screen to show movements.
     things is a list of objects on the screen.
     thingsPos is a list of the positions of the objects.
-    moved is an array of objects that will be moved after the redrawing, 
-    along with the original surfaces containing the moved objects at the 
+    moved is an array of objects that will be moved after the redrawing,
+    along with the original surfaces containing the moved objects at the
     start of the program.
-    newCenterPos is a tuple/list of the new coordinates of the moved
-    objects' center points after being redrawn.
+    newCenterPos is an array the new coordinates of the moved objects'
+    centers after being redrawn.
     rotate, if specified, is an array of the angles (measured in degrees)
     by which the moved objects will rotate. The default is that there is
     no change from the original rotation.'''
@@ -97,20 +97,23 @@ def setDiagStep(stepX, stepY, maxDist=10):
 def toPoint(centerPos, endPoint, endAngle, speedBoost=1):
     '''This function moves an object to a specified end point.
     centerPos is the coordinates of the object's center point.
-    endAngle is the direction the front of the object will face after the
-    object has reached the end point. It's an angle between 
+    endAngle is the direction the front of the object will face
+    after the object has reached the end point. 
     speedBoost adjusts the step size and must not be negative.'''
     if endPoint == centerPos:   # object has reached end point --> stop moving
         stepX, stepY = 0, 0
     else:
-        # distance from end point
+        # difference in coordinates
         Xdiff, Ydiff = line.getParams(endPoint, centerPos)[:2]
         # step size
         stepX = setDiagStep(Xdiff, Ydiff)[0] * abs(speedBoost)
         stepY = setDiagStep(Xdiff, Ydiff)[1] * abs(speedBoost)
-        if abs(Xdiff) <= abs(stepX) or abs(Ydiff) <= abs(stepY):
-            # final step before reaching the end point
-            stepX, stepY = Xdiff, Ydiff
+        # final step size before reaching the end point
+        if abs(Xdiff) < abs(stepX):
+            stepX, stepY = Xdiff, Xdiff/math.tan(endAngle)
+        elif abs(Ydiff) < abs(stepY):
+            stepX, stepY = Ydiff*math.tan(endAngle), Ydiff
+    print('step size',stepX,stepY)
     # new coordinates of object center
     newCenterPos = centerPos[0]+stepX, centerPos[1]+stepY
     rotate = endAngle   # measured in degrees

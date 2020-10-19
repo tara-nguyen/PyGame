@@ -35,7 +35,6 @@ goalkeeper.blitBody()
 striker.blitBody()
 
 players = goalkeeper, striker
-gkStartSpeed = goalkeeper.speed   # goalkeeper's initial speed
 
 # list of everything on the screen
 allThings = bg.things + goal.things
@@ -57,6 +56,8 @@ for player in players:
 for thing in (ball,) + players:
     thing.allThings, thing.allPos = allThings, allPos
 
+gkStartSpeed = goalkeeper.speed   # goalkeeper's initial speed
+
 while True:
     # process events in the game
     for event in pygame.event.get():
@@ -73,22 +74,20 @@ while True:
     if pressedKeys[pygame.K_s]:
         goalkeeper.kickBall(ball, gk=True)
         striker.kickBall(ball)
-        # The ball will move if the foot touches it.
-        if goalkeeper.touchedBall or striker.touchedBall:
-            if goalkeeper.touchedBall:
-                goalkeeper.speed = gkStartSpeed   # reset
-                bg.processMovements(random.uniform(18,22), ball, goal, players)
-            else:
-                bg.processMovements(random.uniform(18,22), ball, goal, players)
-                if ball.gkCaught:   # ball caught by goalkeeper
-                    goalkeeper.speed = 0
-                    goalkeeper.kickBall(ball, gk=True)
-                    if goalkeeper.touchedBall:
-                        print('gk kicks ball back')
-                        goalkeeper.speed = gkStartSpeed   # reset
-                        ball.gkCaught = False   # reset
-                        bg.processMovements(random.uniform(18,22), ball, goal,
-                                            players)
+        if goalkeeper.touchedBall:
+            goalkeeper.speed = gkStartSpeed   # reset
+            ball.gkCaught = False
+            bg.processMovements(ball, goal, players)
+        elif striker.touchedBall:
+            bg.processMovements(ball, goal, players)
+            if ball.gkCaught:   # ball caught by goalkeeper
+                goalkeeper.speed = 0
+                goalkeeper.kickBall(ball, gk=True)
+                if goalkeeper.touchedBall:
+                    print('gk kicks ball back')
+                    goalkeeper.speed = gkStartSpeed   # reset
+                    ball.gkCaught = False   # reset
+                    bg.processMovements(ball, goal, players)
                         
     goalkeeper.moveAcross(goal)
     goalkeeper.updateAll()

@@ -21,8 +21,6 @@ List of modules:
 
 ### Branch `add-goalkeeper`
 
-#### Changes from `master`
-
 **New modules:**
 - `MyFirstGameUsingClassesVer2` – main program, from which the game is initiated
 - `NonplayerClasses` – contains classes `Game`, `Background`, `Goal`, and `Ball`
@@ -37,28 +35,28 @@ List of modules:
 - Add goalkeeper.
 - Add `processMovements()` function.
 
-**Changes to `NonplayerClasses`:**
-- Add `addToLists()` and `getLists()` methods to the `Game` class.
-- Add `load()` method to the `Background` class.
+**Changes to `NonplayerClasses`, excluding changes to `Ball` class:**
+- Add to `Game`: `addToLists()` and `getLists()` methods.
+- Add to `Background`: `load()` method.
 - Add two functions, `isBetween()` and `getTrig()`, which do not belong to any class.
 
-**Changes to `Ball`:**
+**Changes to `Ball` class in `NonplayerClasses`:**
 - Add `load()` method.
-- Put the ball at a fixed position at the start of the program. After the player scores, the ball will be returned to this position.
-- Reduce the speed.
-- Remove the `getSinCos()` method (repaced by the `getTrig()` function in the `NonplayerClasses` module).
-- Rename `moveBall()` to `move()`. Modify that method to accommodate goalkeeper movements.
-- Modify the `hitPlayer()` method to accommodate the presence of multiple players.
+- Remove `getSinCos()` method.
+- Rename `moveBall()` to `move()`. Modify it to accommodate goalkeeper movements.
+- Modify `hitPlayer()` to accommodate the presence of multiple players.
 
 **Changes to `PlayerClasses`:**
 - Add two classes, `Goalkeeper` and `Outfielder`, which are children of the `Player` class.
 - Rename `setStartPos()` to `setFootStartPos()`.
-- Add `adjustFootStartPos()` method to the `Player` class.
-- Split the `blit()` method into `blitFeet()` and `blitBody()`.
-- Remove the `getSinCos()` method (repaced by the `getTrig()` function in the `NonplayerClasses` module).
-- Move the `move()` method in the `Player` class to the `Outfielder` class. The `Goalkeeper` class has its own `move()` method.
-- Modify the `updatePlayer()` and `updateFoot()` methods to accommodate movements of multiple players.
-- Split the `kickBall()` method in the `Player` class into: `prepareBallKick()`, `updateKickingFoot()`, and `checkBallTouch()` in that class, plus the `kickBall()` method in each of the child classes.
+- Add to `Player`: `adjustFootStartPos()` method.
+- Split `blit()` into `blitFeet()` and `blitBody()`.
+- Remove `getSinCos()` method.
+- Move the `move()` method from `Player` to `Outfielder`. `Goalkeeper` has its own `move()` method.
+- Modify `updatePlayer()` and `updateFoot()` to accommodate movements of multiple players.
+- Split the `kickBall()` method in `Player` into:
+  - `prepareBallKick()`, `updateKickingFoot()`, and `checkBallTouch()` in `Player`; and
+  - `kickBall()` in `Goalkeeper` and in `Outfielder`.
 
 ### Branch `outfielder-movements`
 
@@ -72,7 +70,7 @@ List of modules:
 - `MoveFunctions`
 
 **Changes to `LineParams`:**
-- Add three functions: `getIntersect()`, `getDistToLine()`, `isBetween()`, and `checkSide()`.
+- Add functions: `getIntersect()`, `getDistToLine()`, `isBetween()`, and `checkSide()`.
 
 **Changes from `MoveFunctions` to `MoveFunctionsUpdated`:**
 - Split big chunks of a function into several other functions for neatness.
@@ -80,22 +78,29 @@ List of modules:
 - Rename most of the functions.
 
 **Changes from `MyFirstGameUsingClassesVer2` to `MyFirstGameUsingClassesVer3`:**
-- Move the `processMovements()` function to the `Game` class in the `NonplayerClasses` module.
+- Move the `processMovements()` function to the `Game` class in `NonplayerClasses`.
 
-**Changes to `NonplayerClasses`:**
-- Add `processMovements()` method to the `Game` class (moved from the main program).
-- Remove the `addToLists()` method, the `getLists()` method, and the `isBetween()` function because they are unnecessary.
+**Changes to `Game` class:**
+- Add to `Game`: `processMovements()` (moved from `MyFirstGameUsingClassesVer3`).
+- Remove methods and functions: `addToLists()`, `getLists()`, and `isBetween()`.
 
-**Changes to `Goal`:**
-- Remove the `getCenter()` and `getCenterPos()` methods because they are unnecessary.
+**Changes to `Goal` class in `NonplayerClasses`:**
+- Remove methods: `getCenter()` and `getCenterPos()`.
 
-**Changes to `Ball`:**
-- Remove the following methods: `setVelocity()`, `getVelocity()`, `setFinalStep1()`, `setFinalStep2()`, `hitGoalPosts()`, `checkBouncing()`, `hitPlayer()`, and `checkGoal()`.
-- Rename `setFinalStepSB()`, `setFinalStepGP()`, and `bounceBack()` to `approachScrBounds()`, `approachGoalPosts()`, and `bounceOff()`, respectively.
-- Add `approachPlayer()` method.
+**Changes to `Ball` class in `NonplayerClasses`:**
+- Remove methods: `setVelocity()`, `getVelocity()`, `setFinalStep1()`, `setFinalStep2()`, `hitGoalPosts()`, `checkBouncing()`, `hitPlayer()`, and `checkGoal()`.
+- Rename:
+  - `setFirstStep()` to `setStep1`,
+  - `setStep()` to `setStep2()`,
+  - `setFinalStepSB()` to `approachScrBounds()`,
+  - `setFinalStepGP()` to `approachGoalPosts()`,
+  - `bounceBack()` to `bounceOff()`,
+  - `resetBall()` to `reset()`, and
+  - `updateBall()` to `update()`
+- Add methods: `getNewStep1()`, `getNewStep2()`, and `approachPlayer()`.
 - Modify code for setting final step (`approachScrBounds()`, `approachGoalPosts()`, and `approachPlayer()`) before the ball hits the screen boundaries, the goal posts, or a player.
-- Modify the `move()` method so that the ball makes only one movement per keypress.
-- Rename `resetBall()` and `updateBall()` to `reset()` and `update()`, respectively.
+- Modify `bounceOff()` to accommodate changing both lateral and vertical steps at the same time.
+- Modify `move()` so that the ball makes only one movement per keypress.
 
 **Changes to `PlayerClasses`:**
 - Add `getCorners()` and `getShoulderAngle()` methods to the `Player` class.
