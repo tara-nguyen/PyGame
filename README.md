@@ -1,7 +1,6 @@
 # PyGame Mini-Football
 
 **Overview**
-
 - Mini-football game written in Python 3.7.8
 - PyGame version 1.9.6
 - Branches (in order of date created):
@@ -20,6 +19,10 @@ List of modules:
 - `MyFirstGameUsingClassesVer1` – main program for the game using classes
 
 ## Branch `add-goalkeeper`
+
+**Overview**
+- Created from `master` - [repos at initial commit](https://github.com/tara-nguyen/pygame-football/tree/4a8ffb20957ad7faba00bda1d9cf337846650662)
+- [Add a goalkeeper who is able to move between goal posts, catch the ball, and kick it back to the outfielder.](https://github.com/tara-nguyen/pygame-football/milestone/1)
 
 **New modules:**
 - `MyFirstGameUsingClassesVer2` – main program, from which the game is initiated
@@ -59,6 +62,10 @@ List of modules:
   - `kickBall()` in `Goalkeeper` and in `Outfielder`.
 
 ## Branch `outfielder-movements`
+
+**Overview**
+- Created from `add-goalkeeper` - [repos at initial commit](https://github.com/tara-nguyen/pygame-football/tree/4a8ffb20957ad7faba00bda1d9cf337846650662)
+- [Enable outfielder to move in any direction using only the arrow keys.](https://github.com/tara-nguyen/pygame-football/milestone/2)
 
 ### Changes from `add-goalkeeper`
 
