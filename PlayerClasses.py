@@ -396,11 +396,9 @@ class Outfielder(Player):
     def __init__(self, screenSize):
         '''This function initializes the class and sets its core attributes.'''
         Player.__init__(self, screenSize)   # initialize the parent class
-##        bodyStartPosX = random.uniform(20, self.screenWidth-96)
-##        bodyStartPosY = random.uniform(self.screenHeight-150,
-##                                       self.screenHeight-100)
-        bodyStartPosX = 60
-        bodyStartPosY = self.screenHeight-97
+        bodyStartPosX = random.uniform(20, self.screenWidth-96)
+        bodyStartPosY = random.uniform(self.screenHeight-150,
+                                       self.screenHeight-100)
         self.bodyStartPos = bodyStartPosX, bodyStartPosY
         self.startRot = 90
         self.moved = False
