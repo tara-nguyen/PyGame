@@ -83,11 +83,9 @@ while True:
             if ball.gkCaught:   # ball caught by goalkeeper
                 goalkeeper.speed = 0
                 goalkeeper.kickBall(ball, gk=True)
-                if goalkeeper.touchedBall:
-                    print('gk kicks ball back')
-                    goalkeeper.speed = gkStartSpeed   # reset
-                    ball.gkCaught = False   # reset
-                    bg.processMovements(ball, goal, players)
+                goalkeeper.speed = gkStartSpeed   # reset
+                ball.gkCaught = False   # reset
+                bg.processMovements(ball, goal, players)
                         
     goalkeeper.moveAcross(goal)
     goalkeeper.updateAll()

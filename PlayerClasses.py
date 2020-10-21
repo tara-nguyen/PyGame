@@ -7,15 +7,15 @@ import MoveFunctionsUpdated as move
 import NonplayerClasses as np
 
 class Player(np.Game):
-    '''This class is a child class of Game, which is defined in the
-    module NonplayerClass.py. It's also the parent class of Goalkeeper
-    and Outfielder. Player has the following methods: __init__, load,
-    setFootStartPos, adjustFootStartPos, blitFeet, blitBody,
-    getStartPos, getCenter, setCenterPos, getCenterPos, getCorners,
-    getRotation, getShoulderAngle, getBodyAngle, getFootAngle,
-    setMovingRotation, getMovingRotation, getDistanceMoved,
-    getDistanceToBall, getEnding, feetToFront, move, chooseKickingFoot,
-    kickBall, checkBallTouch, updateFeet, and updateAll.
+    '''This class is a child class of Game, which is defined in the module
+    NonplayerClass. It's also the parent class of Goalkeeper and Outfielder.
+    Player has the following methods:
+        __init__, load, setFootStartPos, adjustFootStartPos, blitFeet,
+        blitBody, getStartPos, getCenter, setCenterPos, getCenterPos,
+        getCorners, getRotation, getBodyAngle, getFootAngle,
+        setMovingRotation, getMovingRotation, getDistMoved,
+        getDistToBall, getEnding, feetToFront, move, chooseKickingFoot,
+        kickBall, checkBallTouch, updateFeet, and updateAll.
     To get a brief description of each method, use the following syntax:
         <module name as imported>.Player.<method name>.__doc__'''
     def __init__(self, screenSize):
@@ -67,7 +67,7 @@ class Player(np.Game):
         newBodyCenterPos = (self.bodyStartPos[0]+self.getCenter()[1][0],
                             self.bodyStartPos[1]+self.getCenter()[1][1])
         # distance from the old coordinates
-        moveX, moveY = self.getDistanceMoved(newBodyCenterPos)
+        moveX, moveY = self.getDistMoved(newBodyCenterPos)
         self.setCenterPos('body', newBodyCenterPos[0], newBodyCenterPos[1])
         self.setCenterPos('lFoot', self.getCenterPos()[0][0]+moveX,
                           self.getCenterPos()[0][1]+moveY)
@@ -160,7 +160,7 @@ class Player(np.Game):
         direction the player is currently facing. It is an angle (measured in
         degrees) formed by two lines: (1) the line connecting the body center
         and the midpoint between the two foot centers, and (2) the y-axis
-        pointing downward.'''
+        pointing downward from the midpoint.'''
         # coordinates of the midpoint between the two foot centers
         midpoint = ((self.getCenterPos()[0][0]+self.getCenterPos()[1][0])/2,
                     (self.getCenterPos()[0][1]+self.getCenterPos()[1][1])/2)
@@ -168,14 +168,6 @@ class Player(np.Game):
         currentRot = line.getParams(midpoint, self.getCenterPos()[2])[3]
         return currentRot
 
-    def getShoulderAngle(self):
-        '''This function returns the angle (between 0 and 90 degrees)
-        between the line connecting the player's shoulders and the y-axis.'''
-        frontCorners = self.getCorners()[:2]
-        shoulderAngle = line.getIntersect(frontCorners[0], frontCorners[1],
-                                          (0,0), (0,1))[2]
-        return shoulderAngle
-        
     def getBodyAngle(self, ball):
         '''This function returns the angle (measured in degrees) of the body
         with respect to the y-axis pointing downward from the ball.'''
@@ -184,11 +176,9 @@ class Player(np.Game):
     def getFootAngle(self, ball):
         '''This function returns the angles (measured in degrees) of the feet
         with respect to the y-axis pointing downward from the ball.'''
-        lFootAngle = line.getParams(ball.getCenterPos(),
-                                    self.getCenterPos()[0])[3]
-        rFootAngle = line.getParams(ball.getCenterPos(),
-                                    self.getCenterPos()[1])[3]
-        return lFootAngle, rFootAngle
+        left = line.getParams(ball.getCenterPos(), self.getCenterPos()[0])[3]
+        right = line.getParams(ball.getCenterPos(), self.getCenterPos()[1])[3]
+        return left, right
 
     def setMovingRotation(self, rotate):
         '''This function sets the angle (measured in degrees) by which the
@@ -202,20 +192,18 @@ class Player(np.Game):
         start of the program.'''
         return self.rotate
 
-    def getDistanceMoved(self, newCenterPos):
+    def getDistMoved(self, newCenterPos):
         '''This function returns the change in the position of the body
         after a movement.
-        newCenterPos is the new coordinates of the center of the body.'''
-        moveX, moveY = line.getParams(newCenterPos, self.getCenterPos()[2])[:2]
+        newCenterPos is the new coordinates of the body center.'''
+        moveX, moveY = line.getParams(self.getCenterPos()[2], newCenterPos)[:2]
         return moveX, moveY
 
-    def getDistanceToBall(self, ball):
+    def getDistToBall(self, ball):
         '''This function returns the distance between each foot and the ball.'''
-        lFootToBall = line.getParams(self.getCenterPos()[0],
-                                     ball.getCenterPos())[2]
-        rFootToBall = line.getParams(self.getCenterPos()[1],
-                                     ball.getCenterPos())[2]
-        return lFootToBall, rFootToBall
+        left = line.getParams(ball.getCenterPos(), self.getCenterPos()[0])[2]
+        right = line.getParams(ball.getCenterPos(), self.getCenterPos()[1])[2]
+        return left, right
 
     def getEnding(self, bodyPart, ball):
         '''This function returns the point to which the body will move when
@@ -272,7 +260,7 @@ class Player(np.Game):
                 objCenter=self.getCenter()[1])
         if newCenterPos != self.getCenterPos()[2]:
             self.moved = True
-            moveX, moveY = self.getDistanceMoved(newCenterPos)
+            moveX, moveY = self.getDistMoved(newCenterPos)
             self.setCenterPos('body', newCenterPos[0], newCenterPos[1])
             self.setMovingRotation(rotate)
             # move feet at the same distance as body
@@ -289,7 +277,7 @@ class Player(np.Game):
         (1) a string indicating the foot,
         (2) the coordinates of the foot's center point, and
         (3) the distance between the ball and that foot.'''
-        lFootToBall, rFootToBall = self.getDistanceToBall(ball)
+        lFootToBall, rFootToBall = self.getDistToBall(ball)
         if lFootToBall < rFootToBall:
             return 'lFoot', self.getCenterPos()[0], lFootToBall
         elif lFootToBall > rFootToBall:
@@ -311,11 +299,7 @@ class Player(np.Game):
             endAngle = self.getFootAngle(ball)[0]
         else:
             endAngle = self.getFootAngle(ball)[1]
-        if distToBall <= self.footStartCenter[1] + ball.center[1]:
-            # foot is already very close to the ball
-            endPoint = kFootCenterPos
-        else:
-            endPoint = self.getEnding(kickingFoot, ball)[0]
+        endPoint = self.getEnding(kickingFoot, ball)[0]
         # move foot
         newKFootCenterPos, kFootRotate = move.toPoint(kFootCenterPos,
                                                       endPoint, endAngle)
@@ -339,7 +323,6 @@ class Player(np.Game):
             else:   # right foot is the kicking foot
                 newCenterPos = self.getCenterPos()[0], kFootCenterPos
             self.updateFeet(kickingFoot, newCenterPos, (currentRot,)*2)
-        print()
         
     def updateFeet(self, foot, newCenterPos, rotate):
         '''This function updates the positions and rotations of only the feet.
@@ -353,10 +336,6 @@ class Player(np.Game):
         move.update(self.screen, self.allThings, self.allPos, moved,
                     newCenterPos, rotate)
         self.lFoot, self.rFoot = self.allThings[lFootIndex:lFootIndex+2]
-        if self.strongFoot == 'lFoot':
-            self.strongFoot = self.lFoot
-        else:
-            self.strongFoot = self.rFoot
 
     def updateAll(self):
         '''This function updates the positions and rotations of both the body
@@ -417,9 +396,11 @@ class Outfielder(Player):
     def __init__(self, screenSize):
         '''This function initializes the class and sets its core attributes.'''
         Player.__init__(self, screenSize)   # initialize the parent class
-        bodyStartPosX = random.uniform(20, self.screenWidth-96)
-        bodyStartPosY = random.uniform(self.screenHeight-150,
-                                       self.screenHeight-100)
+##        bodyStartPosX = random.uniform(20, self.screenWidth-96)
+##        bodyStartPosY = random.uniform(self.screenHeight-150,
+##                                       self.screenHeight-100)
+        bodyStartPosX = 60
+        bodyStartPosY = self.screenHeight-97
         self.bodyStartPos = bodyStartPosX, bodyStartPosY
-        self.startRot = 0
+        self.startRot = 90
         self.moved = False
