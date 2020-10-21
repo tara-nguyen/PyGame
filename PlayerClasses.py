@@ -205,18 +205,18 @@ class Player(np.Game):
         right = line.getParams(ball.getCenterPos(), self.getCenterPos()[1])[2]
         return left, right
 
-    def getEnding(self, bodyPart, ball):
-        '''This function returns the point to which the body will move when
-        it's headed for the ball, along with the direction the body/foot will
-        face when it reaches the endpoint (angle measured in degrees).'''
+    def getEnding(self, bodyPart, ball, finalDist):
+        '''This function returns the point to which the body/foot will move
+        when it's headed for the ball, along with the direction the body/foot
+        will face when it reaches the endpoint (angle measured in degrees).
+        finalDist is the distance between the center of the body/foot and
+        the ball center when the body/foot is at the target point.'''
         if 'Foot' in bodyPart:
-            finalDist = self.footStartCenter[1] + ball.center[1]
             if bodyPart == 'lFoot':
                 angle = self.getFootAngle(ball)[0]
             else:
                 angle = self.getFootAngle(ball)[1]
         else:
-            finalDist = self.bodyStartCenter[1] + ball.center[1]
             angle = self.getBodyAngle(ball)
         # point to which the body will move
         endPointX = ball.getCenterPos()[0] + finalDist * np.getTrig(angle)[0]
@@ -249,7 +249,8 @@ class Player(np.Game):
                 direction,self.getCenterPos()[2],objCenter=self.getCenter()[1],
                 screenSize=(self.screenWidth,self.screenHeight))
         elif moveType == 'to ball':
-            endPoint, endAngle = self.getEnding('body', ball)
+            finalDist = self.bodyStartCenter[1] + ball.center[1]
+            endPoint, endAngle = self.getEnding('body', ball, finalDist)
             newCenterPos, rotate = move.toPoint(self.getCenterPos()[2],
                                                 endPoint, endAngle, 3)
         elif moveType == 'circle':
@@ -299,7 +300,11 @@ class Player(np.Game):
             endAngle = self.getFootAngle(ball)[0]
         else:
             endAngle = self.getFootAngle(ball)[1]
-        endPoint = self.getEnding(kickingFoot, ball)[0]
+        minDist = self.footStartCenter[1] + ball.center[1]
+        if distToBall <= minDist:
+            endPoint = kFootCenterPos
+        else:
+            endPoint = self.getEnding(kickingFoot, ball, minDist)[0]
         # move foot
         newKFootCenterPos, kFootRotate = move.toPoint(kFootCenterPos,
                                                       endPoint, endAngle)
@@ -307,22 +312,23 @@ class Player(np.Game):
             self.touchedBall = True
         else:
             self.touchedBall = False
-        if (gk and self.touchedBall) or ((not gk) and (not ball.gkCaught)):
-            if kickingFoot == 'lFoot':
-                newCenterPos = newKFootCenterPos, self.getCenterPos()[1]
-                rotate = kFootRotate, currentRot
-            else:
-                newCenterPos = self.getCenterPos()[0], newKFootCenterPos
-                rotate = currentRot, kFootRotate
-            self.updateFeet(kickingFoot, newCenterPos, rotate)
-            self.updateDisplay()
-            pygame.time.wait(100)   # pause program for 100 ms
-            # bring foot back to its position and rotation before the kick
-            if kickingFoot == 'lFoot':   # left foot is the kicking foot
-                newCenterPos = kFootCenterPos, self.getCenterPos()[1]
-            else:   # right foot is the kicking foot
-                newCenterPos = self.getCenterPos()[0], kFootCenterPos
-            self.updateFeet(kickingFoot, newCenterPos, (currentRot,)*2)
+        if newKFootCenterPos != kFootCenterPos:
+            if (gk and self.touchedBall) or ((not gk) and (not ball.gkCaught)):
+                if kickingFoot == 'lFoot':
+                    newCenterPos = newKFootCenterPos, self.getCenterPos()[1]
+                    rotate = kFootRotate, currentRot
+                else:
+                    newCenterPos = self.getCenterPos()[0], newKFootCenterPos
+                    rotate = currentRot, kFootRotate
+                self.updateFeet(kickingFoot, newCenterPos, rotate)
+                self.updateDisplay()
+                pygame.time.wait(100)   # pause program for 100 ms
+                # bring foot back to its position and rotation before the kick
+                if kickingFoot == 'lFoot':
+                    newCenterPos = kFootCenterPos, self.getCenterPos()[1]
+                else:
+                    newCenterPos = self.getCenterPos()[0], kFootCenterPos
+                self.updateFeet(kickingFoot, newCenterPos, (currentRot,)*2)
         
     def updateFeet(self, foot, newCenterPos, rotate):
         '''This function updates the positions and rotations of only the feet.
@@ -400,5 +406,5 @@ class Outfielder(Player):
         bodyStartPosY = random.uniform(self.screenHeight-150,
                                        self.screenHeight-100)
         self.bodyStartPos = bodyStartPosX, bodyStartPosY
-        self.startRot = 90
+        self.startRot = 0
         self.moved = False

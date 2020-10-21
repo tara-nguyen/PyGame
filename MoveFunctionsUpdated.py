@@ -103,14 +103,13 @@ def toPoint(centerPos, endPoint, endAngle, speedBoost=1):
     if endPoint == centerPos:   # object has reached end point
         stepX, stepY = 0, 0
     else:
-        Xdiff, Ydiff = line.getParams(centerPos, endPoint)[:2]
+        Xdiff, Ydiff, dist = line.getParams(centerPos, endPoint)[:3]
         stepX = setDiagStep(Xdiff, Ydiff)[0] * abs(speedBoost)
         stepY = setDiagStep(Xdiff, Ydiff)[1] * abs(speedBoost)
+        speed = math.sqrt(stepX**2 + stepY**2)
         # final step size before reaching the end point
-        if abs(Xdiff) < abs(stepX):
-            stepX = Xdiff
-        if abs(Ydiff) < abs(stepY):
-            stepY = Ydiff
+        if dist < speed:
+            stepX, stepY = Xdiff, Ydiff
     newCenterPos = centerPos[0]+stepX, centerPos[1]+stepY
     rotate = endAngle   # measured in degrees
     return newCenterPos, rotate

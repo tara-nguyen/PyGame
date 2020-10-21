@@ -84,7 +84,7 @@ class Game:
             if player.touchedBall:
                 bodyAngle = player.getBodyAngle(ball)
                 break
-        ball.apprScrBound, ball.apprGoalPost, ball.inGoal = [False] * 3
+        ball.apprScrBound, ball.apprGoalPost = False, False
         ball.apprPlayer = [False] * len(players)
         # move ball
         ball.setMovingAngle(random.uniform(bodyAngle-.5, bodyAngle+.5))
@@ -104,8 +104,6 @@ class Game:
                sum(ball.apprPlayer) > 0:
                 ball.setStep2(stepX, stepY)   # reset
             speed /= random.uniform(1.03, 1.05)   # decrement speed
-        if ball.inGoal:
-            ball.reset()   # return to its original position
         
 class Background(Game):
     '''This class is a child class of Game and has the following methods:
@@ -210,7 +208,7 @@ class Ball(Game):
         Game.__init__(self, screenSize)   # initialize the parent class
         self.ball, self.diameter = None, 30
         self.startPos = (self.screenWidth-self.diameter)/2,self.screenHeight-200
-        self.gkCaught = False
+        self.gkCaught, self.inGoal = False, False
         self.initSpeed = random.uniform(18, 22)
 
     def load(self, imageName):
@@ -220,7 +218,7 @@ class Ball(Game):
     def blit(self):
         '''This function draws the ball onto the screen.'''
         self.screen.blit(self.ball, self.startPos)
-        self.center = self.ball.get_rect().center   # center of the ball
+        self.center = self.ball.get_rect().center
         # coordinates of the center at the start of the program (i.e.,
         # before any change/movement has been made)
         self.centerPos = (self.startPos[0]+self.center[0],
