@@ -100,21 +100,17 @@ def toPoint(centerPos, endPoint, endAngle, speedBoost=1):
     endAngle is the direction the front of the object will face
     after the object has reached the end point. 
     speedBoost adjusts the step size and must not be negative.'''
-    if endPoint == centerPos:   # object has reached end point --> stop moving
+    if endPoint == centerPos:   # object has reached end point
         stepX, stepY = 0, 0
     else:
-        # difference in coordinates
-        Xdiff, Ydiff = line.getParams(endPoint, centerPos)[:2]
-        # step size
+        Xdiff, Ydiff = line.getParams(centerPos, endPoint)[:2]
         stepX = setDiagStep(Xdiff, Ydiff)[0] * abs(speedBoost)
         stepY = setDiagStep(Xdiff, Ydiff)[1] * abs(speedBoost)
         # final step size before reaching the end point
         if abs(Xdiff) < abs(stepX):
-            stepX, stepY = Xdiff, Xdiff/math.tan(endAngle)
-        elif abs(Ydiff) < abs(stepY):
-            stepX, stepY = Ydiff*math.tan(endAngle), Ydiff
-    print('step size',stepX,stepY)
-    # new coordinates of object center
+            stepX = Xdiff
+        if abs(Ydiff) < abs(stepY):
+            stepY = Ydiff
     newCenterPos = centerPos[0]+stepX, centerPos[1]+stepY
     rotate = endAngle   # measured in degrees
     return newCenterPos, rotate
@@ -191,41 +187,38 @@ def straight(direction, centerPos, stepX=10, stepY=10, screenSize=None,
     stepX and stepY are the lateral and vertical step sizes, respectively.
     objCenter is the object's center point, only specified if screenSize
     is specified.'''
-    if direction == 'left':   # negative lateral step size; no vertical movement
+    if direction == 'left':
         stepX, stepY = -stepX, 0
         rotate = 90   # measured in degrees
     elif direction == 'right':
-        stepY = 0   # no vertical movement
+        stepY = 0
         rotate = -90   # measured in degrees
-    elif direction == 'up':   # no lateral movement; negative vertical step size
+    elif direction == 'up':
         stepX, stepY = 0, -stepY
         rotate = 0   # measured in degrees
     elif direction == 'down':
-        stepX = 0   # no lateral movement
+        stepX = 0
         rotate = 180   # measured in degrees
     else:   # diagonal movement
-        if direction == 'upleft':   # negative lateral and vertical step sizes
+        if direction == 'upleft':
             stepX, stepY = setDiagStep(-stepX, -stepY)
             rotate = 45   # measured in degrees
-        elif direction == 'upright':   # negative vertical step size
+        elif direction == 'upright':
             stepX, stepY = setDiagStep(stepX, -stepY)
             rotate = -45   # measured in degrees
-        elif direction == 'downleft':   # negative lateral step size
+        elif direction == 'downleft':
             stepX, stepY = setDiagStep(-stepX, stepY)  
             rotate = 135   # measured in degrees
         elif direction == 'downright':
             stepX, stepY = setDiagStep(stepX, stepY)
             rotate = -135   # measured in degrees
-    # check screen boundaries
     if screenSize != None:
         boundaries = setBoundaries(objCenter, screenSize)
-        # set final step size before reaching boundary
+        # final step size before reaching boundary
         stepX, stepY = setFinalStep1(boundaries, direction, stepX, stepY,
                                      centerPos)
-        # stop moving if object has reached one of the screen boundaries
         if reachedBoundaries1(boundaries, direction, centerPos):
             stepX, stepY = 0, 0
-    # new coordinates of the object's center
     newCenterPos = centerPos[0]+stepX, centerPos[1]+stepY
     return newCenterPos, rotate
 
@@ -242,16 +235,16 @@ def setMaxRotStep(direction, maxRot, angle, step):
     (2) the positive y-axis pointing downward from the latter point.
     step is the step size (i.e., the number of degrees in each movement).'''
     if direction == 'clockwise' or direction == 'left':
-        maxRot = -abs(maxRot)   # makes sure maxRot is negative
+        maxRot = -abs(maxRot)
         if angle <= maxRot:    # object has reached maximum rotation
-            step = 0    # stop moving
+            step = 0
         if step <= maxRot - angle:
             # final step before reaching maximum rotation
             step = maxRot - angle
     elif direction == 'counterclockwise' or direction == 'right':
-        maxRot = abs(maxRot)   # makes sure maxRot is positive
+        maxRot = abs(maxRot)
         if angle >= maxRot:    # object has reached maximum rotation
-            step = 0    # stop moving
+            step = 0
         if step >= maxRot - angle:
             # final step before reaching maximum rotation
             step = maxRot - angle
@@ -334,36 +327,25 @@ def rotate(direction, centerPos, rotCenter, step=10, maxRot=None,
     step is the step size (i.e., the number of degrees in each movement).
     centerPos is the coordinates of the object's center point.
     rotCenter is the point around which the object moves.
-    maxRot is the maximum angle (measured in degrees) to which the object
-    is allowed to move.
-    objCenter is the object's center point, only specified if screenSize
-    is specified.'''
-    # relationship between the object's center point and the point 
-    # around which the object moves:
-    # radius, angle (measured in degrees), and quarter in the xy-plane
+    maxRot is the maximum angle (measured in degrees) to which the
+    object is allowed to move.
+    objCenter is the object's center point, only specified if
+    screenSize is specified.'''
     r, angle, quarter = line.getParams(rotCenter, centerPos)[2:]
-    # check direction
     if direction == 'clockwise' or direction == 'left':
-        step *= -1   # negative step size
-        # check maximum rotation
+        step *= -1
         if maxRot != None:
             step = setMaxRotStep(direction, maxRot, angle, step)
     elif direction == 'counterclockwise' or direction == 'right':
-        # check maximum rotation
         if maxRot != None:
             step = setMaxRotStep(direction, maxRot, angle, step)
-    # new coordinates of the object's center and new angle (in degrees)
     newCenterPos, rotate = setNewPos(rotCenter, r, angle, step)
-    # check screen boundaries
     if screenSize != None:
         boundaries = setBoundaries(objCenter, screenSize)
-        # set final step size before reaching boundary
+        # final step size before reaching boundary
         while reachedBoundaries2(boundaries,direction,newCenterPos,quarter):
             step = setFinalStep2(direction, step)
-            # new coordinates of the object's center and new angle
             newCenterPos,rotate = setNewPos(rotCenter,r,angle,step)
-        # stop moving if object has reached one of the screen boundaries
         if reachedBoundaries2(boundaries, direction, centerPos, quarter):
-            # no change in either position or angle
             newCenterPos, rotate = centerPos, angle
     return newCenterPos, rotate

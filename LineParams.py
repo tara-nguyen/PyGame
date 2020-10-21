@@ -10,116 +10,79 @@ def getParams(point1, point2):
     (1) the difference in x-coordinates between the two points,
     (2) the difference in y-coordinates between the two points,
     (3) the distance between the two points,
-    (4) the angle (measured in degrees) formed by the line connecting the
-    two points and the y-axis pointing down from the first point, and
-    (5) the quarter in the xy-plane in which the second point belongs, with
-    the first point being the origin of that plane.
-    The angle is between -180 and 180 degrees, with negative values denoting
-    that the object is to the left of the y-axis, and positive values otherwise.'''
+    (4) the angle (measured in degrees) formed by the line connecting
+    the two points and the y-axis pointing down from the first point, and
+    (5) the quarter in the xy-plane in which the second point belongs,
+    with the first point being the origin of that plane.
+    The angle is between -180 and 180 degrees, with negative values
+    denoting that the object is to the left of the y-axis, and
+    non-negative values otherwise.'''
     # distance
-    Xdiff = point1[0] - point2[0]
-    Ydiff = point1[1] - point2[1]
+    Xdiff = point2[0] - point1[0]
+    Ydiff = point2[1] - point1[1]
     dist = math.sqrt(Xdiff**2 + Ydiff**2)
-    if dist == 0:   # the two points are the same --> can't compute angle
+    # angle (measured in degrees) and quarter
+    if dist == 0:   # the two points are the same
         angle, quarter = None, None
+    elif Ydiff == 0:   # the points form a horizontal line
+        quarter = Xdiff / abs(Xdiff)
+        angle = 90 * quarter
     else:
-        if point2[1] >= point1[1]:   # bottom-right quarter of xy-plane
-            quarter = 1
-            angle = math.asin(abs(Xdiff)/dist)
-        else:   # top-right quarter of xy-plane
-            quarter = 2
-            angle = math.pi/2 + math.asin(abs(Ydiff)/dist)
-        if point2[0] < point1[0]:   # left of the y-axis
-            quarter *= -1
-            angle *= -1
-        angle *= 180/math.pi   # angle measured in degrees
+        angle = math.atan(Xdiff/Ydiff) * 180 / math.pi
+        if angle >= 0:
+            quarter = 1   # bottom-right quarter, unless Ydiff < 0
+        else:
+            quarter = -1   # bottom-left quarter, unless Ydiff < 0
+        if Ydiff < 0:   # top-right and top-left quarters
+            angle = (180 - abs(angle)) * -quarter
+            quarter *= -2
     return Xdiff, Ydiff, dist, angle, quarter
 
 def getLine(point1, point2):
-    '''This function returns the slope of the line connecting two given
-    points, along with the y-intercept and the x-intercept of that line.'''
-    # difference in coordinates of the two given points
-    Xdiff, Ydiff = getParams(point1, point2)[:2]
-    if Xdiff == 0:   # line parallel to the y-axis --> undefined slope
-        slope = None
-    else:
-        slope = Ydiff / Xdiff
-    # x- and y-intercepts
-    if slope == None:   # line is parallel to the y-axis
-        yIntercept, xIntercept = None, point1[0]
-    elif slope == 0:   # line is parallel to the x-axis
-        yIntercept, xIntercept = point1[1], None
-    else:
-        xIntercept = -point1[1] / slope + point1[0]
-        yIntercept = slope * (-point1[0]) + point1[1]
-    return slope, yIntercept, xIntercept
+    '''This function returns the coefficients in the line
+    ax + by + c = 0 (a and b are not both zero) passing 
+    through two given points.'''
+    a, b = getParams(point1, point2)[1::-1]
+    c = -a * point1[0] - b * point1[1]
+    return a, b, c
 
 def getIntersect(point1, point2, point3, point4):
-    '''This function returns the coordinates and angle (between 0 & 90 degrees)
-    of the intersection of two lines, one formed by the first two given points
-    (point1 and point2) and the other formed by the last two given points
-    (point3 and point4). The two lines are assumed to be separate lines.'''
-    slope1, yIntercept1, xIntercept1 = getLine(point1, point2)
-    slope2, yIntercept2, xIntercept2 = getLine(point3, point4)
-    if slope1 == slope2:   # the lines are parallel to each other
-        intersectX, intersectY, angle = None, None, 0
-    elif slope1 == None or slope2 == None:  # one line is parallel to the y-axis
-        if slope1 == None:
-            intersectX = xIntercept1
-            intersectY = slope2 * intersectX + yIntercept2    
-        else:
-            intersectX = xIntercept2
-            intersectY = slope1 * intersectX + yIntercept1
-        angle = math.atan(abs((xIntercept1-xIntercept2)/intersectY))
+    '''This function returns the coordinates of the intersection point
+    of two lines, one formed by the first two given points (point1 and
+    point2) and the other formed by the last two given points (point3
+    and point4). The two lines are assumed to be separate lines.'''
+    x1, x2, x3, x4 = point1[0], point2[0], point3[0], point4[0]
+    y1, y2, y3, y4 = point1[1], point2[1], point3[1], point4[1]
+    denom = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
+    if denom == 0:   # the lines are parallel to each other
+        intersectX, intersectY = None, None
     else:
-        intersectX = (yIntercept2 - yIntercept1) / (slope1 - slope2)
-        intersectY = slope1 * intersectX + yIntercept1
-        if slope1 * slope2 == -1:   # the lines are perpendicular
-            angle = math.pi   # measured in radians
-        else:
-            angle = math.atan(abs((slope1-slope2)/(1+slope1*slope2)))
-    angle *= 180/math.pi   # measured in degrees
-    return intersectX, intersectY, angle
+        det12 = x1 * y2 - y1 * x2
+        det34 = x3 * y4 - x4 * y3
+        xNumer = det12 * (x3 - x4) - (x1 - x2) * det34
+        yNumer = det12 * (y3 - y4) - (y1 - y2) * det34
+        intersectX, intersectY = xNumer/denom, yNumer/denom
+    return intersectX, intersectY
 
 def getDistToLine(point0, linePoint1, linePoint2):
-    '''This function returns the distance from a point (point0) to a line,
-    along with the differences in x- and y-coordinates between point0 and
-    the intersection point of two lines: (1) the given line, and (2) the
-    line perpendicular to that line and passing through point0.'''
-    slope, yIntercept, xIntercept = getLine(linePoint1, linePoint2)
-    if slope == None:   # line is parallel to the y-axis
-        Xdiff, Ydiff = point0[0]-xIntercept, 0
-        dist = abs(Xdiff)
-    elif slope == 0:   # line is parallel to the x-axis
-        Xdiff, Ydiff = 0, point0[1]-yIntercept
-        dist = abs(Ydiff)
-    else:
-        # y-intercept of the line perpendicular to the given line 
-        # and passing through point0
-        yIntercept2 = point0[1] - (-1/slope) * point0[0]
-        # intersection point of the two lines
-        intersectX, intersectY = getIntersect(point0, (0,yIntercept2),
-                                              linePoint1, linePoint2)[:2]
-        # distance
-        Xdiff, Ydiff, dist = getParams(point0, (intersectX,intersectY))[:3]
-    return Xdiff, Ydiff, dist
+    '''This function returns the distance from a point to a line.'''
+    x0, x1, x2 = point0[0], linePoint1[0], linePoint2[0]
+    y0, y1, y2 = point0[1], linePoint1[1], linePoint2[1]
+    dNumer = abs((x2-x1)*(y1-y0) - (x1-x0)*(y2-y1))
+    dDenom = getParams(linePoint1, linePoint2)[2]
+    return dNumer / dDenom
 
 def isBetween(point0, point1, point2):
-    '''This function takes in three different points and checks if
-    the points are only the same line, and if one of them (point0)
-    lies between the other two (point1 and point2).'''
-    isBetween = False
-    if getDistToLine(point0, point1, point2)[2] == 0:
-        # differences in coordinates
-        Xdiff1, Ydiff1 = getParams(point0, point1)[:2]
-        Xdiff2, Ydiff2 = getParams(point0, point2)[:2]
-        if Xdiff1 == 0:   # line is parallel to the y-axis
-            if Ydiff1 * Ydiff2 <= 0:
-                isBetween = True
-        else:
-            if Xdiff1 * Xdiff2 <= 0:
-                isBetween = True
-    return isBetween
+    '''This function takes in three points on the same line and
+    checks if one of them (point0) lies between the other two
+    (point1 and point2).'''
+    dist01 = getParams(point0, point1)[2]
+    dist02 = getParams(point0, point2)[2]
+    dist12 = getParams(point1, point2)[2]
+    if dist01 <= dist12 and dist02 <= dist12:
+        return True
+    else:
+        return False
 
 def checkSide(point1, point2, linePoint1, linePoint2):
     '''This function checks if two given points (point1 and point2) are on
@@ -128,15 +91,13 @@ def checkSide(point1, point2, linePoint1, linePoint2):
     • 1 if point1 and point2 are on the same side of the line,
     • -1 if the points are on different sides of the line, or
     • 0 if at least one of the points is on the line.'''
-    # intersection of the given line and the line connecting point1 and point2
-    intersectX, intersectY = getIntersect(point1, point2,
-                                          linePoint1, linePoint2)[:2]
-    if intersectX == None:   # the lines are parallel to each other
-        return 1
-    elif (intersectX,intersectY) == point1 or (intersectX,intersectY) == point2:
+    a, b, c = getLine(linePoint1, linePoint2)
+    # plug point1 and point2 into the equation for the line
+    f1 = a * point1[0] + b * point1[1] + c
+    f2 = a * point2[0] + b * point2[1] + c
+    if f1 == 0 or f2 == 0:
         return 0
+    elif f1 * f2 > 0:
+        return 1
     else:
-        if isBetween((intersectX,intersectY), point1, point2):
-            return -1
-        else:
-            return 1
+        return -1
