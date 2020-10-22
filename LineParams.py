@@ -1,5 +1,5 @@
 '''This module defines the following functions: getParams(), getLine(),
-getIntersect(), getDistToLine(), isBetween(), and checkSide().
+getDistToLine(), getIntersect(), isBetween(), and checkSide().
 To get a brief description of each function, use the following syntax:
     <module name as imported>.<function name>.__doc__'''
 
@@ -42,9 +42,17 @@ def getLine(point1, point2):
     '''This function returns the coefficients in the line
     ax + by + c = 0 (a and b are not both zero) passing 
     through two given points.'''
-    a, b = getParams(point1, point2)[1::-1]
+    a, b = point2[1]-point1[1], point1[0]-point2[0]
     c = -a * point1[0] - b * point1[1]
     return a, b, c
+
+def getDistToLine(point0, linePoint1, linePoint2):
+    '''This function returns the distance from a point to a line.'''
+    x0, x1, x2 = point0[0], linePoint1[0], linePoint2[0]
+    y0, y1, y2 = point0[1], linePoint1[1], linePoint2[1]
+    dNumer = abs((x2-x1)*(y1-y0) - (x1-x0)*(y2-y1))
+    dDenom = getParams(linePoint1, linePoint2)[2]
+    return dNumer / dDenom
 
 def getIntersect(point1, point2, point3, point4):
     '''This function returns the coordinates of the intersection point
@@ -63,14 +71,6 @@ def getIntersect(point1, point2, point3, point4):
         yNumer = det12 * (y3 - y4) - (y1 - y2) * det34
         intersectX, intersectY = xNumer/denom, yNumer/denom
     return intersectX, intersectY
-
-def getDistToLine(point0, linePoint1, linePoint2):
-    '''This function returns the distance from a point to a line.'''
-    x0, x1, x2 = point0[0], linePoint1[0], linePoint2[0]
-    y0, y1, y2 = point0[1], linePoint1[1], linePoint2[1]
-    dNumer = abs((x2-x1)*(y1-y0) - (x1-x0)*(y2-y1))
-    dDenom = getParams(linePoint1, linePoint2)[2]
-    return dNumer / dDenom
 
 def isBetween(point0, point1, point2):
     '''This function takes in three points on the same line and
