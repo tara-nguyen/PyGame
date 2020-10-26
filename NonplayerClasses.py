@@ -42,7 +42,7 @@ class Game:
         image = pygame.image.load(self.getFile(imageName)).convert_alpha()
         if newWidth != None and newHeight == None:
             newHeight = image.get_rect().height   # height not changed
-        if newWidth == None and newHeight != None:
+        elif newWidth == None and newHeight != None:
             newWidth = image.get_rect().width   # width not changed
         if newWidth != None or newHeight != None:
             image = pygame.transform.scale(image, (newWidth, newHeight))
@@ -88,22 +88,22 @@ class Game:
         ball.apprPlayer = [False] * len(players)
         # move ball
         ball.setMovingAngle(random.uniform(bodyAngle-.5, bodyAngle+.5))
-        speed = ball.initSpeed
+        ball.speed = ball.initSpeed
         ball.moving = True
-        while ball.moving and round(speed) > 0:
+        while ball.moving and round(ball.speed) > 0:
             players[0].moveAcross(goal)
             players[0].updateAll()
-            ball.setStep1(speed)
+            ball.setStep1()
             stepX, stepY = ball.getStep()   # step size before adjustment
-            ball.move(speed, goal, players)
-            player.touchedBall = False   # reset
+            ball.move(goal, players)
             if not ball.moving:
                 break
             ball.update()
             if ball.apprScrBound != False or ball.apprGoalPost != False or \
                sum(ball.apprPlayer) > 0:
                 ball.setStep2(stepX, stepY)   # reset
-            speed /= random.uniform(1.03, 1.05)   # decrement speed
+            ball.speed /= random.uniform(1.03, 1.05)   # decrement speed
+        player.touchedBall = False   # reset
         
 class Background(Game):
     '''This class is a child class of Game and has the following methods:
@@ -139,10 +139,11 @@ class Goal(Game):
         self.sideWidth = 60   # left and right parts
         self.middleWidth = 120   # middle part
         self.height = 80
+        self.postWidth = 11
         
-    def crop(self, image, newWidth, newHeight, shiftLeft=0):
-        '''This function crops an image and returns the new surface on which
-        the final image will be pasted.'''
+    def crop(self, image, newWidth, newHeight, shiftLeft):
+        '''This function crops an image and returns the new surface on
+        which the final image will be pasted.'''
         newSurface = crop.cropImage(image, 'pixels', newWidth, newHeight,
                                     shiftLeft=shiftLeft, shiftUp=53)
         return newSurface
@@ -155,12 +156,11 @@ class Goal(Game):
         self.middle = self.loadImage(imageName2, scale[0], scale[1])
         self.right = self.loadImage(imageName3, scale[0], scale[1])
         # crop
-        self.left = self.crop(self.left, self.sideWidth, self.height,
-                              shiftLeft=11)
+        self.left = self.crop(self.left, self.sideWidth, self.height, 11)
         self.middle = self.crop(self.middle, self.middleWidth, self.height,
-                                shiftLeft=(scale[0]-self.middleWidth)/2)
+                                (scale[0]-self.middleWidth)/2)
         self.right = self.crop(self.right, self.sideWidth, self.height,
-                               shiftLeft=scale[0]-self.sideWidth-11)
+                               scale[0]-self.sideWidth-11)
         
     def setPos(self):
         '''This function sets the positions where the goal parts will be drawn.'''
@@ -190,9 +190,9 @@ class Goal(Game):
 
 def getTrig(angle):
     '''This function returns the sine, cosine, and tangent of an angle.'''
-    sin = math.sin(angle * math.pi/180)
-    cos = math.cos(angle * math.pi/180)
-    tan = math.tan(angle * math.pi/180)
+    sin = math.sin(angle * math.pi / 180)
+    cos = math.cos(angle * math.pi / 180)
+    tan = math.tan(angle * math.pi / 180)
     return sin, cos, tan
     
 class Ball(Game):
@@ -200,14 +200,15 @@ class Ball(Game):
     __init__, load, blit, getStartPos, setCenterPos, getCenterPos,
     setMovingAngle, getMovingAngle, setStep1, setStep2, getStep,
     getNewStep1, getNewStep2, getExtremes, apprScrBounds, apprGoalPosts,
-    apprPlayers, bounceOff, move, reset, and update.
+    apprPlayers, bounceOff, bounceOffPl, move, reset, and update.
     To get a brief description of each method, use the following syntax:
         <module name as imported>.Ball.<method name>.__doc__'''
     def __init__(self, screenSize):
         '''This function initializes the class and sets its core attributes.'''
         Game.__init__(self, screenSize)   # initialize the parent class
         self.ball, self.diameter = None, 30
-        self.startPos = (self.screenWidth-self.diameter)/2,self.screenHeight-200
+##        self.startPos = (self.screenWidth-self.diameter)/2,self.screenHeight-200
+        self.startPos = (self.screenWidth-self.diameter)/2,self.screenHeight-50
         self.gkCaught, self.inGoal = False, False
         self.initSpeed = random.uniform(18, 22)
 
@@ -239,26 +240,25 @@ class Ball(Game):
         return self.centerPos
 
     def setMovingAngle(self, angle):
-        '''This function sets the angle (measured in degrees) at which the ball
-        will move, with respect to the negative y-axis pointing up from the
-        current ball center.'''
+        '''This function sets the angle (measured in degrees) at which
+        the ball will move, with respect to the negative y-axis pointing
+        up from the current ball center.'''
         self.movingAngle = angle
 
     def getMovingAngle(self):
-        '''This function returns the angle (measured in degrees) at which the
-        ball is currently moving, with respect to the negative y-axis pointing 
-        up from the current ball center.'''
+        '''This function returns the angle (measured in degrees) at
+        which the ball is currently moving, with respect to the negative
+        y-axis pointing up from the current ball center.'''
         return self.movingAngle
 
-    def setStep1(self, speed):
-        '''This function sets the step sizes based on the total
-        distance the ball will travel.'''
-        self.stepX = speed * getTrig(self.getMovingAngle())[0]
-        self.stepY = speed * getTrig(self.getMovingAngle())[1]
+    def setStep1(self):
+        '''This function sets the step sizes based on the total speed.'''
+        self.stepX = self.speed * getTrig(self.getMovingAngle())[0]
+        self.stepY = self.speed * getTrig(self.getMovingAngle())[1]
 
     def setStep2(self, stepX, stepY):
-        '''This function sets the step sizes based on given values for
-        the lateral and the vertical steps (stepX and stepY).'''
+        '''This function sets the step sizes based on the
+        changes in x- and y-coordinates.'''
         self.stepX = stepX
         self.stepY = stepY
 
@@ -317,37 +317,37 @@ class Ball(Game):
             newStepX, newStepY = self.getStep()
             if right < goalPosts[0] and self.stepX < right - goalPosts[0]:
                 # left of left goal post and moving right
-                print('left of left goal post and moving right')
                 newStepX = right - goalPosts[0]
             elif left > goalPosts[1] and self.stepX > left - goalPosts[1]:
                 # right of right goal post and moving left
-                print('right of right goal post and moving left')
                 newStepX = left - goalPosts[1]
             elif left > goalPosts[0] and self.stepX > left - goalPosts[0]:
                 # right of left goal post and moving left
-                print('right of left goal post and moving left')
                 newStepX = left - goalPosts[0]
             elif right < goalPosts[1] and self.stepX < right - goalPosts[1]:
                 # left of right goal post and moving right
-                print('left of right goal post and moving right')
                 newStepX = right - goalPosts[1]
-            elif top > goalPosts[2] and self.stepY > top - goalPosts[2]:
-                # below goal line and moving up
-                print('below goal line and moving up')
-                newStepY = top - goalPosts[2]
             if newStepX != self.stepX:
                 newStepX, newStepY = self.getNewStep1(newStepX)
                 if top - newStepY < goalPosts[2]:
                     approaching = 'side', newStepX, newStepY
-            elif newStepY != self.stepY:
-                newStepX, newStepY = self.getNewStep2(newStepY)
-                if (left - newStepX <= goalPosts[0] and \
-                    right - newStepX >= goalPosts[0]) or \
-                    (left - newStepX <= goalPosts[1] and \
-                     right - newStepX >= goalPosts[1]):
+                elif newStepY > 0 and top - newStepY == goalPosts[2]:
+                    approaching = 'bottom', newStepX, newStepY
+            elif top > goalPosts[2] and self.stepY > top - goalPosts[2]:
+                # below goal line and moving up
+                newStepX, newStepY = self.getNewStep2(top - goalPosts[2])
+                newLeft, newRight = left-newStepX, right-newStepX
+                postRange = ([goalPosts[0]-goal.postWidth+1,
+                              goalPosts[0]+goal.postWidth-1],
+                             [goalPosts[1]-goal.postWidth+1,
+                              goalPosts[1]+goal.postWidth-1])
+                if (newRight>=postRange[0][0] and newRight<=postRange[0][1]) or \
+                   (newLeft>=postRange[0][0] and newLeft<=postRange[0][1]) or \
+                   (newRight>=postRange[1][0] and newRight<=postRange[1][1]) or \
+                   (newLeft>=postRange[1][0] and newLeft<=postRange[1][1]):
                     approaching = 'bottom', newStepX, newStepY
         return approaching
-       
+
     def apprPlayers(self, players):
         '''This function checks if the ball is about to hit a player.
         players is an array listing the players in the game.'''
@@ -355,7 +355,7 @@ class Ball(Game):
         if sum(self.apprPlayer) == 0:
             for player in players:
                 if player.touchedBall:   # this player just kicked the ball
-                    continue
+                    continue   # skip the rest of the loop
                 # the leftmost, rightmost, top, and bottom points on the ball
                 leftP = (self.getExtremes()[0],
                          self.getExtremes()[2]+self.center[1])
@@ -363,10 +363,11 @@ class Ball(Game):
                 topP = (self.getExtremes()[0]+self.center[0],
                         self.getExtremes()[2])
                 bottomP = topP[0], self.getExtremes()[3]
-                currCenterPos = self.getCenterPos()
                 approachingPlayer = [False] * 4   # front, back, left, right
                 apprPts = {}
-                pCorners = player.getCorners()   # player's body corners
+                # player's body center position and body corners
+                pCenterPos = player.getCenterPos()[2]
+                pCorners = player.getCorners()
                 # player's front, back, left, and right sides
                 pSides = ([pCorners[0],pCorners[1]], [pCorners[2],pCorners[3]],
                           [pCorners[0],pCorners[2]], [pCorners[1],pCorners[3]])
@@ -381,8 +382,11 @@ class Ball(Game):
                     for i in range(len(ints)):
                         if line.isBetween(ints[i], p, newp) and \
                            line.isBetween(ints[i], pSides[i][0], pSides[i][1]):
-                            approachingPlayer[i] = True
-                            apprPts[p] = ints[i]
+                            d1 = line.getParams(ints[i], pSides[i][0])[2]
+                            d2 = line.getParams(ints[i], pSides[i][1])[2]
+                            if min(d1, d2) > 1:
+                                approachingPlayer[i] = True
+                                apprPts[p] = ints[i]
                 if 1 in approachingPlayer:
                     # find the point on the ball that will hit the player first
                     count = 0
@@ -399,22 +403,52 @@ class Ball(Game):
                     break
         return approaching
 
-    def bounceOff(self, x, y, speed, adjust=0):
-        '''This function modifies the step size and angle to make the ball
-        bounce off the screen boundaries, the goal posts, or a player.
-        x and y denote whether the sign of the lateral step size and/or
-        that of the vertical step size will be flipped.
-        adjust is the angle (between -90 and 90 degrees) of the surface/line
-        off which the ball bounces, with respect to the x-axis. The default
-        line is any line parallel to the x-axis.'''
-        factor = random.uniform(1.03, 1.05)   # a random real number
-        if x == 1 and y == 0:
-            self.setMovingAngle(-self.getMovingAngle())
-        elif y == 1:
-            self.setMovingAngle(180 - self.getMovingAngle() + adjust)
-        self.setStep1(speed)
-            
-    def move(self, speed, goal, players):
+    def bounceOff(self, bounceType):
+        '''This function sets new parameters (moving angle, speed, and
+        step size) for the movement of the ball when it bounces off
+        either the screen boundary or the goal post.'''
+        denom = 10
+        if bounceType == 1:
+            angleAdjust = abs(abs(self.getMovingAngle()) - 90) / denom
+            baseNewAngle = -self.getMovingAngle()
+        elif bounceType == 2:
+            angleAdjust = abs(self.getMovingAngle()) / denom
+            baseNewAngle = 180 - self.getMovingAngle()
+        self.setMovingAngle(random.uniform(baseNewAngle-angleAdjust,
+                                           baseNewAngle+angleAdjust))
+        self.speed /= random.uniform(1.03, 1.05)   # decrement speed
+        self.setStep1()
+
+    def bounceOffPl(self, player, sideHit):
+        '''This function sets new parameters (moving angle, speed, and
+        step size) for the movement of the ball when it bounces off either
+        a player's back (sideHit = 2) or a player's flank (sideHit = 3 for
+        left or sideHit = 4 for right).'''
+        pCenterPos = player.getCenterPos()[2]   # player's body center position
+        pCorners = player.getCorners()   # player's body corners
+        # player's back, left, and right sides
+        pSides = ([pCorners[2],pCorners[3]], [pCorners[0],pCorners[2]],
+                  [pCorners[1],pCorners[3]])
+        # the leftmost, rightmost, top, and bottom points on the ball
+        leftP = self.getExtremes()[0], self.getExtremes()[2]+self.center[1]
+        rightP = self.getExtremes()[1], leftP[1]
+        topP = self.getExtremes()[0]+self.center[0], self.getExtremes()[2]
+        bottomP = topP[0], self.getExtremes()[3]
+        # set new parameters (might not be the final values)
+        bounceType = random.choice([1, 2])
+        self.bounceOff(bounceType)
+        speed = self.speed
+        for p in (leftP, rightP, topP, bottomP):
+            newp = p[0]-self.stepX, p[1]-self.stepY
+            checkSide = line.checkSide(newp, pCenterPos, pSides[sideHit-2][0],
+                                       pSides[sideHit-2][1])
+            if checkSide == 1:
+                # ball would be going inside the player's body
+                self.bounceOff(3-bounceType)   # set new parameters again
+                self.speed = speed   # reset
+                break
+       
+    def move(self, goal, players):
         '''This function handles ball movements when the ball is kicked.
         players is an array listing the players in the game. The goalkeeper
         must be listed first.'''
@@ -429,26 +463,34 @@ class Ball(Game):
             self.setStep2(checkGoalPosts[1], checkGoalPosts[2])
             self.apprGoalPost = checkGoalPosts[0]
         elif checkPlayers[0] != False:   # ball approaching player
-            self.setStep1(checkPlayers[1])
+            self.speed = checkPlayers[1]
+            self.setStep1()
             for i in range(len(players)):
                 if players[i] == checkPlayers[-1]:
                     self.apprPlayer[i] = checkPlayers[0]
         elif self.apprScrBound == 'vertb' or self.apprGoalPost == 'side':
-            self.bounceOff(1, 0, speed)
+            # ball hit either the vertical boundary or the side of the goal post
+            self.bounceOff(1)
             self.apprScrBound, self.apprGoalPost = False, False   # reset
+            for player in players:
+                player.touchedBall = False   # reset
         elif self.apprScrBound == 'horzb' or self.apprGoalPost == 'bottom':
-            self.bounceOff(0, 1, speed)
+            # ball hit either the horizontal boundary or
+            # the bottom of the goal post
+            self.bounceOff(2)
             self.apprScrBound, self.apprGoalPost = False, False   # reset
+            for player in players:
+                player.touchedBall = False   # reset
         elif sum(self.apprPlayer) > 0:
             for i in range(len(self.apprPlayer)):
                 if self.apprPlayer[i] != 0:
                     if self.apprPlayer[i] == 1:   # ball hits player's front
                         self.setStep2(0, 0)
                         self.moving = False
-                        if i == 0:   # ball hits goalkeeper's front
+                        if i == 0:
                             self.gkCaught = True
                     else:   # ball hits player's back or flank
-                        self.bounceOff(0, 1, speed)
+                        self.bounceOffPl(players[i], self.apprPlayer[i])
                     break
             self.apprPlayer = [False] * len(players)   # reset
         elif self.getExtremes()[3] <= goalPosts[2] and \

@@ -72,26 +72,24 @@ while True:
     if moveType != None:
         striker.move(moveType, direction, ball)
     if pressedKeys[pygame.K_s]:
-        print('gk kicks')
-        goalkeeper.kickBall(ball, gk=True)
-        print()
-        print('striker kicks')
-        striker.kickBall(ball)
-        print('bodyAngle',striker.getBodyAngle(ball))
-        print('\n')
-        if goalkeeper.touchedBall:
-            goalkeeper.speed = gkStartSpeed   # reset
-            ball.gkCaught = False
-            bg.processMovements(ball, goal, players)
-        elif striker.touchedBall:
-            bg.processMovements(ball, goal, players)
-            if ball.gkCaught:   # ball caught by goalkeeper
-                print('gk caught ball')
-                goalkeeper.speed = 0
+        for player in players[1:]:
+            if player.getDistToBall(ball)[2]<=goalkeeper.getDistToBall(ball)[2]:
+                player.kickBall(ball)
+                if player.touchedBall:
+                    bg.processMovements(ball, goal, players)
+                    if ball.gkCaught:   # ball caught by goalkeeper
+                        goalkeeper.speed = 0
+                        pygame.time.wait(200)   # pause program for 200 ms
+                        goalkeeper.kickBall(ball, gk=True)
+                        ball.gkCaught = False   # reset
+                        goalkeeper.speed = gkStartSpeed   # reset
+                        bg.processMovements(ball, goal, players)
+            else:
                 goalkeeper.kickBall(ball, gk=True)
-                goalkeeper.speed = gkStartSpeed   # reset
-                ball.gkCaught = False   # reset
-                bg.processMovements(ball, goal, players)
+                if goalkeeper.touchedBall:
+                    goalkeeper.speed = gkStartSpeed   # reset
+                    ball.gkCaught = False
+                    bg.processMovements(ball, goal, players)
         if ball.inGoal:
             ball.reset()   # return to its original position
                         
