@@ -72,8 +72,8 @@ def update(screen, things, thingsPos, moved, newCenterPos, rotate=False):
                         break
 
 def setBoundaries(objCenter, screenSize):
-    '''This function sets the boundaries of the area in which an object is
-    allowed to move.
+    '''This function sets the boundaries of the area in which an object
+    is allowed to move.
     objCenter is the object's center point.
     screenSize is a tuple containing the width and height of the screen.'''
     leftBound = objCenter[0]
@@ -84,9 +84,9 @@ def setBoundaries(objCenter, screenSize):
     return boundaries
 
 def setDiagStep(stepX, stepY, maxDist=10):
-    '''This function adjusts the lateral and vertical step sizes when an object
-    is moving diagonally, so that the total distance traveled per movement is
-    not too big (i.e., within maxDist).'''
+    '''This function adjusts the lateral and vertical step sizes when an
+    object is moving diagonally, so that the total speed is not too big
+    (i.e., within maxDist).'''
     stepDiag = math.sqrt(stepX**2 + stepY**2)
     while stepDiag > maxDist + .001:
         stepX /= 1.0001
@@ -117,10 +117,10 @@ def toPoint(centerPos, endPoint, endAngle, speedBoost=1):
 ### The next three functions (up to straight()) handle straight movements. ###
 
 def setFinalStep1(boundaries, direction, stepX, stepY, centerPos):
-    '''This function checks if a moving object is about to reach the screen
-    boundaries, and sets the final step size accordingly.
-    stepX and stepY are the lateral and vertical step sizes, respectively,
-    before making the final step.
+    '''This function checks if a moving object is about to reach the
+    screen boundaries, and sets the final step size accordingly.
+    stepX and stepY are the lateral and vertical step sizes,
+    respectively, before making the final step.
     centerPos is the coordinates of the object's center.'''
     if direction == 'left' and stepX <= boundaries[0] - centerPos[0]:
         stepX = boundaries[0] - centerPos[0]
@@ -153,8 +153,8 @@ def setFinalStep1(boundaries, direction, stepX, stepY, centerPos):
     return stepX, stepY
 
 def reachedBoundaries1(boundaries, direction, centerPos):
-    '''This function checks if a moving object has gone or will be going
-    beyond the screen boundaries.
+    '''This function checks if a moving object has gone or will be
+    going beyond the screen boundaries.
     centerPos is the coordinates of the object's center.'''
     if direction == 'left' and centerPos[0] <= boundaries[0]:
         return True
@@ -184,8 +184,8 @@ def straight(direction, centerPos, stepX=10, stepY=10, screenSize=None,
     '''This function moves an object on a straight line.
     centerPos is the coordinates of the object's center point.
     stepX and stepY are the lateral and vertical step sizes, respectively.
-    objCenter is the object's center point, only specified if screenSize
-    is specified.'''
+    objCenter is the object's center point, only specified if
+    screenSize is specified.'''
     if direction == 'left':
         stepX, stepY = -stepX, 0
         rotate = 90   # measured in degrees
@@ -214,8 +214,7 @@ def straight(direction, centerPos, stepX=10, stepY=10, screenSize=None,
     if screenSize != None:
         boundaries = setBoundaries(objCenter, screenSize)
         # final step size before reaching boundary
-        stepX, stepY = setFinalStep1(boundaries, direction, stepX, stepY,
-                                     centerPos)
+        stepX, stepY = setFinalStep1(boundaries,direction,stepX,stepY,centerPos)
         if reachedBoundaries1(boundaries, direction, centerPos):
             stepX, stepY = 0, 0
     newCenterPos = centerPos[0]+stepX, centerPos[1]+stepY
@@ -226,11 +225,11 @@ def straight(direction, centerPos, stepX=10, stepY=10, screenSize=None,
 def setMaxRotStep(direction, maxRot, angle, step):
     '''This function checks if a moving object has gone or will be going
     beyond the maximum rotation allowed, and sets the step size accordingly.
-    maxRot is the maximum angle (measured in degrees) to which the object 
-    is allowed to move.
+    maxRot is the maximum angle (measured in degrees) to which the
+    object is allowed to move.
     angle is the angle (measured in degrees) formed by two lines:
-    (1) the line connecting the object's center point and the point around
-    which it moves, and
+    (1) the line connecting the object's center point and the point
+    around which it moves, and
     (2) the positive y-axis pointing downward from the latter point.
     step is the step size (i.e., the number of degrees in each movement).'''
     if direction == 'clockwise' or direction == 'left':
@@ -250,8 +249,8 @@ def setMaxRotStep(direction, maxRot, angle, step):
     return step
 
 def setFinalStep2(direction, step):
-    '''This function sets the final step size before a moving object reaches
-    the screen boundaries.
+    '''This function sets the final step size before a moving object
+    reaches the screen boundaries.
     step is the step size before making the final step.'''
     if direction == 'clockwise' or direction == 'left':
         step += .01
@@ -289,11 +288,11 @@ def reachedBoundaries2(boundaries, direction, centerPos, quarter):
             return False
     
 def setRot(angle, step):
-    '''This function sets the new rotation of an object that is moving
-    around a point.
+    '''This function sets the new rotation of an object that is
+    moving around a point.
     angle is the angle (measured in degrees) formed by two lines:
-    (1) the line connecting the object's center point and the point around
-    which it moves, and
+    (1) the line connecting the object's center point and the point
+    around which it moves, and
     (2) the positive y-axis pointing downward from the latter point.
     step is the step size before making the final step.'''
     rotate = angle + step
@@ -323,7 +322,7 @@ def setNewPos(rotCenter, r, angle, step):
 def rotate(direction, centerPos, rotCenter, step=10, maxRot=None,
            screenSize=None, objCenter=None):
     '''This function rotates an object around a point.
-    step is the step size (i.e., the number of degrees in each movement).
+    step is the step size, or the number of degrees in each movement.
     centerPos is the coordinates of the object's center point.
     rotCenter is the point around which the object moves.
     maxRot is the maximum angle (measured in degrees) to which the
@@ -342,9 +341,9 @@ def rotate(direction, centerPos, rotCenter, step=10, maxRot=None,
     if screenSize != None:
         boundaries = setBoundaries(objCenter, screenSize)
         # final step size before reaching boundary
-        while reachedBoundaries2(boundaries,direction,newCenterPos,quarter):
+        while reachedBoundaries2(boundaries, direction, newCenterPos, quarter):
             step = setFinalStep2(direction, step)
-            newCenterPos,rotate = setNewPos(rotCenter,r,angle,step)
+            newCenterPos, rotate = setNewPos(rotCenter, r, angle, step)
         if reachedBoundaries2(boundaries, direction, centerPos, quarter):
             newCenterPos, rotate = centerPos, angle
     return newCenterPos, rotate

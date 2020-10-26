@@ -23,6 +23,7 @@ class Player(np.Game):
         np.Game.__init__(self, screenSize)   # initialize the parent class
         self.lFoot, self.rFoot, self.body = [None] * 3
         self.strongFoot = random.choice(['lFoot', 'rFoot'])
+        self.touchedBall = False
         
     def load(self, imageName1, imageName2):
         '''This function loads images of the player's foot and body into PyGame
@@ -59,7 +60,7 @@ class Player(np.Game):
                                self.lFootStartPos[1]+self.footStartCenter[1])
         self.rFootCenterPos = (self.rFootStartPos[0]+self.footStartCenter[0],
                                self.rFootStartPos[1]+self.footStartCenter[1])
-
+        
     def adjustFootStartPos(self):
         '''This function adjusts the positions where the feet will be drawn at
         the start of the program. To do that, both the coordinates of the body
@@ -193,17 +194,18 @@ class Player(np.Game):
         return self.rotate
 
     def getDistMoved(self, newCenterPos):
-        '''This function returns the change in the position of the body
-        after a movement.
+        '''This function returns the change in the position of
+        the body after a movement.
         newCenterPos is the new coordinates of the body center.'''
-        moveX, moveY = line.getParams(self.getCenterPos()[2], newCenterPos)[:2]
-        return moveX, moveY
+        return line.getParams(self.getCenterPos()[2], newCenterPos)[:2]
 
     def getDistToBall(self, ball):
-        '''This function returns the distance between each foot and the ball.'''
-        left = line.getParams(ball.getCenterPos(), self.getCenterPos()[0])[2]
-        right = line.getParams(ball.getCenterPos(), self.getCenterPos()[1])[2]
-        return left, right
+        '''This function returns the distance from the ball to each foot and
+        to the body.'''
+        lFoot = line.getParams(ball.getCenterPos(), self.getCenterPos()[0])[2]
+        rFoot = line.getParams(ball.getCenterPos(), self.getCenterPos()[1])[2]
+        body = line.getParams(ball.getCenterPos(), self.getCenterPos()[2])[2]
+        return lFoot, rFoot, body
 
     def getEnding(self, bodyPart, ball, finalDist):
         '''This function returns the point to which the body/foot will move
@@ -278,7 +280,7 @@ class Player(np.Game):
         (1) a string indicating the foot,
         (2) the coordinates of the foot's center point, and
         (3) the distance between the ball and that foot.'''
-        lFootToBall, rFootToBall = self.getDistToBall(ball)
+        lFootToBall, rFootToBall = self.getDistToBall(ball)[:2]
         if lFootToBall < rFootToBall:
             return 'lFoot', self.getCenterPos()[0], lFootToBall
         elif lFootToBall > rFootToBall:
