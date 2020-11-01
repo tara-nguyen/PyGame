@@ -22,14 +22,16 @@ class Player(np.Game):
         '''This function initializes the class and sets its core attributes.'''
         np.Game.__init__(self, screenSize)   # initialize the parent class
         self.lFoot, self.rFoot, self.body = [None] * 3
+        self.footSize = 20, 25
+        self.bodySize = 64, 40
         self.strongFoot = random.choice(['lFoot', 'rFoot'])
         self.touchedBall = False
         
     def load(self, imageName1, imageName2):
         '''This function loads images of the player's foot and body into PyGame
         and rotates them 90 degrees counterclockwise.'''
-        self.lFoot = self.loadImage(imageName1, 25, 20)
-        self.body = self.loadImage(imageName2, 40, 64)
+        self.lFoot = self.loadImage(imageName1,self.footSize[1],self.footSize[0])
+        self.body = self.loadImage(imageName2, self.bodySize[1],self.bodySize[0])
         # rotate 90 degrees clockwise
         self.lFoot = pygame.transform.rotate(self.lFoot, 90)
         self.rFoot = self.lFoot
@@ -39,11 +41,11 @@ class Player(np.Game):
         self.footStart, self.bodyStart = self.lFoot, self.body
         self.footStartCenter = self.footStart.get_rect().center
         self.bodyStartCenter = self.bodyStart.get_rect().center
-
+        
     def setFootStartPos(self):
-        '''This function sets the positions where the feet will be drawn,
-        assuming that the player will be facing upward at the start of
-        the program.'''
+        '''This function sets the positions where the feet will be
+        drawn, assuming that the player will be facing upward at the
+        start of the program.'''
         # coordinates of the body center at the start of the program (i.e.,
         # before any change/movement has been made)
         self.bodyCenterPos = (self.bodyStartPos[0]+self.bodyStartCenter[0],
@@ -146,7 +148,7 @@ class Player(np.Game):
         # coordinates of the corners if the player were/is facing upward
         corner1 = (bodyCenterPos[0]-self.bodyStartCenter[0],
                    bodyCenterPos[1]-self.bodyStartCenter[1]+extraPix)
-        corner2 = corner1[0]+self.bodyStartCenter[0]*2, corner1[1]
+        corner2 = corner1[0]+self.bodySize[0], corner1[1]
         corner3 = corner1[0], corner1[1]+(self.bodyStartCenter[1]-extraPix)*2
         corner4 = corner2[0], corner3[1]
         corners = [corner1, corner2, corner3, corner4]
@@ -261,6 +263,8 @@ class Player(np.Game):
                 direction, self.getCenterPos()[2], ball.getCenterPos(),
                 screenSize=(self.screenWidth,self.screenHeight),
                 objCenter=self.getCenter()[1])
+        else:
+            newCenterPos = self.getCenterPos()[2]
         if newCenterPos != self.getCenterPos()[2]:
             self.moved = True
             moveX, moveY = self.getDistMoved(newCenterPos)
@@ -315,7 +319,9 @@ class Player(np.Game):
         else:
             self.touchedBall = False
         if newKFootCenterPos != kFootCenterPos:
-            if (gk and self.touchedBall) or ((not gk) and (not ball.gkCaught)):
+            if (gk and self.touchedBall) or \
+               ((not gk) and (not ball.gkCaught) and \
+                (self.getDistToBall(ball)[2] <= minDist * 1.5)):
                 if kickingFoot == 'lFoot':
                     newCenterPos = newKFootCenterPos, self.getCenterPos()[1]
                     rotate = kFootRotate, currentRot
@@ -404,9 +410,8 @@ class Outfielder(Player):
     def __init__(self, screenSize):
         '''This function initializes the class and sets its core attributes.'''
         Player.__init__(self, screenSize)   # initialize the parent class
-        bodyStartPosX = random.uniform(20, self.screenWidth-96)
-        bodyStartPosY = random.uniform(self.screenHeight-150,
-                                       self.screenHeight-100)
+        bodyStartPosX = random.uniform(5, self.screenWidth-5-self.bodySize[0])
+        bodyStartPosY = random.uniform(100,self.screenHeight-5-self.bodySize[1])
         self.bodyStartPos = bodyStartPosX, bodyStartPosY
         self.startRot = 0
         self.moved = False
