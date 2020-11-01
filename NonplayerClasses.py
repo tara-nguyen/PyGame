@@ -34,8 +34,7 @@ class Game:
         
     def getFile(self, imageName):
         '''This function returns the link to the images stored in the computer.'''
-        file = 'ImagesInPyGame/' + imageName + '.png'
-        return file
+        return 'ImagesInPyGame/' + imageName + '.png'
 
     def loadImage(self, imageName, newWidth=None, newHeight=None):
         '''This function loads an image into PyGame and resizes it if required.'''
@@ -48,16 +47,17 @@ class Game:
             image = pygame.transform.scale(image, (newWidth, newHeight))
         return image
 
-    def processMoveKeys(self, pressedKeys):
-        '''This function processes pressed keys that will initiate
-        player movements.'''
+    def processMoveKeys(self, moveKeys, moveKeysPressed):
+        '''This function processes pressed keys that will
+        initiate player movements.'''
         moveType, direction = None, None
         directions = 'left', 'right', 'up', 'down'
-        keys = (pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN,
-                pygame.K_SPACE, pygame.K_RSHIFT)
         pressed = []
-        for key in keys:
-            pressed.append(pressedKeys[key])
+        for key in moveKeys:
+            if key in moveKeysPressed:
+                pressed.append(1)
+            else:
+                pressed.append(0)
         if sum(pressed) == 1:   # only one key pressed
             if pressed.index(1) < 4:   # LEFT, RIGHT, UP, or DOWN key
                 moveType = 'straight'
@@ -66,7 +66,7 @@ class Game:
                 moveType = 'to ball'
         elif sum(pressed) == 2:   # two keys pressed at the same time
             if pressed.index(1) < 2:   # LEFT or RIGHT key
-                if pressed.index(1,2) < 4:   # UP or DOWN key
+                if 1 in pressed[2:4]:   # UP or DOWN key
                     moveType = 'straight'
                     direction = directions[pressed.index(1,2)] + \
                                 directions[pressed.index(1)]
@@ -75,7 +75,7 @@ class Game:
                     direction = directions[pressed.index(1)]
         return moveType, direction
         
-    def processMovements(self, ball, goal, players):
+    def processMovements(self, ball, goal, players, moveKeys, moveKeysPressed):
         '''This function processes the movements of the ball and
         of the goalkeeper while the ball is moving.
         players is an array listing the players in the game. The
@@ -91,6 +91,18 @@ class Game:
         ball.speed = ball.initSpeed
         ball.moving = True
         while ball.moving and round(ball.speed) > 0:
+            moveType, direction = None, None
+            moveKeysPressed = []
+            for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN:
+                    if event.key in moveKeys:
+                        moveKeysPressed.append(event.key)
+                        print(moveKeysPressed)
+                        moveType, direction = self.processMoveKeys(\
+                            moveKeys, moveKeysPressed)
+            players[1].move(moveType, direction, ball)
+            if players[1].moved:
+                players[1].updateAll()
             players[0].moveAcross(goal)
             players[0].updateAll()
             ball.setStep1()
