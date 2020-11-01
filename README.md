@@ -1,7 +1,7 @@
 # Mini-Football in PyGame
 
 - **Author:** [Tara Nguyen](https://github.com/tara-nguyen)
-- **Status:** On hold
+- **Status:** Active
 - **Language:** Python 3.7.8
 - **PyGame version:** 1.9.6
 
