@@ -69,45 +69,67 @@ pygame.key.set_repeat(1)   # control how held keys are repeated
 
 playing = True
 while playing:
-    # process events in the game
+    moveType, direction = None, None
+    moveKeysPressed = []
+    kickBall = False
+    
     for event in pygame.event.get():
-        pressedKeys = pygame.key.get_pressed()
-        if event.type == pygame.QUIT or pressedKeys[pygame.K_ESCAPE] or \
-           (pressedKeys[pygame.K_LCTRL] and pressedKeys[pygame.K_w]):
+        print()
+        print('event:',event)
+        if (event.type == pygame.QUIT) or \
+           (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
             playing = False
-                
-    pressedKeys = pygame.key.get_pressed()
-    moveType, direction = bg.processMoveKeys(pressedKeys)    
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_s:
+                kickBall = True
+            elif event.key in moveKeys:
+                moveKeysPressed.append(event.key)
+##                print(moveKeysPressed)
+                for event2 in pygame.event.get():
+                    print('event2:',event2)
+                    if event2.type == pygame.KEYDOWN and \
+                       event2.key in moveKeys and \
+                       event2.key != event.key:
+                        moveKeysPressed.append(event2.key)
+##                        print(moveKeysPressed)
+                        print()
+                moveType, direction = bg.processMoveKeys(moveKeys,
+                                                         moveKeysPressed)
+
     striker.move(moveType, direction, ball)
     if striker.moved:
         striker.updateAll()
-        
+
     goalkeeper.moveAcross(goal)
     goalkeeper.updateAll()
-                        
-    if pressedKeys[pygame.K_s]:
+    
+    if kickBall:
         for player in players[1:]:
             if player.getDistToBall(ball)[2]<=goalkeeper.getDistToBall(ball)[2]:
                 player.kickBall(ball)
                 if player.touchedBall:
-                    bg.processMovements(ball, goal, players)
+                    bg.processMovements(ball, goal, players, moveKeys,
+                                        moveKeysPressed)
                     if ball.gkCaught:   # ball caught by goalkeeper
                         goalkeeper.speed = 0
                         pygame.time.wait(200)   # pause program for 200 ms
                         goalkeeper.kickBall(ball, gk=True)
                         ball.gkCaught = False   # reset
                         goalkeeper.speed = gkStartSpeed   # reset
-                        bg.processMovements(ball, goal, players)
-                    break
+                        bg.processMovements(ball, goal, players, moveKeys,
+                                            moveKeysPressed)
+                break
             else:
                 goalkeeper.kickBall(ball, gk=True)
                 if goalkeeper.touchedBall:
                     goalkeeper.speed = gkStartSpeed   # reset
                     ball.gkCaught = False
-                    bg.processMovements(ball, goal, players)
+                    bg.processMovements(ball, goal, players, moveKeys,
+                                        moveKeysPressed)
+                break
         if ball.inGoal:
             ball.reset()   # return to its original position
-                        
+
     bg.updateDisplay()
 
 pygame.quit()
