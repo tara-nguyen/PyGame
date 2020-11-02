@@ -85,8 +85,10 @@ while playing:
     movingOutfielder.move(moveType, direction, ball)
     if movingOutfielder.moved:
         movingOutfielder.updateAll()
-    
-    goalkeeper.moveAcross(goal)   # goalkeeper movements
+
+    # goalkeeper movements
+    if ball.getCenterPos()[1] <= goal.getPosts()[2] + screenSize[0]/6:
+        goalkeeper.moveAcross(goal)   
 
     # ball kick
     if keypresses[pygame.K_s]:

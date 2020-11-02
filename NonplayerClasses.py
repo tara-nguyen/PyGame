@@ -108,7 +108,9 @@ class Game:
             movingOutfielder.move(moveType, direction, ball)
             if movingOutfielder.moved:
                 movingOutfielder.updateAll()
-            players[0].moveAcross(goal)   # goalkeeper movements
+            # goalkeeper movements
+            if ball.getCenterPos()[1] <= goal.getPosts()[2]+self.screenHeight/6:
+                players[0].moveAcross(goal)   
             # ball movements
             ball.setStep1()
             stepX, stepY = ball.getStep()   # step size before adjustment
