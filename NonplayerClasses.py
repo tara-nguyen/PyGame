@@ -47,17 +47,16 @@ class Game:
             image = pygame.transform.scale(image, (newWidth, newHeight))
         return image
 
-    def processMoveKeys(self, moveKeys, moveKeysPressed):
+    def processMoveKeys(self, keypresses):
         '''This function processes pressed keys that will
         initiate player movements.'''
         moveType, direction = None, None
         directions = 'left', 'right', 'up', 'down'
+        keys = (pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN,
+                pygame.K_SPACE, pygame.K_RSHIFT)
         pressed = []
-        for key in moveKeys:
-            if key in moveKeysPressed:
-                pressed.append(1)
-            else:
-                pressed.append(0)
+        for key in keys:
+                pressed.append(keypresses[key])
         if sum(pressed) == 1:   # only one key pressed
             if pressed.index(1) < 4:   # LEFT, RIGHT, UP, or DOWN key
                 moveType = 'straight'
@@ -75,36 +74,42 @@ class Game:
                     direction = directions[pressed.index(1)]
         return moveType, direction
         
-    def processMovements(self, ball, goal, players, moveKeys, moveKeysPressed):
-        '''This function processes the movements of the ball and
-        of the goalkeeper while the ball is moving.
+    def processMovements(self, ball, goal, players, keypresses):
+        '''This function processes the movements of both the ball
+        and the players while the ball is moving.
         players is an array listing the players in the game. The
         goalkeeper must be listed first.'''
+        nonkickers = []
         for player in players:
             if player.touchedBall:
-                bodyAngle = player.getBodyAngle(ball)
-                break
+                kicker = player
+            else:
+                nonkickers.append(player)
+        bodyAngle = kicker.getBodyAngle(ball)
         ball.apprScrBound, ball.apprGoalPost = False, False
         ball.apprPlayer = [False] * len(players)
-        # move ball
         ball.setMovingAngle(random.uniform(bodyAngle-.5, bodyAngle+.5))
         ball.speed = ball.initSpeed
         ball.moving = True
         while ball.moving and round(ball.speed) > 0:
-            moveType, direction = None, None
-            moveKeysPressed = []
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN:
-                    if event.key in moveKeys:
-                        moveKeysPressed.append(event.key)
-                        print(moveKeysPressed)
-                        moveType, direction = self.processMoveKeys(\
-                            moveKeys, moveKeysPressed)
-            players[1].move(moveType, direction, ball)
-            if players[1].moved:
-                players[1].updateAll()
-            players[0].moveAcross(goal)
-            players[0].updateAll()
+                    keypresses[event.key] = 1
+                if event.type == pygame.KEYUP:
+                    keypresses[event.key] = 0
+            # outfielder movements
+            movingOutfielder = nonkickers[1]
+            minDistToBall = movingOutfielder.getDistToBall(ball)[2]
+            for nonkicker in nonkickers[1:]:
+                if nonkicker.getDistToBall(ball)[2] < minDistToBall:
+                    movingOutfielder = nonkicker
+                    minDistToBall = movingOutfielder.getDistToBall(ball)[2]
+            moveType, direction = self.processMoveKeys(keypresses)
+            movingOutfielder.move(moveType, direction, ball)
+            if movingOutfielder.moved:
+                movingOutfielder.updateAll()
+            players[0].moveAcross(goal)   # goalkeeper movements
+            # ball movements
             ball.setStep1()
             stepX, stepY = ball.getStep()   # step size before adjustment
             ball.move(goal, players)
@@ -115,7 +120,7 @@ class Game:
                sum(ball.apprPlayer) > 0:
                 ball.setStep2(stepX, stepY)   # reset
             ball.speed /= random.uniform(1.03, 1.05)   # decrement speed
-        player.touchedBall = False   # reset
+        kicker.touchedBall = False   # reset
         
 class Background(Game):
     '''This class is a child class of Game and has the following methods:
@@ -505,6 +510,8 @@ class Ball(Game):
                         self.bounceOffPl(players[i], self.apprPlayer[i])
                     break
             self.apprPlayer = [False] * len(players)   # reset
+            for player in players:
+                player.touchedBall = False   # reset
         elif self.getExtremes()[3] <= goalPosts[2] and \
              self.getExtremes()[0] >= goalPosts[0] and \
              self.getExtremes()[1] <= goalPosts[1]:
