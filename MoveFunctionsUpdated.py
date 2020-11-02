@@ -116,68 +116,41 @@ def toPoint(centerPos, endPoint, endAngle, speedBoost=1):
 
 ### The next three functions (up to straight()) handle straight movements. ###
 
-def setFinalStep1(boundaries, direction, stepX, stepY, centerPos):
-    '''This function checks if a moving object is about to reach the
-    screen boundaries, and sets the final step size accordingly.
+def apprScrBounds1(boundaries, direction, stepX, stepY, centerPos):
+    '''This function checks if a moving object is about to reach or has
+    reached the screen boundaries, and sets the step size accordingly.
     stepX and stepY are the lateral and vertical step sizes,
     respectively, before making the final step.
     centerPos is the coordinates of the object's center.'''
-    if direction == 'left' and stepX <= boundaries[0] - centerPos[0]:
+    if direction == 'left' and stepX < boundaries[0] - centerPos[0]:
         stepX = boundaries[0] - centerPos[0]
-    if direction == 'right' and stepX >= boundaries[1] - centerPos[0]:
+    elif direction == 'right' and stepX > boundaries[1] - centerPos[0]:
         stepX = boundaries[1] - centerPos[0]
-    if direction == 'up' and stepY <= boundaries[2] - centerPos[1]:
+    elif direction == 'up' and stepY < boundaries[2] - centerPos[1]:
         stepY = boundaries[2] - centerPos[1]
-    if direction == 'down' and stepY >= boundaries[3] - centerPos[1]:
+    elif direction == 'down' and stepY > boundaries[3] - centerPos[1]:
         stepY = boundaries[3] - centerPos[1]
-    if direction == 'upleft':
-        if stepX <= boundaries[0] - centerPos[0]:
+    elif direction == 'upleft':
+        if stepX < boundaries[0] - centerPos[0]:
             stepX = boundaries[0] - centerPos[0]
-        if stepY <= boundaries[2] - centerPos[1]:
+        if stepY < boundaries[2] - centerPos[1]:
             stepY = boundaries[2] - centerPos[1]
-    if direction == 'upright':
-        if stepX >= boundaries[1] - centerPos[0]:
+    elif direction == 'upright':
+        if stepX > boundaries[1] - centerPos[0]:
             stepX = boundaries[1] - centerPos[0]
-        if stepY <= boundaries[2] - centerPos[1]:
+        if stepY < boundaries[2] - centerPos[1]:
             stepY = boundaries[2] - centerPos[1]
-    if direction == 'downleft':
-        if stepX <= boundaries[0] - centerPos[0]:
+    elif direction == 'downleft':
+        if stepX < boundaries[0] - centerPos[0]:
             stepX = boundaries[0] - centerPos[0]
-        if stepY >= boundaries[3] - centerPos[1]:
+        if stepY > boundaries[3] - centerPos[1]:
             stepY = boundaries[3] - centerPos[1]
-    if direction == 'downright':
-        if stepX >= boundaries[1] - centerPos[0]:
+    elif direction == 'downright':
+        if stepX > boundaries[1] - centerPos[0]:
             stepX = boundaries[1] - centerPos[0]
-        if stepY >= boundaries[3] - centerPos[1]:
+        if stepY > boundaries[3] - centerPos[1]:
             stepY = boundaries[3] - centerPos[1]
     return stepX, stepY
-
-def reachedBoundaries1(boundaries, direction, centerPos):
-    '''This function checks if a moving object has gone or will be
-    going beyond the screen boundaries.
-    centerPos is the coordinates of the object's center.'''
-    if direction == 'left' and centerPos[0] <= boundaries[0]:
-        return True
-    elif direction == 'right' and centerPos[0] >= boundaries[1]:
-        return True
-    elif direction == 'up' and centerPos[1] <= boundaries[2]:
-        return True
-    elif direction == 'down' and centerPos[1] >= boundaries[3]:
-        return True
-    elif direction == 'upleft' and \
-         (centerPos[0] <= boundaries[0] or centerPos[1] <= boundaries[2]):
-        return True
-    elif direction == 'upright' and \
-         (centerPos[0] >= boundaries[1] or centerPos[1] <= boundaries[2]):
-        return True
-    elif direction == 'downleft' and \
-         (centerPos[0] <= boundaries[0] or centerPos[1] >= boundaries[3]):
-        return True
-    elif direction == 'downright' and \
-         (centerPos[0] >= boundaries[1] or centerPos[1] >= boundaries[3]):
-        return True
-    else:
-        return False
 
 def straight(direction, centerPos, stepX=10, stepY=10, screenSize=None,
              objCenter=None):
@@ -213,10 +186,7 @@ def straight(direction, centerPos, stepX=10, stepY=10, screenSize=None,
             rotate = -135   # measured in degrees
     if screenSize != None:
         boundaries = setBoundaries(objCenter, screenSize)
-        # final step size before reaching boundary
-        stepX, stepY = setFinalStep1(boundaries,direction,stepX,stepY,centerPos)
-        if reachedBoundaries1(boundaries, direction, centerPos):
-            stepX, stepY = 0, 0
+        stepX, stepY = apprScrBounds1(boundaries,direction,stepX,stepY,centerPos)
     newCenterPos = centerPos[0]+stepX, centerPos[1]+stepY
     return newCenterPos, rotate
 
@@ -248,9 +218,9 @@ def setMaxRotStep(direction, maxRot, angle, step):
             step = maxRot - angle
     return step
 
-def setFinalStep2(direction, step):
-    '''This function sets the final step size before a moving object
-    reaches the screen boundaries.
+def apprScrBounds2(direction, step):
+    '''This function sets the step size when a moving object is about to
+    reach or has reached the screen boundaries.
     step is the step size before making the final step.'''
     if direction == 'clockwise' or direction == 'left':
         step += .01
@@ -258,7 +228,7 @@ def setFinalStep2(direction, step):
         step -= .01
     return step
 
-def reachedBoundaries2(boundaries, direction, centerPos, quarter):
+def reachedBoundaries(boundaries, direction, centerPos, quarter):
     '''This function checks if a moving object has gone or will be going
     beyond the screen boundaries.
     centerPos is the coordinates of the object's center.
@@ -341,9 +311,7 @@ def rotate(direction, centerPos, rotCenter, step=10, maxRot=None,
     if screenSize != None:
         boundaries = setBoundaries(objCenter, screenSize)
         # final step size before reaching boundary
-        while reachedBoundaries2(boundaries, direction, newCenterPos, quarter):
-            step = setFinalStep2(direction, step)
+        while reachedBoundaries(boundaries, direction, newCenterPos, quarter):
+            step = apprScrBounds2(direction, step)
             newCenterPos, rotate = setNewPos(rotCenter, r, angle, step)
-        if reachedBoundaries2(boundaries, direction, centerPos, quarter):
-            newCenterPos, rotate = centerPos, angle
     return newCenterPos, rotate
