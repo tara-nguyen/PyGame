@@ -320,8 +320,7 @@ class Player(np.Game):
             self.touchedBall = False
         if newKFootCenterPos != kFootCenterPos:
             if (gk and self.touchedBall) or \
-               ((not gk) and (not ball.gkCaught) and \
-                (self.getDistToBall(ball)[2] <= minDist * 1.5)):
+               ((not gk) and (not ball.gkCaught) and (distToBall <= minDist*2)):
                 if kickingFoot == 'lFoot':
                     newCenterPos = newKFootCenterPos, self.getCenterPos()[1]
                     rotate = kFootRotate, currentRot
@@ -402,9 +401,10 @@ class Goalkeeper(Player):
         self.setCenterPos('rFoot',
                           self.getCenterPos()[1][0]+self.speed*self.direction,
                           self.getCenterPos()[1][1])
+        self.updateAll()
 
 class Outfielder(Player):
-    '''This class is a child class of Player and has only one method: __init__.
+    '''This class is a child class of Player and has only one mthod: __init__.
     To get a brief description of each method, use the following syntax:
         <module name as imported>.Outfielder.<method name>.__doc__'''
     def __init__(self, screenSize):
